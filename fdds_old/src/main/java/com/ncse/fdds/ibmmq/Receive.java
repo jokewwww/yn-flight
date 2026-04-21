@@ -16,6 +16,7 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 import javax.jms.*;
 import javax.naming.NamingException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 
 @Slf4j
@@ -68,7 +69,7 @@ public class Receive implements MessageListener {
                 byte[] byteData = new byte[dataLen];
                 msg.readBytes(byteData);
 //                log.info(new String(byteData,"UTF-8"));
-                result = new String(byteData, "UTF-8");
+                result = new String(byteData, StandardCharsets.UTF_8);
 
             } else {
                 log.warn("FDDS Service msg type error");
@@ -89,8 +90,6 @@ public class Receive implements MessageListener {
                     log.debug("Produce: The message was sent successfully result: {}", stringObjectSendResult.getProducerRecord().toString());
                 }
             });
-        } catch (UnsupportedEncodingException ex) {
-            log.warn(ex.getMessage());
         } catch (InstantiationException | JsonProcessingException
                  | IllegalAccessException | ParseException | DocumentException em) {
             log.warn(em.getMessage());

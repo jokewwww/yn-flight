@@ -32,7 +32,7 @@ public class ReceiveConnect implements Runnable {
     @Value("${ibmmq.password}")
     private String password = "";
 
-    private Receive receive;
+    private final Receive receive;
 
     public ReceiveConnect(Receive receive) {
         this.receive = receive;

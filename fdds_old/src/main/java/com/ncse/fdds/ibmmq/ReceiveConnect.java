@@ -32,7 +32,7 @@ public class ReceiveConnect implements Runnable {
     @Value("${ibmmq.password}")
     private String password = "";
 
-    private Receive receive;
+    private final Receive receive;
 
     public ReceiveConnect(Receive receive) {
         this.receive = receive;
@@ -50,7 +50,7 @@ public class ReceiveConnect implements Runnable {
             try {
                 connect();
 //                log.debug("statusFlag:"+ statusFlag + ",connFlag:"+connFlag);
-                if ((statusFlag == true) && (connFlag == false)) {
+                if ((statusFlag) && (!connFlag)) {
                     startService();
                     firstCon = ++firstCon;
                     reconnectTimes = ++reconnectTimes; //重连次数

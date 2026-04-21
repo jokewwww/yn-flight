@@ -11,6 +11,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import javax.jms.*;
 import javax.naming.NamingException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 public class Receive implements MessageListener {
@@ -68,7 +69,7 @@ public class Receive implements MessageListener {
                 byte[] byteData = new byte[dataLen];
                 msg.readBytes(byteData);
 //                log.info(new String(byteData,"UTF-8"));
-                result = new String(byteData, "UTF-8");
+                result = new String(byteData, StandardCharsets.UTF_8);
                 tflightCache.setMessage(result);
             } else {
                 log.warn("FDDS Service msg type error");
@@ -94,8 +95,6 @@ public class Receive implements MessageListener {
                     log.info("Produce: The message was sent successfully result: {}",stringObjectSendResult.getProducerRecord().toString());
                 }
             });*/
-        } catch (UnsupportedEncodingException ex) {
-            log.warn(ex.getMessage() + " msg：" + result);
         }
         /*catch (InstantiationException|JsonProcessingException
                 |IllegalAccessException|ParseException|DocumentException em){
