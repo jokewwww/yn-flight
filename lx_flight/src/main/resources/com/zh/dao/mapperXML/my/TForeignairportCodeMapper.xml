@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TForeignairportCodeMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.TForeignairportCode">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="alcd_icao_code" jdbcType="VARCHAR" property="alcdIcaoCode" />
+    <result column="alcd_arln_name" jdbcType="VARCHAR" property="alcdArlnName" />
+    <result column="cstm_num" jdbcType="VARCHAR" property="cstmNum" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, alcd_icao_code, alcd_arln_name, cstm_num
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from T_FOREIGNAIRPORT_CODE
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from T_FOREIGNAIRPORT_CODE
+  </select>
+
+  <select id="selectByAlcdIcaoCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from T_FOREIGNAIRPORT_CODE
+    where alcd_icao_code = #{alcdIcaoCode,jdbcType=VARCHAR}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from T_FOREIGNAIRPORT_CODE
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.flight.TForeignairportCode">
+    insert into T_FOREIGNAIRPORT_CODE (id, alcd_icao_code, alcd_arln_name,
+      cstm_num)
+    values (#{id,jdbcType=VARCHAR}, #{alcdIcaoCode,jdbcType=VARCHAR}, #{alcdArlnName,jdbcType=VARCHAR},
+      #{cstmNum,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.zh.bean.flight.TForeignairportCode">
+    insert into T_FOREIGNAIRPORT_CODE
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="alcdIcaoCode != null">
+        alcd_icao_code,
+      </if>
+      <if test="alcdArlnName != null">
+        alcd_arln_name,
+      </if>
+      <if test="cstmNum != null">
+        cstm_num,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="alcdIcaoCode != null">
+        #{alcdIcaoCode,jdbcType=VARCHAR},
+      </if>
+      <if test="alcdArlnName != null">
+        #{alcdArlnName,jdbcType=VARCHAR},
+      </if>
+      <if test="cstmNum != null">
+        #{cstmNum,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.flight.TForeignairportCode">
+    update T_FOREIGNAIRPORT_CODE
+    <set>
+      <if test="alcdIcaoCode != null">
+        alcd_icao_code = #{alcdIcaoCode,jdbcType=VARCHAR},
+      </if>
+      <if test="alcdArlnName != null">
+        alcd_arln_name = #{alcdArlnName,jdbcType=VARCHAR},
+      </if>
+      <if test="cstmNum != null">
+        cstm_num = #{cstmNum,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TForeignairportCode">
+    update T_FOREIGNAIRPORT_CODE
+    set alcd_icao_code = #{alcdIcaoCode,jdbcType=VARCHAR},
+      alcd_arln_name = #{alcdArlnName,jdbcType=VARCHAR},
+      cstm_num = #{cstmNum,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+
+  <select id="getMaxId" resultType="int">
+    select max(CAST(id as signed)) from T_FOREIGNAIRPORT_CODE
+  </select>
+
+</mapper>

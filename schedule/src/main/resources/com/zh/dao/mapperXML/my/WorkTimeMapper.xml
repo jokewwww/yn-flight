@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.WorkTimeMapper">
+
+    <!-- 加油员工作时间显示与疲劳提醒 -->
+    <select id="getSetting" resultType="com.zh.entity.SetEntity">
+        SELECT data_value as time,
+            data_label as intervalTime
+        FROM sys_dict
+        where data_code = 'work_time'
+            LIMIT 1
+    </select>
+
+
+</mapper>

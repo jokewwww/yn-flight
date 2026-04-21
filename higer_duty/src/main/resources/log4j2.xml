@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- No need to set system property "Log4jContextSelector" to any value when 
+	using <asyncLogger> or <asyncRoot>. -->
+<Configuration>
+	<properties>
+		<property name="LOG_PATTERN">[%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c %M %L %t] %m%n</property>
+	</properties>
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="${LOG_PATTERN}" />
+		</Console>
+		<RollingRandomAccessFile name="RandomAccessFile"
+			fileName="logs/javaDemo.log"
+			filePattern="logs/${date:yyyy-MM}/javaDemo-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout
+				pattern="${LOG_PATTERN}" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" />
+				<SizeBasedTriggeringPolicy size="100 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="30" />
+		</RollingRandomAccessFile>
+	</Appenders>
+	<Loggers>
+		<!-- pattern layout actually uses location, so we need to include it -->
+		<AsyncLogger name="cn.iwen" level="trace" includeLocation="true">
+			<AppenderRef ref="RandomAccessFile" />
+			<appender-ref ref="Console" />
+		</AsyncLogger>
+		<Root level="info"></Root>
+	</Loggers>
+</Configuration>

@@ -1,0 +1,47 @@
+<R>
+    <HD>
+        <MT>OIRQ-R</MT>
+        <MS>234675</MS>
+        <RMS>20200512170730598</RMS>
+        <SSN>CNAF</SSN>
+        <RSN>CNAF-TSN</RSN>
+        <STM>2020-05-12 17:07:30</STM>
+    </HD>
+    <BD>
+        <MULTREC>1</MULTREC>
+        <NUM>2</NUM>
+        <SUB>
+            <IUD>I</IUD>
+            <LUTS>2020-04-26 02:08:08.000</LUTS>
+            <ORDER_NO>D20200512020021014</ORDER_NO>
+            <ADDOIL_TYPE>1</ADDOIL_TYPE>
+            <APC3>PKX</APC3>
+            <ADDRESS></ADDRESS>
+            <ORDER_DATE>20201229</ORDER_DATE>
+            <CSTNO>0000110034</CSTNO>
+            <CSTNM>江苏华宇通用航空有限公司</CSTNM>
+            <ESTIMATED_VOLUME>15890</ESTIMATED_VOLUME>
+            <ESTIMATED_TIME>2020-05-12 14:01:30</ESTIMATED_TIME>
+            <OIL_TYPE>3</OIL_TYPE>
+            <ORDER_STATUS>1</ORDER_STATUS>
+            <OIL_USER_NM>BBB</OIL_USER_NM>
+            <OIL_USER_TEL>1111</OIL_USER_TEL>
+            <TANKER_NO></TANKER_NO>
+            <FLNO>F111</FLNO>
+            <TTYP></TTYP>
+            <REGN>B111</REGN>
+            <ACT3></ACT3>
+            <ACTN></ACTN>
+            <ALC2></ALC2>
+            <ALCNM></ALCNM>
+            <ORG3></ORG3>
+            <ORGNM></ORGNM>
+            <DES3></DES3>
+            <DESNM></DESNM>
+            <VIA3></VIA3>
+            <VIANM></VIANM>
+            <CDAT>2020-04-26 15:38:08</CDAT>
+            <LSTU></LSTU>
+        </SUB>
+    </BD>
+</R>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.LogMapper">
+    <resultMap id="BaseResultMap" type="com.zh.bean.OperationLog">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="staff_id" jdbcType="VARCHAR" property="staffId"/>
+        <result column="staff_name" jdbcType="VARCHAR" property="staffName"/>
+        <result column="module_name" jdbcType="VARCHAR" property="moduleName"/>
+        <result column="action_name" jdbcType="VARCHAR" property="actionName"/>
+        <result column="succeed" jdbcType="VARCHAR" property="succeed"/>
+        <result column="create_date" jdbcType="TIMESTAMP" property="createDate"/>
+    </resultMap>
+    <!-- 人员车辆绑定 -->
+    <insert id="logOperationInsert">
+        INSERT into t_operation_log (staff_id, staff_name, module_name, action_name, succeed, content, fail_reason,
+                                     create_date)
+        values (#{operation.staffId},
+                #{operation.staffName},
+                #{operation.moduleName},
+                #{operation.actionName},
+                #{operation.succeed},
+                #{operation.content},
+                #{operation.failReason},
+                #{operation.createDate})
+    </insert>
+    <sql id="Base_Column_List">
+        id
+        , staff_id, staff_name, module_name, action_name, succeed, create_date
+    </sql>
+    <select id="selectAll" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from
+        t_operation_log
+    </select>
+
+</mapper>

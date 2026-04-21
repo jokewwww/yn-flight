@@ -1,0 +1,39 @@
+package {0}.web;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+import cn.iwen.frame.dao.bean.*;
+import cn.iwen.frame.*;
+import {1};
+import {2};
+
+@Controller
+@RequestMapping("/{9}")
+public final class {3} extends BaseAction'{'
+
+	@Autowired
+	private {4} {5};
+
+	@RequestMapping("/{6}/list") 
+	public ModelAndView json(PageBean<{7}> pb,{7} {8}) '{'
+		{5}.getPageList(pb,{8},null);
+		return Json(pb);
+	}
+
+	@RequestMapping("/{6}/save") 
+	public ModelAndView save(MsgBean mbean,{7} {8}) '{'
+		mbean.setInfo("保存成功");
+		{5}.save({8});
+		return Json(mbean);
+	}
+
+	@RequestMapping("/{6}/delete") 
+	public ModelAndView delete(MsgBean mbean,{7} {8}) '{'
+		mbean.setInfo("删除成功");
+		{5}.delete({8});
+		return Json(mbean);
+	}
+
+}

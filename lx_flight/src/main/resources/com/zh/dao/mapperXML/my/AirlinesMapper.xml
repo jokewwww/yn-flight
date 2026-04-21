@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.AirlinesCodeMapper">
+
+     <insert id="insertAirlinesCode">
+     INSERT INTO T_AIRLINES_CODE(alcd_icao_code,alcd_arln_name,alcd_arln_name_s,alcd_arln_nw,cstm_num)
+     values(#{alcdIcaoCode},#{alcdArlnName},#{alcdArlnNameS}, #{alcdArlnNw},#{cstmNum})
+     </insert>
+     
+     <update id="updateAirlinesCode">
+     UPDATE T_AIRLINES_CODE SET 
+     alcd_arln_name=#{alcdArlnName},alcd_arln_name_s=#{alcdArlnNameS},alcd_arln_nw = #{alcdArlnNw},cstm_num = #{cstmNum}
+     WHERE alcd_icao_code=#{alcdIcaoCode}
+     </update>
+     
+     <delete id="deleteAirlinesCode">
+     DELETE 
+     FROM T_AIRLINES_CODE
+     WHERE alcd_icao_code=#{alcdIcaoCode}
+     </delete>
+     
+     <select id="selectAirlinesCode" resultType="com.zh.bean.flight.MyAirlinesCode">
+     SELECT alcd_icao_code AS alcdIcaoCode,
+     alcd_arln_name AS alcdArlnName,
+     alcd_arln_name_s AS alcdArlnNameS,
+     alcd_arln_nw AS alcdArlnNw,
+     cstm_num AS cstmNum
+     FROM T_AIRLINES_CODE
+     </select>
+     
+     <select id="selectAirlinesCodeFind" resultType="com.zh.bean.flight.MyAirlinesCode">
+          SELECT alcd_icao_code AS alcdIcaoCode,
+     alcd_arln_name AS alcdArlnName,
+     alcd_arln_name_s AS alcdArlnNameS,
+     alcd_arln_nw AS alcdArlnNw,
+     cstm_num AS cstmNum
+     FROM T_AIRLINES_CODE
+     WHERE alcd_icao_code=#{alcdIcaoCode}
+     </select>
+</mapper>

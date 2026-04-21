@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.SerAiportMapper">
+
+    <select id="findfwflight" resultType="com.zh.bean.login.MyServAirport">
+        SELECT svap_airport_code AS svapAirportCode,
+               svap_aptarea_code AS svapAptareaCode,
+               svap_aptplac_no   AS svapAptplacNo,
+               svap_hydrt_pit_no AS svapHydrtPitNo
+        FROM T_SERV_AIRPORT
+        WHERE svap_aptplac_no = #{svapAptplacNo}
+    </select>
+    <!-- 根据机位查询机场区域代码CODE -->
+    <select id="getAirportAreaCode" resultType="java.lang.String">
+        SELECT svap_aptarea_code AS svapAptareaCode
+        FROM T_SERV_AIRPORT
+        WHERE svap_aptplac_no = #{svapAptplacNo}
+          AND svap_airport_code = #{svapAirportCode} limit 1
+    </select>
+    <!--根据机场代码，机场区域代码查询服务表  -->
+    <select id="selectairport" resultType="com.zh.bean.login.MyServAirport">
+        SELECT
+        svap_airport_code AS svapAirportCode,
+        svap_aptarea_code AS svapAptareaCode,
+        svap_aptplac_no AS svapAptplacNo,
+        svap_hydrt_pit_no AS svapHydrtPitNo
+        FROM T_SERV_AIRPORT WHERE
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            svap_airport_code=#{staffAirportCode}
+        </if>
+        <if test="staffAptareaCode!=null and staffAptareaCode!=''">
+            AND svap_aptarea_code=#{staffAptareaCode}
+        </if>
+    </select>
+    <!-- 新增服务表 -->
+    <insert id="insertairport">
+        INSERT INTO T_SERV_AIRPORT(svap_airport_code, svap_aptarea_code, svap_aptplac_no, svap_hydrt_pit_no)
+        VALUES (#{svapAirportCode}, #{svapAptareaCode}, #{svapAptplacNo}, #{svapHydrtPitNo})
+    </insert>
+    <!-- 根据机场代码，机场区域代码，机位号，地井编号删除服务表信息 -->
+    <delete id="deleteairport">
+        DELETE FROM T_SERV_AIRPORT WHERE
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            svap_airport_code=#{staffAirportCode}
+        </if>
+        <if test="staffAptareaCode!=null and staffAptareaCode!=''">
+            AND svap_aptarea_code=#{staffAptareaCode}
+        </if>
+        AND svap_aptplac_no=#{svapAptplacNo}
+        AND svap_hydrt_pit_no=#{svapHydrtPitNo}
+    </delete>
+    <!-- 添加信息 -->
+    <insert id="inserport">
+        INSERT INTO T_SERV_AIRPORT(svap_airport_code, svap_aptarea_code, svap_aptplac_no, svap_hydrt_pit_no)
+        VALUES (#{staffAirportCode}, #{svapAptareaCode}, #{svapAptplacNo}, #{svapHydrtPitNo})
+    </insert>
+
+    <!-- 根据机场代码删除有关此机场代码的信息 -->
+    <delete id="delirport">
+        DELETE
+        FROM T_SERV_AIRPORT
+        WHERE svap_airport_code = #{staffAirportCode}
+    </delete>
+
+    <select id="selectServAirport" resultType="com.zh.bean.login.MyServAirport">
+        select svap_airport_code AS svapAirportCode,
+               svap_aptarea_code AS svapAptareaCode,
+               svap_aptplac_no   AS svapAptplacNo,
+               svap_hydrt_pit_no AS svapHydrtPitNo
+        FROM T_SERV_AIRPORT
+    </select>
+</mapper>

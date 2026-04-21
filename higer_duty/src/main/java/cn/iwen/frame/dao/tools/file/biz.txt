@@ -1,0 +1,12 @@
+package {0}.biz.impl;
+
+import org.springframework.stereotype.Service;
+import cn.iwen.frame.dao.BaseDao;
+import {1};
+import {2};
+
+@Service
+public class {3} extends BaseDao<{4}> implements {5} '{'
+
+}
+

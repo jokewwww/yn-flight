@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.SysLogMapper">
+
+    <insert id="insert">
+        INSERT INTO sys_log
+        (title, method, request_body, response_body, create_by, create_date, fl_no, task_id, exception, ip)
+        values (#{title}, #{method}, #{requestBody}, #{responseBody}, #{createBy}, #{createDate}, #{flNo}, #{taskId},
+                #{exception}, #{ip})
+    </insert>
+
+    <update id="updateLog">
+        UPDATE sys_log
+        SET fl_no=#{flNo}
+        WHERE task_id = #{taskId}
+    </update>
+
+    <select id="getLogs" resultType="com.zh.bean.flight.SysLog">
+        SELECT
+        title,
+        method,
+        request_body AS requestBody,
+        response_body AS responseBody,
+        create_by AS createBy,
+        create_date AS createDate,
+        fl_no AS flNo,
+        task_id AS taskId,
+        ip
+        FROM sys_log
+        <where>
+            <if test="flNo != null and flNo != '' ">
+                AND fl_no = #{flNo}
+            </if>
+            <if test="title != null and title != '' ">
+                AND title = #{title}
+            </if>
+            <if test="taskId != null and taskId != '' ">
+                AND task_id = #{taskId}
+            </if>
+            <if test="createDate != null and createDate != '' ">
+                AND create_date = #{taskId}
+            </if>
+            <if test="startTime != null and startTime != '' ">
+                AND create_date &gt;= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != '' ">
+                AND create_date &lt;= #{endTime}
+            </if>
+            <if test="ip != null and ip != '' ">
+                AND ip = #{ip}
+            </if>
+        </where>
+
+    </select>
+
+</mapper>

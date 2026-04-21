@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.NewFuelMapper">
+
+
+    <select id="findNewFuelsToday" resultType="com.zh.bean.login.MyFuel">
+        SELECT fuel_test_bill_no  as fuelTestBillNo,
+               fuel_date          as fuelDate,
+               fuel_name          as fuelName,
+               fuel_temp          as fuelTemp,
+               fuel_dnst          as fuelDnst,
+               fuel_airport_code  as fuelAirportCode,
+               fuel_staff_name    as fuelStaffName,
+               fuel_logic_del_flg as fuelLogicDelFlg
+        FROM T_FUEL
+        WHERE fuel_date > STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(), '%Y-%m-%d'), '04:00:00'), '%Y-%m-%d %H:%i:%s')
+          and fuel_airport_code = #{staffAirportCode}
+    </select>
+    <select id="findById" resultType="com.zh.bean.login.MyFuel" parameterType="com.zh.bean.login.MyFuel">
+        SELECT fuel_test_bill_no  as fuelTestBillNo,
+               fuel_date          as fuelDate,
+               fuel_name          as fuelName,
+               fuel_temp          as fuelTemp,
+               fuel_dnst          as fuelDnst,
+               fuel_airport_code  as fuelAirportCode,
+               fuel_staff_name    as fuelStaffName,
+               fuel_logic_del_flg as fuelLogicDelFlg
+        FROM T_FUEL
+        WHERE fuel_test_bill_no = #{fuel.fuelTestBillNo}
+          and fuel_airport_code = #{fuel.fuelAirportCode}
+    </select>
+
+    <insert id="addNewFuel" parameterType="com.zh.bean.login.MyFuel">
+        INSERT into T_FUEL(fuel_test_bill_no, fuel_date, fuel_name, fuel_temp, fuel_dnst, fuel_airport_code,
+                           fuel_staff_name, fuel_logic_del_flg)
+        values (#{fuel.fuelTestBillNo}, #{fuel.fuelDate}, #{fuel.fuelName}, #{fuel.fuelTemp}, #{fuel.fuelDnst},
+                #{fuel.fuelAirportCode}, #{staffName}, 1)
+    </insert>
+
+    <update id="updateNewFuel" parameterType="com.zh.bean.login.MyFuel">
+        update T_FUEL
+        set fuel_name=#{fuel.fuelName},
+            fuel_temp=#{fuel.fuelTemp},
+            fuel_dnst=#{fuel.fuelDnst},
+            fuel_date=#{fuel.fuelDate},
+            fuel_staff_name=#{staffName},
+            fuel_logic_del_flg= 1
+        where fuel_test_bill_no = #{fuel.fuelTestBillNo}
+          and fuel_airport_code = #{fuel.fuelAirportCode}
+    </update>
+    <update id="updateNewFuelFlag">
+        update T_FUEL
+        set fuel_logic_del_flg=#{flag}
+        where fuel_test_bill_no = #{fuel.fuelTestBillNo}
+          and fuel_airport_code = #{fuel.fuelAirportCode}
+    </update>
+
+    <select id="findOneByNow" parameterType="java.lang.String" resultType="com.zh.bean.login.MyFuel">
+        SELECT id                 AS id,
+               fuel_test_bill_no  AS fuelTestBillNo,
+               fuel_date          AS fuelDate,
+               fuel_name          AS fuelName,
+               fuel_temp          AS fuelTemp,
+               fuel_dnst          AS fuelDnst,
+               fuel_type          AS fuelType,
+               fuel_pub_type      AS fuelPubType,
+               fuel_airport_code  AS fuelAirportCode,
+               fuel_check_name    AS fuelCheckName,
+               fuel_staff_name    AS fuelStaffName,
+               fuel_logic_del_flg AS fuelLogicDelFlg
+        FROM (SELECT *
+              FROM `T_FUEL`
+              WHERE fuel_logic_del_flg = 0
+                AND fuel_date &lt;= NOW()
+                AND fuel_airport_code = #{staffAirportCode}
+              ORDER BY fuel_date DESC LIMIT 100) MAX
+        GROUP BY fuel_pub_type, fuel_type
+        ORDER BY fuel_type ASC
+
+    </select>
+    <select id="findOneByFuture" parameterType="java.lang.String" resultType="com.zh.bean.login.MyFuel">
+        SELECT id                 AS id,
+               fuel_test_bill_no  AS fuelTestBillNo,
+               fuel_date          AS fuelDate,
+               fuel_name          AS fuelName,
+               fuel_temp          AS fuelTemp,
+               fuel_dnst          AS fuelDnst,
+               fuel_type          AS fuelType,
+               fuel_pub_type      AS fuelPubType,
+               fuel_airport_code  AS fuelAirportCode,
+               fuel_check_name    AS fuelCheckName,
+               fuel_staff_name    AS fuelStaffName,
+               fuel_logic_del_flg AS fuelLogicDelFlg
+        FROM `T_FUEL`
+        WHERE fuel_date > NOW()
+          AND fuel_airport_code = #{staffAirportCode}
+        ORDER BY fuel_date asc, fuel_type ASC
+    </select>
+
+    <select id="findByDate" parameterType="java.util.Date" resultType="com.zh.bean.login.MyFuel">
+        select fuel_test_bill_no  as fuelTestBillNo,
+               fuel_date          as fuelDate,
+               fuel_name          as fuelName,
+               fuel_temp          as fuelTemp,
+               fuel_dnst          as fuelDnst,
+               fuel_airport_code  as fuelAirportCode,
+               fuel_staff_name    as fuelStaffName,
+               fuel_logic_del_flg as fuelLogicDelFlg
+        from T_FUEL
+        where fuel_date = #{date}
+    </select>
+</mapper>

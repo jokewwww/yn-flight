@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TFlightCodeTemporaryMapper">
+
+    <!-- 查询飞机临时号码基本信息 -->
+    <select id="getTFlightCodeTemporary" resultType="com.zh.bean.flight.TFlightCodeTemporary">
+        SELECT
+            tf.id,
+            tf.arcr_regn AS arcrRegn,
+            tf.arcr_acname AS arcrAcname,
+            tf.arcr_custom_num AS arcrCustomNum,
+            tf.arcr_start_date AS arcrStartDate,
+            tf.arcr_end_date AS arcrEndDate,
+            tf.flno,
+            tc.cstm_name AS arcrName,
+            tc.cstm_region AS cstmRegion
+        FROM T_FLIGHT_CODE_TEMPORARY tf
+        LEFT JOIN T_CUSTOM  tc ON TRIM(LEADING '0' FROM tf.arcr_custom_num) =  TRIM(LEADING '0' FROM tc.cstm_num)
+        <where>
+            <if test="arcrRegn != null and arcrRegn !=  '' ">
+                and tf.arcr_regn = #{arcrRegn}
+            </if>
+            <if test="arcrAcname != null and arcrAcname !=  '' ">
+                and tf.arcr_acname = #{arcrAcname}
+            </if>
+            <if test="arcrCustomNum != null and arcrCustomNum !=  '' ">
+                and tf.arcr_custom_num = #{arcrCustomNum}
+            </if>
+            <if test="flno != null and flno !=  '' ">
+                and tf.flno = #{flno}
+            </if>
+        </where>
+    </select>
+
+    <select id="getOne" resultType="com.zh.bean.flight.TFlightCodeTemporary">
+        SELECT
+            id,
+            arcr_regn AS arcrRegn,
+            arcr_acname AS arcrAcname,
+            arcr_custom_num AS arcrCustomNum,
+            arcr_start_date AS arcrStartDate,
+            arcr_end_date AS arcrEndDate,
+            flno
+        FROM T_FLIGHT_CODE_TEMPORARY
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="arcrRegn != null and arcrRegn !=  '' ">
+                and arcr_regn = #{arcrRegn}
+            </if>
+            <if test="flno != null and flno !=  '' ">
+                and flno = #{flno}
+            </if>
+            <if test="flno == null or flno ==  '' ">
+                and (flno is null or flno='')
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增飞机临时号码基本信息 -->
+    <update id="addTFlightCodeTemporary">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into T_FLIGHT_CODE_TEMPORARY
+            (arcr_regn,arcr_acname,arcr_custom_num,arcr_start_date,arcr_end_date,flno)
+        VALUES
+            (#{arcrRegn},#{arcrAcname},#{arcrCustomNum},#{arcrStartDate},#{arcrEndDate},#{flno})
+    </update>
+
+    <!-- 修改飞机临时号码基本信息 -->
+    <update id="updateTFlightCodeTemporary">
+        update T_FLIGHT_CODE_TEMPORARY
+        <set>
+            <if test="arcrRegn != null">
+                arcr_regn = #{arcrRegn,jdbcType=VARCHAR},
+            </if>
+            <if test="arcrAcname != null">
+                arcr_acname = #{arcrAcname,jdbcType=VARCHAR},
+            </if>
+            <if test="arcrCustomNum != null">
+                arcr_custom_num = #{arcrCustomNum,jdbcType=VARCHAR},
+            </if>
+            <if test="arcrStartDate != null">
+                arcr_start_date = #{arcrStartDate,jdbcType=VARCHAR},
+            </if>
+            <if test="arcrEndDate != null">
+                arcr_end_date = #{arcrEndDate,jdbcType=VARCHAR},
+            </if>
+            flno = #{flno,jdbcType=VARCHAR},
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除飞机临时号码基本信息 -->
+    <delete id="deleteTFlightCodeTemporary">
+        DELETE FROM T_FLIGHT_CODE_TEMPORARY WHERE id = #{id}
+    </delete>
+
+
+
+</mapper>

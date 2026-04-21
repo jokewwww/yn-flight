@@ -1,0 +1,13 @@
+package {0}.entity;
+
+import javax.persistence.*;
+import cn.iwen.frame.BaseUtils;
+
+@Table(name="{1}")
+public class {2} '{'
+	
+{3}
+	
+{4}
+	
+}

@@ -1,0 +1,2726 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.FlightMapper">
+    <!-- 查询航班总数 -->
+    <select id="getFlightSum" resultType="java.lang.Integer">
+        select count(*) from T_FLIGHT where
+        flgt_flop = CURDATE() and flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+    </select>
+    <!--以航班日期=当前系统，并且进离港=出港，实际起飞时间!=空为条件从DB查询出航班量_已离 -->
+    <select id="getleaveFlightSum" resultType="java.lang.Integer">
+        select count(*) from T_FLIGHT where
+        flgt_flop = CURDATE() and flgt_adid = 'D' and
+        flgt_d_atot is not null and flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+    </select>
+    <!-- 以航班日期=当前系统，并且进离港=进港，实际到达时间!=空为条件从DB查询出航班量_未到 -->
+    <select id="getnonArrivalFlightSum" resultType="java.lang.Integer">
+        select count(*) from T_FLIGHT where
+        flgt_flop = CURDATE() and flgt_adid = 'A' and
+        flgt_a_atot is not null and flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+    </select>
+    <!-- 以航班日期=当前系统，并且进离港=出港，实际起飞时间==空为条件从DB查询出航班量_停场 -->
+    <select id="getstopFlightSum" resultType="java.lang.Integer">
+        select count(*) from T_FLIGHT where
+        flgt_flop = CURDATE() and flgt_adid = 'D' and
+        flgt_d_atot is null and flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+    </select>
+
+    <!-- 查询当天进港航班有连接航班并落地的航班 与 当天出港航班有连接航班并为起飞的航班 再以航班日期，航班连接号，
+	进港航班连接航班号等于出港航班为条件筛选 再加上 当天进港航班不出港 为本场航班-->
+    <select id="getstopFlightSumNew" resultType="java.lang.Integer">
+        select c.ac+d.adc from
+
+        (SELECT COUNT(*) as ac
+        FROM zhoil_flight.T_FLIGHT
+        WHERE
+        flgt_airport_code = #{staffAirportCode}
+        AND flgt_adid = 'A'
+        AND flgt_flop = CURDATE()
+        AND flgt_a_atot IS NOT NULL
+        AND flgt_link_flop IS NULL
+        AND flgt_ftyp &lt;&gt;'FX' AND flgt_ftyp &lt;&gt;'NO' AND flgt_ftyp &lt;&gt;'CX'
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>) c,
+
+        (select count(*) as adc from
+        (SELECT flgt_link_flno,flgt_repeat,flgt_flop,flgt_a_atot
+        FROM zhoil_flight.T_FLIGHT
+        WHERE
+        flgt_airport_code = #{staffAirportCode} AND flgt_adid = 'A'
+        AND flgt_flop = CURDATE()
+        AND flgt_a_atot IS NOT NULL
+
+        AND flgt_ftyp &lt;&gt;'FX'
+        AND flgt_ftyp &lt;&gt;'NO' AND flgt_ftyp &lt;&gt;'CX'
+        AND flgt_link_flop IS NOT NULL
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>) a,
+        (SELECT flgt_flno,flgt_repeat,flgt_flop,flgt_d_atot
+        from zhoil_flight.T_FLIGHT
+        where flgt_flop = CURDATE()
+        AND flgt_adid = 'D'
+        AND flgt_d_atot IS NULL
+        AND flgt_link_flop IS NOT NULL) b
+        where a.flgt_link_flno = b.flgt_flno
+        and a.flgt_repeat=b.flgt_repeat
+        and a.flgt_flop=b.flgt_flop) d
+    </select>
+    <!-- 单出在场：以（所属机场代码＝输入_机场代码，航班日期＝系统日期，进离港＝出港，计划到达时间＝空，实际起飞时间＝空）的条件，
+	取得航班表（DB）中的对象记录，写入输出接口。 -->
+    <select id="getFlightList" resultType="com.zh.bean.flight.TFlightInfoList">
+        select flgt_id        as aircraftID,
+               flgt_regn      as aircraftNum,
+               flgt_placecode as seatID,
+               flgt_flno      as takeOffFlightN,
+               flgt_fnflag    as farNear,
+               flgt_acname    as model,
+               flgt_vip       as vip,
+               flgt_ftyp      as flightState,
+               flgt_alcname   as companyName,
+               flgt_d_atot    as flgtDAtot,
+               flgt_a_atot    as flgtAAtot,
+               flgt_d_stot    as flgtDStot,
+               flgt_a_stot    as flgtAStot
+        from T_FLIGHT
+        where flgt_airport_code = #{flgtAirportCode}
+          and flgt_adid = 'D'
+          and flgt_flop BETWEEN DATE_SUB(curdate(), INTERVAL 1 DAY) AND CURDATE()
+          and flgt_d_atot IS NULL
+          AND flgt_ftyp &lt;&gt; 'FX'
+          AND flgt_ftyp &lt;&gt; 'NO'
+          AND flgt_ftyp &lt;&gt; 'CX'
+    </select>
+    <!-- 单进在场：以（所属机场代码＝输入_机场代码，航班日期＝系统日期，进离港＝进港，实际到达时间≠空）的条件，取得航班表（DB）中的对象记录 -->
+    <select id="getFlightListTwo" resultType="com.zh.bean.flight.TFlight">
+        select flgt_id          as flgtId,
+               flgt_regn        as flgtRegn,
+               flgt_placecode   as flgtPlacecode,
+               flgt_flno        as flgtFlno,
+               flgt_fnflag      as flgtFnflag,
+               flgt_acname      as flgtAcname,
+               flgt_vip         as flgtVip,
+               flgt_ftyp        as flgtFtyp,
+               flgt_alcname     as flgtAlcname,
+               flgt_a_stot      as flgtAStot,
+               flgt_d_atot      as flgtDAtot,
+               flgt_a_atot      as flgtAAtot,
+               flgt_adid        as flgtAdid,
+               flgt_d_stot      as flgtDStot,
+               flgt_link_flno   as flgtLinkFlno,
+               flgt_link_flop   as flgtLinkFlop,
+               flgt_link_repeat as flgtLinkRepeat
+        from T_FLIGHT
+        where flgt_airport_code = #{flgtAirportCode}
+          and flgt_adid = 'A'
+          and flgt_flop = CURDATE()
+          and flgt_a_atot IS NOT NULL
+          AND flgt_ftyp &lt;&gt; 'FX'
+          AND flgt_ftyp &lt;&gt; 'NO'
+          AND flgt_ftyp &lt;&gt; 'CX'
+    </select>
+    <!-- 查询（飞机号码＝①_飞机号码，进离港＝出港，计划到达时间＝①_计划到达时间）的记录-->
+    <select id="getFlightCount" resultType="java.lang.Integer">
+        select count(*)
+        from T_FLIGHT
+        where flgt_regn = #{tFlightTwo.flgtRegn}
+          and flgt_adid = 'D'
+          and flgt_a_stot = #{tFlightTwo.flgtAStot}
+    </select>
+    <!-- 以（所属机场代码＝输入_机场ID，航班日期＝系统日期，进离港＝出港，计划到达时间≠空，实际起飞时间＝空）的条件，取得航班表（DB）中的对象记录 -->
+    <select id="getFlightListFour" resultType="com.zh.bean.flight.TFlight">
+        select flgt_id        as flgtId,
+               flgt_regn      as flgtRegn,
+               flgt_placecode as flgtPlacecode,
+               flgt_flno      as flgtFlno,
+               flgt_fnflag    as flgtFnflag,
+               flgt_acname    as flgtAcname,
+               flgt_vip       as flgtVip,
+               flgt_ftyp      as flgtFtyp,
+               flgt_alcname   as flgtAlcname,
+               flgt_a_stot    as flgtAStot,
+               flgt_d_atot    as flgtDAtot,
+               flgt_a_atot    as flgtAAtot,
+               flgt_d_stot    as flgtDStot,
+               flgt_adid      as flgtAdid
+        from T_FLIGHT
+        where flgt_airport_code = #{flgtAirportCode}
+          and flgt_adid = 'D'
+          and flgt_flop = CURDATE()
+          and flgt_game = 'Y'
+          and flgt_flno!=flgt_link_flno
+    </select>
+    <!-- 查询（飞机号码＝flightListFour集合中的飞机号码，进离港＝进港，计划到达时间＝flightListFour集合中的计划到达时间，实际到达时间≠空）的记录 -->
+    <select id="getFlightCountTwo" resultType="java.lang.Integer">
+        select count(*)
+        from T_FLIGHT
+        where flgt_regn = #{tFlightFour.flgtRegn}
+          and flgt_adid = 'A'
+          and flgt_a_stot = #{tFlightFour.flgtAStot}
+          and flgt_a_atot is not null
+    </select>
+    <!-- 添加航班信息 -->
+    <insert id="addFlight">
+        insert into T_FLIGHT (
+        flgt_id, flgt_ffid, flgt_airport_code,
+        flgt_aptarea_code, flgt_flno, flgt_flop,
+        flgt_acname, flgt_regn, flgt_placecode,
+        flgt_al2c, flgt_alcname,
+        <if test="flight.flgtVialc != 'null-null'">
+            flgt_vialc,
+        </if>
+        flgt_a_stot, flgt_a_etot, flgt_a_atot,
+        flgt_d_stot, flgt_d_etot, flgt_d_atot,
+        flgt_org3c, flgt_orgnm, flgt_trs3c1,
+        flgt_trsnm1, flgt_trs3c2, flgt_trsnm2,flgt_trs3c3,
+        flgt_trsnm3,flgt_trs3c4, flgt_trsnm4,flgt_trs3c5, flgt_trsnm5,
+        flgt_des3c, flgt_desnm,
+        flgt_adid, flgt_mission_prop, flgt_nature,
+        flgt_sub_nature, flgt_flti, flgt_ftyp,
+        flgt_delaycode, flgt_proxy, flgt_link_flno,
+        flgt_fnflag, flgt_ifsr, flgt_game,
+        flgt_dep_runway, flgt_arr_runway, flgt_gate,
+        flgt_crew_in_place, flgt_chocks_in, flgt_chocks_out,
+        flgt_first_lugg, flgt_last_lugg, flgt_ptax,
+        flgt_etax, flgt_atax, flgt_takeoff_fuel,
+        flgt_chock_fuel,
+        <if test="flight.flgtStarmark != null">
+            flgt_starmark,
+        </if>
+        <if test="flight.flgtTaskAsign != null">
+            flgt_task_asign,
+        </if>
+        flgt_vip,flgt_link_flop,flgt_link_repeat,flgt_repeat
+        )values (
+        #{flight.flgtId}, #{flight.flgtFfid}, #{flight.flgtAirportCode},
+        #{flight.flgtAptareaCode}, #{flight.flgtFlno}, #{flight.flgtFlop},
+        #{flight.flgtAcname}, #{flight.flgtRegn}, #{flight.flgtPlacecode},
+        #{flight.flgtAl2c}, #{flight.flgtAlcname},
+        <if test="flight.flgtVialc != 'null-null'">
+            #{flight.flgtVialc},
+        </if>
+        #{flight.flgtAStot}, #{flight.flgtAEtot}, #{flight.flgtAAtot},
+        #{flight.flgtDStot}, #{flight.flgtDEtot}, #{flight.flgtDAtot},
+        #{flight.flgtOrg3c}, #{flight.flgtOrgnm}, #{flight.flgtTrs3c1},
+        #{flight.flgtTrsnm1},#{flight.flgtTrs3c2},#{flight.flgtTrsnm2},
+        #{flight.flgtTrs3c3},#{flight.flgtTrsnm3},#{flight.flgtTrs3c4},
+        #{flight.flgtTrsnm4}, #{flight.flgtTrs3c5}, #{flight.flgtTrsnm5},#{flight.flgtDes3c}, #{flight.flgtDesnm},
+        #{flight.flgtAdid}, #{flight.flgtMissionProp}, #{flight.flgtNature},
+        #{flight.flgtSubNature}, #{flight.flgtFlti}, #{flight.flgtFtyp},
+        #{flight.flgtDelaycode}, #{flight.flgtProxy}, #{flight.flgtLinkFlno},
+        #{flight.flgtFnflag}, #{flight.flgtIfsr}, #{flight.flgtGame},
+        #{flight.flgtDepRunway}, #{flight.flgtArrRunway}, #{flight.flgtGate},
+        #{flight.flgtCrewInPlace}, #{flight.flgtChocksIn}, #{flight.flgtChocksOut},
+        #{flight.flgtFirstLugg}, #{flight.flgtLastLugg}, #{flight.flgtPtax},
+        #{flight.flgtEtax}, #{flight.flgtAtax}, #{flight.flgtTakeoffFuel},
+        #{flight.flgtChockFuel},
+        <if test="flight.flgtStarmark != null">
+            #{flight.flgtStarmark},
+        </if>
+        <if test="flight.flgtTaskAsign != null">
+            #{flight.flgtTaskAsign},
+        </if>
+        #{flight.flgtVip},#{flight.flgtLinkFlop},#{flight.flgtLinkRepeat},#{flight.flgtRepeat}
+        )
+    </insert>
+    <!-- 根据不同的机场三字码去DB中查出对应的机场名称 -->
+    <select id="getAirportName" resultType="java.lang.String">
+        select apcd_airport_name
+        from T_AIRPORT_CODE
+        where apcd_iata_code = #{airport3c}
+    </select>
+    <!-- 根据航空公司二字码去DB中查出对应的航空公司名称 -->
+    <select id="getCompanyName" resultType="java.lang.String">
+        select alcd_arln_name
+        from T_AIRLINES_CODE
+        where alcd_icao_code = #{flgtAl2c}
+    </select>
+
+    <!-- 根据航空公司二字码去DB中查出对应的航空公司简名称 -->
+    <select id="getCompanyNames" resultType="java.lang.String">
+        select alcd_arln_name_s
+        from T_AIRLINES_CODE
+        where alcd_icao_code = #{flgtAl2c}
+    </select>
+    <!-- 添加任务信息 -->
+    <insert id="addTask">
+        insert into T_TASK (
+        task_id, task_flight_id, task_flight_no,
+        task_airport_code, task_aptarea_code, task_rec_cre_time,
+        task_ope_staff_id,
+        <if test="task.taskContent != null">
+            task_content,
+        </if>
+        <if test="task.taskStatus != null">
+            task_status,
+        </if>
+        task_asg_time, task_acc_time,task_chag_sta_time,task_chag_end_time,
+        task_done_time,task_fuel_recpt_no,task_vehi_no,task_cre_staff_id
+        )values (
+        #{task.taskId}, #{task.taskFlightId}, #{task.taskFlightNo},
+        #{task.taskAirportCode}, #{task.taskAptareaCode}, #{task.taskRecCreTime},
+        #{task.taskOpeStaffId},
+        <if test="task.taskContent != null">
+            #{task.taskContent},
+        </if>
+        <if test="task.taskStatus != null">
+            #{task.taskStatus},
+        </if>
+        #{task.taskAsgTime}, #{task.taskAccTime},#{task.taskChagStaTime},#{task.taskChagEndTime},
+        #{task.taskDoneTime},#{task.taskFuelRecptNo},#{task.taskVehiNo},#{task.taskCreStaffId}
+        )
+    </insert>
+    <!-- 取得系统日期和机场代码和机场区域代码检索航班表（DB）的航班日期字段,取得前1天，当天，后1天的航班所有信息 -->
+    <select id="getFlightThreeDateList" resultType="com.zh.bean.flight.MyFlight">
+        select
+        flgt_id AS flgtId,
+        flgt_ffid AS flgtFfid,
+        flgt_airport_code AS flgtAirportCode,
+        flgt_aptarea_code AS flgtAptareaCode,
+        flgt_flno AS flgtFlno,
+        flgt_flop AS flgtFlop,
+        flgt_acname AS flgtAcname,
+        flgt_regn AS flgtRegn,
+        flgt_placecode AS flgtPlacecode,
+        flgt_al2c AS flgtAl2c,
+        flgt_alcname AS flgtAlcname,
+        flgt_vialc AS flgtVialc,
+        flgt_a_stot AS flgtAStot,
+        flgt_a_etot AS flgtAEtot,
+        flgt_a_atot AS flgtAAtot,
+        flgt_d_stot AS flgtDStot,
+        flgt_d_etot AS flgtDEtot,
+        flgt_d_atot AS flgtDAtot,
+        flgt_org3c AS flgtOrg3c,
+        flgt_orgnm AS flgtOrgnm,
+        flgt_trs3c1 AS flgtTrs3c1,
+        flgt_trs3c2 AS flgtTrs3c2,
+        flgt_trs3c3 AS flgtTrs3c3,
+        flgt_trs3c4 AS flgtTrs3c4,
+        flgt_trs3c5 AS flgtTrs3c5,
+        flgt_trsnm1 AS flgtTrsnm1,
+        flgt_trsnm2 AS flgtTrsnm2,
+        flgt_trsnm3 AS flgtTrsnm3,
+        flgt_trsnm4 AS flgtTrsnm4,
+        flgt_trsnm5 AS flgtTrsnm5,
+        flgt_des3c AS flgtDes3c,
+        flgt_desnm AS flgtDesnm,
+        flgt_adid AS flgtAdid,
+        flgt_mission_prop AS flgtMissionProp,
+        flgt_nature AS flgtNature,
+        flgt_sub_nature AS flgtSubNature,
+        flgt_flti AS flgtFlti,
+        flgt_ftyp AS flgtFtyp,
+        flgt_delaycode AS flgtDelaycode,
+        flgt_proxy AS flgtProxy,
+        flgt_link_flno AS flgtLinkFlno,
+        flgt_fnflag AS flgtFnflag,
+        flgt_ifsr AS flgtIfsr,
+        flgt_game AS flgtGame,
+        flgt_dep_runway AS flgtDepRunway,
+        flgt_arr_runway AS flgtArrRunway,
+        flgt_gate AS flgtGate,
+        flgt_crew_in_place AS flgtCrewInPlace,
+        flgt_chocks_in AS flgtChocksIn,
+        flgt_chocks_out AS flgtChocksOut,
+        flgt_first_lugg AS flgtFirstLugg,
+        flgt_last_lugg AS flgtLastLugg,
+        flgt_ptax AS flgtPtax,
+        flgt_etax AS flgtEtax,
+        flgt_atax AS flgtAtax,
+        flgt_takeoff_fuel AS flgtTakeoffFuel,
+        flgt_chock_fuel AS flgtChockFuel,
+        flgt_vip AS flgtVip,
+        flgt_otc AS flgtOtc,
+        flgt_starmark AS flgtStarmark,
+        flgt_task_asign AS flgtTaskAsign
+        from T_FLIGHT where
+        flgt_flop in (DATE_SUB(CURDATE(),interval 1 day),CURDATE(),DATE_SUB(CURDATE(),interval -1 day)) and
+        flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        ORDER BY flgt_flop desc,flgt_a_stot desc
+    </select>
+    <!-- 取得系统日期和机场代码和机场区域代码检索航班表（DB）的航班日期字段,取得前7天的航班所有信息 -->
+    <select id="getFlightSevenDateList" resultType="com.zh.bean.flight.MyFlight">
+        select
+        flgt_id AS flgtId,
+        flgt_ffid AS flgtFfid,
+        flgt_airport_code AS flgtAirportCode,
+        flgt_aptarea_code AS flgtAptareaCode,
+        flgt_flno AS flgtFlno,
+        flgt_flop AS flgtFlop,
+        flgt_acname AS flgtAcname,
+        flgt_regn AS flgtRegn,
+        flgt_placecode AS flgtPlacecode,
+        flgt_al2c AS flgtAl2c,
+        flgt_alcname AS flgtAlcname,
+        flgt_vialc AS flgtVialc,
+        flgt_a_stot AS flgtAStot,
+        flgt_a_etot AS flgtAEtot,
+        flgt_a_atot AS flgtAAtot,
+        flgt_d_stot AS flgtDStot,
+        flgt_d_etot AS flgtDEtot,
+        flgt_d_atot AS flgtDAtot,
+        flgt_org3c AS flgtOrg3c,
+        flgt_orgnm AS flgtOrgnm,
+        flgt_trs3c1 AS flgtTrs3c1,
+        flgt_trs3c2 AS flgtTrs3c2,
+        flgt_trs3c3 AS flgtTrs3c3,
+        flgt_trs3c4 AS flgtTrs3c4,
+        flgt_trs3c5 AS flgtTrs3c5,
+        flgt_trsnm1 AS flgtTrsnm1,
+        flgt_trsnm2 AS flgtTrsnm2,
+        flgt_trsnm3 AS flgtTrsnm3,
+        flgt_trsnm4 AS flgtTrsnm4,
+        flgt_trsnm5 AS flgtTrsnm5,
+        flgt_des3c AS flgtDes3c,
+        flgt_desnm AS flgtDesnm,
+        flgt_adid AS flgtAdid,
+        flgt_mission_prop AS flgtMissionProp,
+        flgt_nature AS flgtNature,
+        flgt_sub_nature AS flgtSubNature,
+        flgt_flti AS flgtFlti,
+        flgt_ftyp AS flgtFtyp,
+        flgt_delaycode AS flgtDelaycode,
+        flgt_proxy AS flgtProxy,
+        flgt_link_flno AS flgtLinkFlno,
+        flgt_fnflag AS flgtFnflag,
+        flgt_ifsr AS flgtIfsr,
+        flgt_game AS flgtGame,
+        flgt_dep_runway AS flgtDepRunway,
+        flgt_arr_runway AS flgtArrRunway,
+        flgt_gate AS flgtGate,
+        flgt_crew_in_place AS flgtCrewInPlace,
+        flgt_chocks_in AS flgtChocksIn,
+        flgt_chocks_out AS flgtChocksOut,
+        flgt_first_lugg AS flgtFirstLugg,
+        flgt_last_lugg AS flgtLastLugg,
+        flgt_ptax AS flgtPtax,
+        flgt_etax AS flgtEtax,
+        flgt_atax AS flgtAtax,
+        flgt_takeoff_fuel AS flgtTakeoffFuel,
+        flgt_chock_fuel AS flgtChockFuel,
+        flgt_vip AS flgtVip,
+        flgt_starmark AS flgtStarmark,
+        flgt_task_asign AS flgtTaskAsign
+        from T_FLIGHT where
+        flgt_flop in (CURDATE(),DATE_SUB(CURDATE(),interval 1 day),DATE_SUB(CURDATE(),interval 2
+        day),DATE_SUB(CURDATE(),interval 3 day),DATE_SUB(CURDATE(),interval 4 day),DATE_SUB(CURDATE(),interval 5
+        day),DATE_SUB(CURDATE(),interval 6 day),DATE_SUB(CURDATE(),interval 7 day)) and
+        flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        ORDER BY flgt_flop desc,flgt_a_stot desc
+    </select>
+    <!-- 更新航班信息 -->
+    <update id="updateFlightInfo">
+        update T_FLIGHT
+        set flgt_ffid = #{flight.flgtFfid},
+        flgt_airport_code = #{flight.flgtAirportCode},
+        flgt_aptarea_code = #{flight.flgtAptareaCode},
+        flgt_flno = #{flight.flgtFlno},
+        flgt_flop = #{flight.flgtFlop},
+        flgt_acname = #{flight.flgtAcname},
+        flgt_regn = #{flight.flgtRegn},
+        flgt_placecode = #{flight.flgtPlacecode},
+        flgt_al2c = #{flight.flgtAl2c},
+        flgt_alcname = #{flight.flgtAlcname},
+        <if test="flight.flgtVialc != 'null-null'">
+            flgt_vialc = #{flight.flgtVialc},
+        </if>
+        <if test="flight.flgtVialc == 'null-null'">
+            flgt_vialc = null,
+        </if>
+        flgt_a_stot = #{flight.flgtAStot},
+        flgt_a_etot = #{flight.flgtAEtot},
+        flgt_a_atot = #{flight.flgtAAtot},
+        flgt_d_stot = #{flight.flgtDStot},
+        flgt_d_etot = #{flight.flgtDEtot},
+        flgt_d_atot = #{flight.flgtDAtot},
+        flgt_org3c = #{flight.flgtOrg3c},
+        flgt_orgnm = #{flight.flgtOrgnm},
+        flgt_trs3c1 = #{flight.flgtTrs3c1},
+        flgt_trs3c2 = #{flight.flgtTrs3c2},
+        flgt_trs3c3 = #{flight.flgtTrs3c3},
+        flgt_trs3c4 = #{flight.flgtTrs3c4},
+        flgt_trs3c5 = #{flight.flgtTrs3c5},
+        flgt_trsnm1 = #{flight.flgtTrsnm1},
+        flgt_trsnm2 = #{flight.flgtTrsnm2},
+        flgt_trsnm3 = #{flight.flgtTrsnm3},
+        flgt_trsnm4 = #{flight.flgtTrsnm4},
+        flgt_trsnm5 = #{flight.flgtTrsnm5},
+        flgt_des3c = #{flight.flgtDes3c},
+        flgt_desnm = #{flight.flgtDesnm},
+        flgt_adid = #{flight.flgtAdid},
+        flgt_mission_prop = #{flight.flgtMissionProp},
+        flgt_nature = #{flight.flgtNature},
+        flgt_sub_nature = #{flight.flgtSubNature},
+        flgt_flti = #{flight.flgtFlti},
+        flgt_ftyp = #{flight.flgtFtyp},
+        flgt_delaycode = #{flight.flgtDelaycode},
+        flgt_proxy = #{flight.flgtProxy},
+        flgt_link_flno = #{flight.flgtLinkFlno},
+        flgt_fnflag = #{flight.flgtFnflag},
+        flgt_ifsr = #{flight.flgtIfsr},
+        flgt_game = #{flight.flgtGame},
+        flgt_dep_runway = #{flight.flgtDepRunway},
+        flgt_arr_runway = #{flight.flgtArrRunway},
+        flgt_gate = #{flight.flgtGate},
+        flgt_crew_in_place = #{flight.flgtCrewInPlace},
+        flgt_chocks_in = #{flight.flgtChocksIn},
+        flgt_chocks_out = #{flight.flgtChocksOut},
+        flgt_first_lugg = #{flight.flgtFirstLugg},
+        flgt_last_lugg = #{flight.flgtLastLugg},
+        flgt_ptax = #{flight.flgtPtax},
+        flgt_etax = #{flight.flgtEtax},
+        flgt_atax = #{flight.flgtAtax},
+        flgt_takeoff_fuel = #{flight.flgtTakeoffFuel},
+        flgt_chock_fuel = #{flight.flgtChockFuel},
+        <if test="flight.flgtStarmark != null">
+            flgt_starmark = #{flight.flgtStarmark},
+        </if>
+        <if test="flight.flgtTaskAsign != null">
+            flgt_task_asign = #{flight.flgtTaskAsign},
+        </if>
+        <if test="flight.flgtManualFlg != null">
+            flgt_manual_flg = #{flight.flgtManualFlg},
+        </if>
+        flgt_vip = #{flight.flgtVip}
+        where flgt_id = #{flight.flgtId}
+    </update>
+    <!-- 更新进港航班信息 -->
+    <update id="updateInFlightInfo">
+        update T_FLIGHT
+        set flgt_acname    = #{flight.flgtAcname},
+            flgt_regn      = #{flight.flgtRegn},
+            flgt_placecode = #{flight.flgtPlacecode},
+            flgt_a_stot    = #{flight.flgtAStot},
+            flgt_a_etot    = #{flight.flgtAEtot},
+            flgt_a_atot    = #{flight.flgtAAtot},
+            flgt_game      = #{flight.flgtGame}
+        where flgt_id = #{flight.flgtId}
+    </update>
+    <!-- 根据航班ID查出航班单条记录 -->
+    <select id="getFlightInfoById" resultType="com.zh.bean.flight.MyFlightTask">
+        SELECT flight.flgt_id               AS flgtId,
+               flight.flgt_ffid             AS flgtFfid,
+               flight.flgt_airport_code     AS flgtAirportCode,
+               flight.flgt_aptarea_code     AS flgtAptareaCode,
+               flight.flgt_flno             AS flgtFlno,
+               flight.flgt_flop             AS flgtFlop,
+               flight.flgt_acname           AS flgtAcname,
+               flight.flgt_regn             AS flgtRegn,
+               flight.flgt_ifsr             AS flgtIfsr,
+               flight.flgt_placecode        AS flgtPlacecode,
+               flight.flgt_al2c             AS flgtAl2c,
+               flight.flgt_alcname          AS flgtAlcname,
+               flight.flgt_d_stot           AS flgtDStot,
+               flight.flgt_d_etot           AS flgtDEtot,
+               flight.flgt_d_atot           AS flgtDAtot,
+               flight.flgt_org3c            AS flgtOrg3c,
+               flight.flgt_orgnm            AS flgtOrgnm,
+               flight.flgt_trs3c1           AS flgtTrs3c1,
+               flight.flgt_trs3c2           AS flgtTrs3c2,
+               flight.flgt_trs3c3           AS flgtTrs3c3,
+               flight.flgt_trs3c4           AS flgtTrs3c4,
+               flight.flgt_trs3c5           AS flgtTrs3c5,
+               flight.flgt_trsnm1           AS flgtTrsnm1,
+               flight.flgt_trsnm2           AS flgtTrsnm2,
+               flight.flgt_trsnm3           AS flgtTrsnm3,
+               flight.flgt_trsnm4           AS flightValic,
+               flight.flgt_trsnm5           AS flgtVialc,
+               flight.flgt_des3c            AS flgtDes3c,
+               flight.flgt_desnm            AS flgtDesnm,
+               flight.flgt_adid             AS flgtAdid,
+               flight.flgt_flti             AS flgtFlti,
+               flight.flgt_ftyp             AS flgtFtyp,
+               flight.flgt_proxy            AS flgtProxy,
+               flight.flgt_fnflag           AS flgtFnflag,
+               flight.flgt_game             AS flgtGame,
+               flight.flgt_chocks_in        AS flgtChocksIn,
+               flight.flgt_chocks_out       AS flgtChocksOut,
+               flight.flgt_vip              AS flgtVip,
+               flight.flgt_otc              AS flgtOtc,
+               flight.flgt_num              AS flgtNum,
+               flight.flgt_repeat           AS flgtRepeat,
+               flight.flgt_link_flop        AS flgtLinkFlop,
+               flight.flgt_link_repeat      AS flgtLinkRepeat,
+               flight.flgt_otc              AS flgtOtc,
+               flight.flgt_regn_status      AS flgtRegnStatus,
+               flight.flgt_placecode_status AS flgtPlacecodeStatus,
+               flight.remark                AS remark,
+               flight.flgt_atax             as flgtAtax,
+               flight.flgt_mission_prop     as flgtMissionProp,
+               tf2.flgt_flno                AS flgtLinkFlno,
+               tf2.flgt_org3c               AS beorg3c,
+               tf2.flgt_a_stot              AS flgtAStot,
+               tf2.flgt_a_etot              AS flgtAEtot,
+               tf2.flgt_a_atot              AS flgtAAtot,
+               tf2.flgt_placecode           AS flgtPlacecodeIn,
+               tf2.flgt_ftyp                AS aFlgtFtyp,
+               tf2.flgt_mission_prop        as flgtMissionPropIn
+        FROM T_FLIGHT AS flight
+                 LEFT JOIN T_FLIGHT tf2
+                           ON tf2.flgt_adid = 'A'
+                               AND flight.flgt_airport_code = tf2.flgt_airport_code
+                               AND ((flight.flgt_link_flno IS NOT NULL AND flight.flgt_link_flno &lt;&gt; '' AND
+                                     tf2.flgt_flno LIKE CONCAT('%', flight.flgt_link_flno, '%')))
+                               AND ((tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND
+                                     flight.flgt_flno LIKE CONCAT('%', tf2.flgt_link_flno, '%')))
+                               AND flight.flgt_regn = tf2.flgt_regn
+                               AND flight.flgt_link_flop = tf2.flgt_flop
+                               AND flight.flgt_flop = tf2.flgt_link_flop
+                               AND flight.flgt_repeat = tf2.flgt_link_repeat
+                               AND flight.flgt_link_repeat = tf2.flgt_repeat
+        WHERE flight.flgt_id = #{flgtId}
+    </select>
+
+    <!-- 根据航班号查询 -->
+    <select id="getFlightInfoByFlightNo" resultType="com.zh.bean.flight.MyFlight">
+        select flgt_id            AS flgtId,
+               flgt_ffid          AS flgtFfid,
+               flgt_airport_code  AS flgtAirportCode,
+               flgt_aptarea_code  AS flgtAptareaCode,
+               flgt_flno          AS flgtFlno,
+               flgt_flop          AS flgtFlop,
+               flgt_acname        AS flgtAcname,
+               flgt_regn          AS flgtRegn,
+               flgt_placecode     AS flgtPlacecode,
+               flgt_al2c          AS flgtAl2c,
+               flgt_alcname       AS flgtAlcname,
+               flgt_vialc         AS flgtVialc,
+               flgt_a_stot        AS flgtAStot,
+               flgt_a_etot        AS flgtAEtot,
+               flgt_a_atot        AS flgtAAtot,
+               flgt_d_stot        AS flgtDStot,
+               flgt_d_etot        AS flgtDEtot,
+               flgt_d_atot        AS flgtDAtot,
+               flgt_org3c         AS flgtOrg3c,
+               flgt_orgnm         AS flgtOrgnm,
+               flgt_trs3c1        AS flgtTrs3c1,
+               flgt_trs3c2        AS flgtTrs3c2,
+               flgt_trs3c3        AS flgtTrs3c3,
+               flgt_trs3c4        AS flgtTrs3c4,
+               flgt_trs3c5        AS flgtTrs3c5,
+               flgt_trsnm1        AS flgtTrsnm1,
+               flgt_trsnm2        AS flgtTrsnm2,
+               flgt_trsnm3        AS flgtTrsnm3,
+               flgt_trsnm4        AS flgtTrsnm4,
+               flgt_trsnm5        AS flgtTrsnm5,
+               flgt_des3c         AS flgtDes3c,
+               flgt_desnm         AS flgtDesnm,
+               flgt_adid          AS flgtAdid,
+               flgt_mission_prop  AS flgtMissionProp,
+               flgt_nature        AS flgtNature,
+               flgt_sub_nature    AS flgtSubNature,
+               flgt_flti          AS flgtFlti,
+               flgt_ftyp          AS flgtFtyp,
+               flgt_delaycode     AS flgtDelaycode,
+               flgt_proxy         AS flgtProxy,
+               flgt_link_flno     AS flgtLinkFlno,
+               flgt_fnflag        AS flgtFnflag,
+               flgt_ifsr          AS flgtIfsr,
+               flgt_game          AS flgtGame,
+               flgt_dep_runway    AS flgtDepRunway,
+               flgt_arr_runway    AS flgtArrRunway,
+               flgt_gate          AS flgtGate,
+               flgt_crew_in_place AS flgtCrewInPlace,
+               flgt_chocks_in     AS flgtChocksIn,
+               flgt_chocks_out    AS flgtChocksOut,
+               flgt_first_lugg    AS flgtFirstLugg,
+               flgt_last_lugg     AS flgtLastLugg,
+               flgt_ptax          AS flgtPtax,
+               flgt_etax          AS flgtEtax,
+               flgt_atax          AS flgtAtax,
+               flgt_takeoff_fuel  AS flgtTakeoffFuel,
+               flgt_chock_fuel    AS flgtChockFuel,
+               flgt_vip           AS flgtVip,
+               flgt_starmark      AS flgtStarmark,
+               flgt_task_asign    AS flgtTaskAsign
+        from T_FLIGHT tf
+        where tf.flgt_flop = CURDATE()
+          and tf.flgt_flno = #{flight.flgtFlno}
+          and tf.flgt_airport_code = #{flight.flgtAirportCode}
+    </select>
+    <!-- 修改任务中的航班号 -->
+    <update id="updateTaskInfo">
+        update T_TASK set
+        <if test="flgtFlno != null and flgtFlno != ''">
+            task_flight_no = #{flgtFlno}
+        </if>
+        <if test="status != null">
+            ,task_status = #{status}
+        </if>
+        <if test="content != null">
+            ,task_content = #{content}
+        </if>
+        where
+        task_flight_id = #{flgtId} and task_status &lt; 7
+    </update>
+    <!-- 根据航班ID查询单条任务信息 -->
+    <select id="getTaskInfoById" resultType="com.zh.bean.flight.MyTask">
+        select task_id            AS taskId,
+               task_flight_id     AS taskFlightId,
+               task_flight_no     AS taskFlightNo,
+               task_airport_code  AS taskAirportCode,
+               task_aptarea_code  AS taskAptareaCode,
+               task_ope_staff_id  AS taskOpeStaffId,
+               task_content       AS taskContent,
+               task_status        AS taskStatus,
+               task_asg_time      AS taskAsgTime,
+               task_acc_time      AS taskAccTime,
+               task_chag_sta_time AS taskChagStaTime,
+               task_chag_end_time AS taskChagEndTime,
+               task_done_time     AS taskDoneTime,
+               task_fuel_recpt_no AS taskFuelRecptNo,
+               task_vehi_no       AS taskVehiNo,
+               task_cre_staff_id  AS taskCreStaffId,
+               task_starmark      AS taskStarmark,
+               task_rec_cre_time  AS taskRecCreTime
+        from T_TASK
+        where task_flight_id = #{flgtId}
+          and task_status in (0, 1, 2, 3, 4, 5, 6, 7)
+        order by task_asg_time desc LIMIT 1
+    </select>
+    <!-- 根据航班ID去任务表中查出任务状态 -->
+    <select id="getTaskStatus" resultType="java.lang.Integer">
+        select task_status AS taskStatus
+        from T_TASK
+        where task_flight_id = #{flgtId}
+    </select>
+    <!-- 根据航班字段进行检索 -->
+    <select id="getFlightListCondition" resultType="com.zh.bean.flight.MyFlight">
+        select
+        flgt_id AS flgtId,
+        flgt_ffid AS flgtFfid,
+        flgt_airport_code AS flgtAirportCode,
+        flgt_aptarea_code AS flgtAptareaCode,
+        flgt_flno AS flgtFlno,
+        flgt_flop AS flgtFlop,
+        flgt_acname AS flgtAcname,
+        flgt_regn AS flgtRegn,
+        flgt_placecode AS flgtPlacecode,
+        flgt_al2c AS flgtAl2c,
+        flgt_alcname AS flgtAlcname,
+        flgt_vialc AS flgtVialc,
+        flgt_a_stot AS flgtAStot,
+        flgt_a_etot AS flgtAEtot,
+        flgt_a_atot AS flgtAAtot,
+        flgt_d_stot AS flgtDStot,
+        flgt_d_etot AS flgtDEtot,
+        flgt_d_atot AS flgtDAtot,
+        flgt_org3c AS flgtOrg3c,
+        flgt_orgnm AS flgtOrgnm,
+        flgt_trs3c1 AS flgtTrs3c1,
+        flgt_trs3c2 AS flgtTrs3c2,
+        flgt_trs3c3 AS flgtTrs3c3,
+        flgt_trs3c4 AS flgtTrs3c4,
+        flgt_trs3c5 AS flgtTrs3c5,
+        flgt_trsnm1 AS flgtTrsnm1,
+        flgt_trsnm2 AS flgtTrsnm2,
+        flgt_trsnm3 AS flgtTrsnm3,
+        flgt_trsnm4 AS flgtTrsnm4,
+        flgt_trsnm5 AS flgtTrsnm5,
+        flgt_des3c AS flgtDes3c,
+        flgt_desnm AS flgtDesnm,
+        flgt_adid AS flgtAdid,
+        flgt_mission_prop AS flgtMissionProp,
+        flgt_nature AS flgtNature,
+        flgt_sub_nature AS flgtSubNature,
+        flgt_flti AS flgtFlti,
+        flgt_ftyp AS flgtFtyp,
+        flgt_delaycode AS flgtDelaycode,
+        flgt_proxy AS flgtProxy,
+        flgt_link_flno AS flgtLinkFlno,
+        flgt_fnflag AS flgtFnflag,
+        flgt_ifsr AS flgtIfsr,
+        flgt_game AS flgtGame,
+        flgt_dep_runway AS flgtDepRunway,
+        flgt_arr_runway AS flgtArrRunway,
+        flgt_gate AS flgtGate,
+        flgt_crew_in_place AS flgtCrewInPlace,
+        flgt_chocks_in AS flgtChocksIn,
+        flgt_chocks_out AS flgtChocksOut,
+        flgt_first_lugg AS flgtFirstLugg,
+        flgt_last_lugg AS flgtLastLugg,
+        flgt_ptax AS flgtPtax,
+        flgt_etax AS flgtEtax,
+        flgt_atax AS flgtAtax,
+        flgt_takeoff_fuel AS flgtTakeoffFuel,
+        flgt_chock_fuel AS flgtChockFuel,
+        flgt_vip AS flgtVip,
+        flgt_starmark AS flgtStarmark,
+        flgt_task_asign AS flgtTaskAsign
+        from T_FLIGHT where 1 = 1
+        <if test="flight.flgtFfid != '' and flight.flgtFfid != null">
+            and flgt_ffid = #{flight.flgtFfid}
+        </if>
+        <if test="flight.flgtAirportCode != '' and flight.flgtAirportCode != null">
+            and flgt_airport_code = #{flight.flgtAirportCode}
+        </if>
+        <if test="flight.flgtAptareaCode != '' and flight.flgtAptareaCode != null">
+            and flgt_aptarea_code = #{flight.flgtAptareaCode}
+        </if>
+        <if test="flight.flgtFlno != '' and flight.flgtFlno != null">
+            and flgt_flno = #{flight.flgtFlno}
+        </if>
+        <if test="flight.flgtFlop != null">
+            and flgt_flop = #{flight.flgtFlop}
+        </if>
+        <if test="flight.flgtFlopStart != null">
+            and flgt_flop &gt;= #{flight.flgtFlopStart}
+        </if>
+        <if test="flight.flgtFlopEnd != null">
+            and flgt_flop &lt;= #{flight.flgtFlopEnd}
+        </if>
+        <if test="flight.flgtAcname != null and flight.flgtAcname != ''">
+            and flgt_acname = #{flight.flgtAcname}
+        </if>
+        <if test="flight.flgtRegn != null and flight.flgtRegn != ''">
+            and flgt_regn = #{flight.flgtRegn}
+        </if>
+        <if test="flight.flgtPlacecode != null and flight.flgtPlacecode != ''">
+            and flgt_placecode = #{flight.flgtPlacecode}
+        </if>
+        <if test="flight.flgtAl2c != null and flight.flgtAl2c != ''">
+            and flgt_al2c = #{flight.flgtAl2c}
+        </if>
+        <if test="flight.flgtAlcname != null and flight.flgtAlcname != ''">
+            and flgt_alcname = #{flight.flgtAlcname}
+        </if>
+        <if test="flight.flgtVialc != null and flight.flgtVialc != ''">
+            and flgt_vialc = #{flight.flgtVialc}
+        </if>
+        <if test="flight.flgtAStot != null">
+            and flgt_a_stot = #{flight.flgtAStot}
+        </if>
+        <if test="flight.flgtAStotStart != null">
+            and flgt_a_stot &gt;= #{flight.flgtAStotStart}
+        </if>
+        <if test="flight.flgtAStotEnd != null">
+            and flgt_a_stot &lt;= #{flight.flgtAStotEnd}
+        </if>
+        <if test="flight.flgtAEtot != null">
+            and flgt_a_etot = #{flight.flgtAEtot}
+        </if>
+        <if test="flight.flgtAEtotStart != null">
+            and flgt_a_etot &gt;= #{flight.flgtAEtotStart}
+        </if>
+        <if test="flight.flgtAEtotEnd != null">
+            and flgt_a_etot &lt;= #{flight.flgtAEtotEnd}
+        </if>
+        <if test="flight.flgtAAtot != null">
+            and flgt_a_atot = #{flight.flgtAAtot}
+        </if>
+        <if test="flight.flgtAAtotStart != null">
+            and flgt_a_atot &gt;= #{flight.flgtAAtotStart}
+        </if>
+        <if test="flight.flgtAAtotEnd != null">
+            and flgt_a_atot &lt;= #{flight.flgtAAtotEnd}
+        </if>
+        <if test="flight.flgtDStot != null">
+            and flgt_d_stot = #{flight.flgtDStot}
+        </if>
+        <if test="flight.flgtDStotStart != null">
+            and flgt_d_stot &gt;= #{flight.flgtDStotStart}
+        </if>
+        <if test="flight.flgtDStotEnd != null">
+            and flgt_d_stot &lt;= #{flight.flgtDStotEnd}
+        </if>
+        <if test="flight.flgtDEtot != null">
+            and flgt_d_etot = #{flight.flgtDEtot}
+        </if>
+        <if test="flight.flgtDEtotStart != null">
+            and flgt_d_etot &gt;= #{flight.flgtDEtotStart}
+        </if>
+        <if test="flight.flgtDEtotEnd != null">
+            and flgt_d_etot &lt;= #{flight.flgtDEtotEnd}
+        </if>
+        <if test="flight.flgtDAtot != null">
+            and flgt_d_atot = #{flight.flgtDAtot}
+        </if>
+        <if test="flight.flgtDAtotStart != null">
+            and flgt_d_atot &gt;= #{flight.flgtDAtotStart}
+        </if>
+        <if test="flight.flgtDAtotEnd != null">
+            and flgt_d_atot &lt;= #{flight.flgtDAtotEnd}
+        </if>
+        <if test="flight.flgtOrg3c != null and flight.flgtOrg3c != ''">
+            and flgt_org3c = #{flight.flgtOrg3c}
+        </if>
+        <if test="flight.flgtOrgnm != null and flight.flgtOrgnm != ''">
+            and flgt_orgnm = #{flight.flgtOrgnm}
+        </if>
+        <if test="flight.flgtTrs3c1 != null and flight.flgtTrs3c1 != ''">
+            and flgt_trs3c1 = #{flight.flgtTrs3c1}
+        </if>
+        <if test="flight.flgtTrsnm1 != null and flight.flgtTrsnm1 != ''">
+            and flgt_trsnm1 = #{flight.flgtTrsnm1}
+        </if>
+        <if test="flight.flgtTrs3c2 != null and flight.flgtTrs3c2 != ''">
+            and flgt_trs3c2 = #{flight.flgtTrs3c2}
+        </if>
+        <if test="flight.flgtTrsnm2 != null and flight.flgtTrsnm2 != ''">
+            and flgt_trsnm2 = #{flight.flgtTrsnm2}
+        </if>
+        <if test="flight.flgtTrs3c3 != null and flight.flgtTrs3c3 != ''">
+            and flgt_trs3c3 = #{flight.flgtTrs3c3}
+        </if>
+        <if test="flight.flgtTrsnm3 != null and flight.flgtTrsnm3 != ''">
+            and flgt_trsnm3 = #{flight.flgtTrsnm3}
+        </if>
+        <if test="flight.flgtTrs3c4 != null and flight.flgtTrs3c4 != ''">
+            and flgt_trs3c4 = #{flight.flgtTrs3c4}
+        </if>
+        <if test="flight.flgtTrsnm4 != null and flight.flgtTrsnm4 != ''">
+            and flgt_trsnm4 = #{flight.flgtTrsnm4}
+        </if>
+        <if test="flight.flgtTrs3c5 != null and flight.flgtTrs3c5 != ''">
+            and flgt_trs3c5 = #{flight.flgtTrs3c5}
+        </if>
+        <if test="flight.flgtTrsnm5 != null and flight.flgtTrsnm5 != ''">
+            and flgt_trsnm5 = #{flight.flgtTrsnm5}
+        </if>
+        <if test="flight.flgtDes3c != null and flight.flgtDes3c != ''">
+            and flgt_des3c = #{flight.flgtDes3c}
+        </if>
+        <if test="flight.flgtDesnm != null and flight.flgtDesnm != ''">
+            and flgt_desnm = #{flight.flgtDesnm}
+        </if>
+        <if test="flight.flgtAdid != null and flight.flgtAdid != ''">
+            and flgt_adid = #{flight.flgtAdid}
+        </if>
+        <if test="flight.flgtMissionProp != null and flight.flgtMissionProp != ''">
+            and flgt_mission_prop = #{flight.flgtMissionProp}
+        </if>
+        <if test="flight.flgtNature != null and flight.flgtNature != ''">
+            and flgt_nature = #{flight.flgtNature}
+        </if>
+        <if test="flight.flgtSubNature != null and flight.flgtSubNature != ''">
+            and flgt_sub_nature = #{flight.flgtSubNature}
+        </if>
+        <if test="flight.flgtFlti != null and flight.flgtFlti != ''">
+            and flgt_flti = #{flight.flgtFlti}
+        </if>
+        <if test="flight.flgtFtyp != null and flight.flgtFtyp != ''">
+            and flgt_ftyp = #{flight.flgtFtyp}
+        </if>
+        <if test="flight.flgtDelaycode != null and flight.flgtDelaycode != ''">
+            and flgt_delaycode = #{flight.flgtDelaycode}
+        </if>
+        <if test="flight.flgtProxy != null and flight.flgtProxy != ''">
+            and flgt_proxy = #{flight.flgtProxy}
+        </if>
+        <if test="flight.flgtLinkFlno != null and flight.flgtLinkFlno != ''">
+            and flgt_link_flno = #{flight.flgtLinkFlno}
+        </if>
+        <if test="flight.flgtFnflag != null and flight.flgtFnflag != ''">
+            and flgt_fnflag = #{flight.flgtFnflag}
+        </if>
+        <if test="flight.flgtIfsr != null and flight.flgtIfsr != ''">
+            and flgt_ifsr = #{flight.flgtIfsr}
+        </if>
+        <if test="flight.flgtGame != null and flight.flgtGame != ''">
+            and flgt_game = #{flight.flgtGame}
+        </if>
+        <if test="flight.flgtDepRunway != null and flight.flgtDepRunway != ''">
+            and flgt_dep_runway = #{flight.flgtDepRunway}
+        </if>
+        <if test="flight.flgtArrRunway != null and flight.flgtArrRunway != ''">
+            and flgt_arr_runway = #{flight.flgtArrRunway}
+        </if>
+        <if test="flight.flgtGate != null and flight.flgtGate != ''">
+            and flgt_gate = #{flight.flgtGate}
+        </if>
+        <if test="flight.flgtCrewInPlace != null">
+            and flgt_crew_in_place = #{flight.flgtCrewInPlace}
+        </if>
+        <if test="flight.flgtCrewInPlaceStart != null">
+            and flgt_crew_in_place &gt;= #{flight.flgtCrewInPlaceStart}
+        </if>
+        <if test="flight.flgtCrewInPlaceEnd != null">
+            and flgt_crew_in_place &lt;= #{flight.flgtCrewInPlaceEnd}
+        </if>
+        <if test="flight.flgtChocksIn != null">
+            and flgt_chocks_in = #{flight.flgtChocksIn}
+        </if>
+        <if test="flight.flgtChocksInStart != null">
+            and flgt_chocks_in &gt;= #{flight.flgtChocksInStart}
+        </if>
+        <if test="flight.flgtChocksInEnd != null">
+            and flgt_chocks_in &lt;= #{flight.flgtChocksInEnd}
+        </if>
+        <if test="flight.flgtChocksOut != null">
+            and flgt_chocks_out = #{flight.flgtChocksOut}
+        </if>
+        <if test="flight.flgtChocksOutStart != null">
+            and flgt_chocks_out &gt;= #{flight.flgtChocksOutStart}
+        </if>
+        <if test="flight.flgtChocksOutEnd != null">
+            and flgt_chocks_out &lt;= #{flight.flgtChocksOutEnd}
+        </if>
+        <if test="flight.flgtFirstLugg != null">
+            and flgt_first_lugg = #{flight.flgtFirstLugg}
+        </if>
+        <if test="flight.flgtFirstLuggStart != null">
+            and flgt_first_lugg &gt;= #{flight.flgtFirstLuggStart}
+        </if>
+        <if test="flight.flgtFirstLuggEnd != null">
+            and flgt_first_lugg &lt;= #{flight.flgtFirstLuggEnd}
+        </if>
+        <if test="flight.flgtLastLugg != null">
+            and flgt_last_lugg = #{flight.flgtLastLugg}
+        </if>
+        <if test="flight.flgtLastLuggStart != null">
+            and flgt_last_lugg &gt;= #{flight.flgtLastLuggStart}
+        </if>
+        <if test="flight.flgtLastLuggEnd != null">
+            and flgt_last_lugg &lt;= #{flight.flgtLastLuggEnd}
+        </if>
+        <if test="flight.flgtPtax != null">
+            and flgt_ptax = #{flight.flgtPtax}
+        </if>
+        <if test="flight.flgtPtaxStart != null">
+            and flgt_ptax &gt;= #{flight.flgtPtaxStart}
+        </if>
+        <if test="flight.flgtPtaxEnd != null">
+            and flgt_ptax &lt;= #{flight.flgtPtaxEnd}
+        </if>
+        <if test="flight.flgtEtax != null">
+            and flgt_etax = #{flight.flgtEtax}
+        </if>
+        <if test="flight.flgtEtaxStart != null">
+            and flgt_etax &gt;= #{flight.flgtEtaxStart}
+        </if>
+        <if test="flight.flgtEtaxEnd != null">
+            and flgt_etax &lt;= #{flight.flgtEtaxEnd}
+        </if>
+        <if test="flight.flgtAtax != null">
+            and flgt_atax = #{flight.flgtAtax}
+        </if>
+        <if test="flight.flgtAtaxStart != null">
+            and flgt_atax &gt;= #{flight.flgtAtaxStart}
+        </if>
+        <if test="flight.flgtAtaxEnd != null">
+            and flgt_atax &lt;= #{flight.flgtAtaxEnd}
+        </if>
+        <if test="flight.flgtTakeoffFuel != null and flight.flgtTakeoffFuel != ''">
+            and flgt_takeoff_fuel = #{flight.flgtTakeoffFuel}
+        </if>
+        <if test="flight.flgtChockFuel != null and flight.flgtChockFuel != ''">
+            and flgt_chock_fuel = #{flight.flgtChockFuel}
+        </if>
+        <if test="flight.flgtVip != null and flight.flgtVip != ''">
+            and flgt_vip = #{flight.flgtVip}
+        </if>
+        <if test="flight.flgtTaskAsign != null and flight.flgtTaskAsign != ''">
+            and flgt_task_asign = #{flight.flgtTaskAsign}
+        </if>
+        <if test="flight.flgtStarmark != null and flight.flgtStarmark != ''">
+            and flgt_starmark = #{flight.flgtStarmark}
+        </if>
+    </select>
+    <!-- 根据航班号和航班时间查询是否存在此航班 -->
+    <select id="getFlightExist" resultType="com.zh.bean.flight.MyFlight">
+        select
+        flgt_id AS flgtId,
+        flgt_ffid AS flgtFfid,
+        flgt_airport_code AS flgtAirportCode,
+        flgt_aptarea_code AS flgtAptareaCode,
+        flgt_flno AS flgtFlno,
+        flgt_flop AS flgtFlop,
+        flgt_acname AS flgtAcname,
+        flgt_regn AS flgtRegn,
+        flgt_placecode AS flgtPlacecode,
+        flgt_al2c AS flgtAl2c,
+        flgt_alcname AS flgtAlcname,
+        flgt_vialc AS flgtVialc,
+        flgt_a_stot AS flgtAStot,
+        flgt_a_etot AS flgtAEtot,
+        flgt_a_atot AS flgtAAtot,
+        flgt_d_stot AS flgtDStot,
+        flgt_d_etot AS flgtDEtot,
+        flgt_d_atot AS flgtDAtot,
+        flgt_org3c AS flgtOrg3c,
+        flgt_orgnm AS flgtOrgnm,
+        flgt_trs3c1 AS flgtTrs3c1,
+        flgt_trs3c2 AS flgtTrs3c2,
+        flgt_trs3c3 AS flgtTrs3c3,
+        flgt_trs3c4 AS flgtTrs3c4,
+        flgt_trs3c5 AS flgtTrs3c5,
+        flgt_trsnm1 AS flgtTrsnm1,
+        flgt_trsnm2 AS flgtTrsnm2,
+        flgt_trsnm3 AS flgtTrsnm3,
+        flgt_trsnm4 AS flgtTrsnm4,
+        flgt_trsnm5 AS flgtTrsnm5,
+        flgt_des3c AS flgtDes3c,
+        flgt_desnm AS flgtDesnm,
+        flgt_adid AS flgtAdid,
+        flgt_mission_prop AS flgtMissionProp,
+        flgt_nature AS flgtNature,
+        flgt_sub_nature AS flgtSubNature,
+        flgt_flti AS flgtFlti,
+        flgt_ftyp AS flgtFtyp,
+        flgt_delaycode AS flgtDelaycode,
+        flgt_proxy AS flgtProxy,
+        flgt_link_flno AS flgtLinkFlno,
+        flgt_fnflag AS flgtFnflag,
+        flgt_ifsr AS flgtIfsr,
+        flgt_game AS flgtGame,
+        flgt_dep_runway AS flgtDepRunway,
+        flgt_arr_runway AS flgtArrRunway,
+        flgt_gate AS flgtGate,
+        flgt_crew_in_place AS flgtCrewInPlace,
+        flgt_chocks_in AS flgtChocksIn,
+        flgt_chocks_out AS flgtChocksOut,
+        flgt_first_lugg AS flgtFirstLugg,
+        flgt_last_lugg AS flgtLastLugg,
+        flgt_ptax AS flgtPtax,
+        flgt_etax AS flgtEtax,
+        flgt_atax AS flgtAtax,
+        flgt_takeoff_fuel AS flgtTakeoffFuel,
+        flgt_chock_fuel AS flgtChockFuel,
+        flgt_vip AS flgtVip,
+        flgt_starmark AS flgtStarmark,
+        flgt_task_asign AS flgtTaskAsign
+        from T_FLIGHT where flgt_flno = #{flgtFlno} and flgt_flop = #{forMatTime}
+        <if test="flgtRegn != null and flgtRegn != ''">
+            and flgt_regn = #{flgtRegn}
+        </if>
+        limit 1
+    </select>
+    <!-- 更新航班信息 -->
+    <update id="updateFlight">
+        update T_FLIGHT
+        <set>
+            <if test="newFlight.flgtFfid != null">
+                flgt_ffid = #{newFlight.flgtFfid},
+            </if>
+            <if test="newFlight.flgtAirportCode != null">
+                flgt_airport_code = #{newFlight.flgtAirportCode},
+            </if>
+            <if test="newFlight.flgtAptareaCode != null and newFlight.flgtAptareaCode != ''">
+                flgt_aptarea_code = #{newFlight.flgtAptareaCode},
+            </if>
+            <if test="newFlight.flgtFlno != null">
+                flgt_flno = #{newFlight.flgtFlno},
+            </if>
+            <if test="newFlight.flgtFlop != null">
+                flgt_flop = #{newFlight.flgtFlop},
+            </if>
+            <if test="newFlight.flgtAcname != null">
+                flgt_acname = #{newFlight.flgtAcname},
+            </if>
+            <if test="newFlight.flgtRegn != null">
+                flgt_regn = #{newFlight.flgtRegn},
+            </if>
+            <if test="newFlight.flgtPlacecode != null">
+                flgt_placecode = #{newFlight.flgtPlacecode},
+            </if>
+            <if test="newFlight.flgtAl2c != null">
+                flgt_al2c = #{newFlight.flgtAl2c},
+            </if>
+            <if test="newFlight.flgtAlcname != null">
+                flgt_alcname = #{newFlight.flgtAlcname},
+            </if>
+            <if test="newFlight.flgtVialc != null">
+                flgt_vialc = #{newFlight.flgtVialc},
+            </if>
+            <if test="newFlight.flgtAStot != null">
+                flgt_a_stot = #{newFlight.flgtAStot},
+            </if>
+            <if test="newFlight.flgtAEtot != null">
+                flgt_a_etot = #{newFlight.flgtAEtot},
+            </if>
+            <if test="newFlight.flgtAAtot != null">
+                flgt_a_atot = #{newFlight.flgtAAtot},
+            </if>
+            <if test="newFlight.flgtDStot != null">
+                flgt_d_stot = #{newFlight.flgtDStot},
+            </if>
+            <if test="newFlight.flgtDEtot != null">
+                flgt_d_etot = #{newFlight.flgtDEtot},
+            </if>
+            <if test="newFlight.flgtDAtot != null">
+                flgt_d_atot = #{newFlight.flgtDAtot},
+            </if>
+            <if test="newFlight.flgtOrg3c != null">
+                flgt_org3c = #{newFlight.flgtOrg3c},
+            </if>
+            <if test="newFlight.flgtOrgnm != null">
+                flgt_orgnm = #{newFlight.flgtOrgnm},
+            </if>
+            <if test="newFlight.flgtTrs3c1 != null">
+                flgt_trs3c1 = #{newFlight.flgtTrs3c1},
+            </if>
+            <if test="newFlight.flgtTrsnm1 != null">
+                flgt_trsnm1 = #{newFlight.flgtTrsnm1},
+            </if>
+            <if test="newFlight.flgtTrs3c2 != null">
+                flgt_trs3c2 = #{newFlight.flgtTrs3c2},
+            </if>
+            <if test="newFlight.flgtTrsnm2 != null">
+                flgt_trsnm2 = #{newFlight.flgtTrsnm2},
+            </if>
+            <if test="newFlight.flgtTrs3c3 != null">
+                flgt_trs3c3 = #{newFlight.flgtTrs3c3},
+            </if>
+            <if test="newFlight.flgtTrsnm3 != null">
+                flgt_trsnm3 = #{newFlight.flgtTrsnm3},
+            </if>
+            <if test="newFlight.flgtTrs3c4 != null">
+                flgt_trs3c4 = #{newFlight.flgtTrs3c4},
+            </if>
+            <if test="newFlight.flgtTrsnm4 != null">
+                flgt_trsnm4 = #{newFlight.flgtTrsnm4},
+            </if>
+            <if test="newFlight.flgtTrs3c5 != null">
+                flgt_trs3c5 = #{newFlight.flgtTrs3c5},
+            </if>
+            <if test="newFlight.flgtTrsnm5 != null">
+                flgt_trsnm5 = #{newFlight.flgtTrsnm5},
+            </if>
+            <if test="newFlight.flgtDes3c != null">
+                flgt_des3c = #{newFlight.flgtDes3c},
+            </if>
+            <if test="newFlight.flgtDesnm != null">
+                flgt_desnm = #{newFlight.flgtDesnm},
+            </if>
+            <if test="newFlight.flgtAdid != null">
+                flgt_adid = #{newFlight.flgtAdid},
+            </if>
+            <if test="newFlight.flgtMissionProp != null">
+                flgt_mission_prop = #{newFlight.flgtMissionProp},
+            </if>
+            <if test="newFlight.flgtNature != null">
+                flgt_nature = #{newFlight.flgtNature},
+            </if>
+            <if test="newFlight.flgtSubNature != null">
+                flgt_sub_nature = #{newFlight.flgtSubNature},
+            </if>
+            <if test="newFlight.flgtFlti != null">
+                flgt_flti = #{newFlight.flgtFlti},
+            </if>
+            <if test="newFlight.flgtFtyp != null">
+                flgt_ftyp = #{newFlight.flgtFtyp},
+            </if>
+            <if test="newFlight.flgtDelaycode != null">
+                flgt_delaycode = #{newFlight.flgtDelaycode},
+            </if>
+            <if test="newFlight.flgtProxy != null">
+                flgt_proxy = #{newFlight.flgtProxy},
+            </if>
+            <if test="newFlight.flgtLinkFlno != null">
+                flgt_link_flno = #{newFlight.flgtLinkFlno},
+            </if>
+            <if test="newFlight.flgtFnflag != null">
+                flgt_fnflag = #{newFlight.flgtFnflag},
+            </if>
+            <if test="newFlight.flgtIfsr != null">
+                flgt_ifsr = #{newFlight.flgtIfsr},
+            </if>
+            <if test="newFlight.flgtGame != null">
+                flgt_game = #{newFlight.flgtGame},
+            </if>
+            <if test="newFlight.flgtDepRunway != null">
+                flgt_dep_runway = #{newFlight.flgtDepRunway},
+            </if>
+            <if test="newFlight.flgtArrRunway != null">
+                flgt_arr_runway = #{newFlight.flgtArrRunway},
+            </if>
+            <if test="newFlight.flgtGate != null">
+                flgt_gate = #{newFlight.flgtGate},
+            </if>
+            <if test="newFlight.flgtCrewInPlace != null">
+                flgt_crew_in_place = #{newFlight.flgtCrewInPlace},
+            </if>
+            <if test="newFlight.flgtChocksIn != null">
+                flgt_chocks_in = #{newFlight.flgtChocksIn},
+            </if>
+            <if test="newFlight.flgtChocksOut != null">
+                flgt_chocks_out = #{newFlight.flgtChocksOut},
+            </if>
+            <if test="newFlight.flgtFirstLugg != null">
+                flgt_first_lugg = #{newFlight.flgtFirstLugg},
+            </if>
+            <if test="newFlight.flgtLastLugg != null">
+                flgt_last_lugg = #{newFlight.flgtLastLugg},
+            </if>
+            <if test="newFlight.flgtPtax != null">
+                flgt_ptax = #{newFlight.flgtPtax},
+            </if>
+            <if test="newFlight.flgtEtax != null">
+                flgt_etax = #{newFlight.flgtEtax},
+            </if>
+            <if test="newFlight.flgtAtax != null">
+                flgt_atax = #{newFlight.flgtAtax},
+            </if>
+            <if test="newFlight.flgtTakeoffFuel != null">
+                flgt_takeoff_fuel = #{newFlight.flgtTakeoffFuel},
+            </if>
+            <if test="newFlight.flgtChockFuel != null">
+                flgt_chock_fuel = #{newFlight.flgtChockFuel},
+            </if>
+            <if test="newFlight.flgtVip != null">
+                flgt_vip = #{newFlight.flgtVip},
+            </if>
+            <if test="newFlight.flgtTaskAsign != null">
+                flgt_task_asign = #{newFlight.flgtTaskAsign},
+            </if>
+            <if test="newFlight.flgtStarmark != null">
+                flgt_starmark = #{newFlight.flgtStarmark},
+            </if>
+            <if test="newFlight.remark != null">
+                remark = #{newFlight.remark}
+            </if>
+        </set>
+        where flgt_id = #{newFlight.flgtId}
+    </update>
+    <update id="updateFlightRemark">
+        update T_FLIGHT
+        <set>
+            remark = #{flight.remark}
+        </set>
+        where flgt_id = #{flight.flgtId}
+    </update>
+    <!-- 更新任务信息 -->
+    <update id="updateTask">
+        update T_TASK
+        <set>
+            <if test="newTask.taskFlightId != null">
+                task_flight_id = #{newTask.taskFlightId},
+            </if>
+            <if test="newTask.taskFlightNo != null">
+                task_flight_no = #{newTask.taskFlightNo},
+            </if>
+            <if test="newTask.taskAirportCode != null">
+                task_airport_code = #{newTask.taskAirportCode},
+            </if>
+            <if test="newTask.taskAptareaCode != null and newTask.taskAptareaCode != ''">
+                task_aptarea_code = #{newTask.taskAptareaCode},
+            </if>
+            <if test="newTask.taskOpeStaffId != null">
+                task_ope_staff_id = #{newTask.taskOpeStaffId},
+            </if>
+            <if test="newTask.taskContent != null">
+                task_content = #{newTask.taskContent},
+            </if>
+            <if test="newTask.taskStatus != null">
+                task_status = #{newTask.taskStatus},
+            </if>
+            <if test="newTask.taskAsgTime != null">
+                task_asg_time = #{newTask.taskAsgTime},
+            </if>
+            <if test="newTask.taskAccTime != null">
+                task_acc_time = #{newTask.taskAccTime},
+            </if>
+            <if test="newTask.taskChagStaTime != null">
+                task_chag_sta_time = #{newTask.taskChagStaTime},
+            </if>
+            <if test="newTask.taskChagEndTime != null">
+                task_chag_end_time = #{newTask.taskChagEndTime},
+            </if>
+            <if test="newTask.taskDoneTime != null">
+                task_done_time = #{newTask.taskDoneTime},
+            </if>
+            <if test="newTask.taskFuelRecptNo != null">
+                task_fuel_recpt_no = #{newTask.taskFuelRecptNo},
+            </if>
+            <if test="newTask.taskVehiNo != null">
+                task_vehi_no = #{newTask.taskVehiNo},
+            </if>
+            <if test="newTask.taskCreStaffId != null">
+                task_cre_staff_id = #{newTask.taskCreStaffId},
+            </if>
+            <if test="newTask.taskStarmark != null">
+                task_starmark = #{newTask.taskStarmark},
+            </if>
+            <if test="newTask.taskRecCreTime != null">
+                task_rec_cre_time = #{newTask.taskRecCreTime},
+            </if>
+        </set>
+        where task_id = #{newTask.taskId}
+    </update>
+    <!-- 根据任务ID更新任务表里的加油员ID和任务状态 -->
+    <update id="updateTaskState">
+        update T_TASK
+        set task_ope_staff_id = #{taskOpeStaffId},
+            task_asg_time     = #{forMatTime},
+            task_status       = #{taskStatus},
+            task_cre_staff_id = #{taskOpeStaffId}
+        where task_id = #{taskId}
+    </update>
+    <!-- 根据当前系统时间获取当日的任务列表并且同时根据任务列表中的航班ID查询航班列表一起输出,按照本场和前方起飞分开的 -->
+    <select id="getFlightDateList" resultType="com.zh.bean.flight.MyFlightTask">
+        (SELECT
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        flight.flgt_id AS flgtId,
+        flight.flgt_ffid AS flgtFfid,
+        flight.flgt_airport_code AS flgtAirportCode,
+        flight.flgt_aptarea_code AS flgtAptareaCode,
+        flight.flgt_flno AS flgtFlno,
+        flight.flgt_flop AS flgtFlop,
+        flight.flgt_acname AS flgtAcname,
+        flight.flgt_regn AS flgtRegn,
+        flight.flgt_placecode AS flgtPlacecode,
+        flight.flgt_al2c AS flgtAl2c,
+        flight.flgt_alcname AS flgtAlcname,
+        flight.flgt_vialc AS flgtVialc,
+        flight.flgt_a_stot AS flgtAStot,
+        flight.flgt_a_etot AS flgtAEtot,
+        flight.flgt_a_atot AS flgtAAtot,
+        flight.flgt_d_stot AS flgtDStot,
+        flight.flgt_d_etot AS flgtDEtot,
+        flight.flgt_d_atot AS flgtDAtot,
+        flight.flgt_org3c AS flgtOrg3c,
+        flight.flgt_orgnm AS flgtOrgnm,
+        flight.flgt_trs3c1 AS flgtTrs3c1,
+        flight.flgt_trs3c2 AS flgtTrs3c2,
+        flight.flgt_trs3c3 AS flgtTrs3c3,
+        flight.flgt_trs3c4 AS flgtTrs3c4,
+        flight.flgt_trs3c5 AS flgtTrs3c5,
+        flight.flgt_trsnm1 AS flgtTrsnm1,
+        flight.flgt_trsnm2 AS flgtTrsnm2,
+        flight.flgt_trsnm3 AS flgtTrsnm3,
+        flight.flgt_trsnm4 AS flgtTrsnm4,
+        flight.flgt_trsnm5 AS flgtTrsnm5,
+        flight.flgt_des3c AS flgtDes3c,
+        flight.flgt_desnm AS flgtDesnm,
+        flight.flgt_adid AS flgtAdid,
+        flight.flgt_flti AS flgtFlti,
+        flight.flgt_ftyp AS flgtFtyp,
+        flight.flgt_proxy AS flgtProxy,
+        flight.flgt_link_flno AS flgtLinkFlno,
+        flight.flgt_fnflag AS flgtFnflag,
+        flight.flgt_game AS flgtGame,
+        flight.flgt_chocks_in AS flgtChocksIn,
+        flight.flgt_chocks_out AS flgtChocksOut,
+        flight.flgt_vip AS flgtVip
+        from T_TASK AS task,T_FLIGHT AS flight where
+        task.task_flight_id = flight.flgt_id and
+        flight.flgt_game = 'N' and flight.flgt_flop = CURDATE() and
+        flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        ORDER BY flight.flgt_a_etot limit 999999999)
+        UNION all
+        (SELECT
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        flight.flgt_id AS flgtId,
+        flight.flgt_ffid AS flgtFfid,
+        flight.flgt_airport_code AS flgtAirportCode,
+        flight.flgt_aptarea_code AS flgtAptareaCode,
+        flight.flgt_flno AS flgtFlno,
+        flight.flgt_flop AS flgtFlop,
+        flight.flgt_acname AS flgtAcname,
+        flight.flgt_regn AS flgtRegn,
+        flight.flgt_placecode AS flgtPlacecode,
+        flight.flgt_al2c AS flgtAl2c,
+        flight.flgt_alcname AS flgtAlcname,
+        flight.flgt_vialc AS flgtVialc,
+        flight.flgt_a_stot AS flgtAStot,
+        flight.flgt_a_etot AS flgtAEtot,
+        flight.flgt_a_atot AS flgtAAtot,
+        flight.flgt_d_stot AS flgtDStot,
+        flight.flgt_d_etot AS flgtDEtot,
+        flight.flgt_d_atot AS flgtDAtot,
+        flight.flgt_org3c AS flgtOrg3c,
+        flight.flgt_orgnm AS flgtOrgnm,
+        flight.flgt_trs3c1 AS flgtTrs3c1,
+        flight.flgt_trs3c2 AS flgtTrs3c2,
+        flight.flgt_trs3c3 AS flgtTrs3c3,
+        flight.flgt_trs3c4 AS flgtTrs3c4,
+        flight.flgt_trs3c5 AS flgtTrs3c5,
+        flight.flgt_trsnm1 AS flgtTrsnm1,
+        flight.flgt_trsnm2 AS flgtTrsnm2,
+        flight.flgt_trsnm3 AS flgtTrsnm3,
+        flight.flgt_trsnm4 AS flgtTrsnm4,
+        flight.flgt_trsnm5 AS flgtTrsnm5,
+        flight.flgt_des3c AS flgtDes3c,
+        flight.flgt_desnm AS flgtDesnm,
+        flight.flgt_adid AS flgtAdid,
+        flight.flgt_flti AS flgtFlti,
+        flight.flgt_ftyp AS flgtFtyp,
+        flight.flgt_proxy AS flgtProxy,
+        flight.flgt_link_flno AS flgtLinkFlno,
+        flight.flgt_fnflag AS flgtFnflag,
+        flight.flgt_game AS flgtGame,
+        flight.flgt_chocks_in AS flgtChocksIn,
+        flight.flgt_chocks_out AS flgtChocksOut,
+        flight.flgt_vip AS flgtVip
+        from T_TASK AS task,T_FLIGHT AS flight where
+        task.task_flight_id = flight.flgt_id and
+        flight.flgt_game = 'Y' and flight.flgt_flop = CURDATE() and
+        flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        ORDER BY flight.flgt_d_stot limit 999999999)
+    </select>
+    <!-- 根据当前系统时间获取当日的任务列表并且同时根据任务列表中的航班ID查询航班列表一起输出,按照本场查询,按照预计起飞时间排序 -->
+    <select id="getFlightTaskDateThis" resultType="com.zh.bean.flight.MyFlightTask">
+        select
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        t5.flgt_id AS flgtId,
+        t5.flgt_ffid AS flgtFfid,
+        t5.flgt_airport_code AS flgtAirportCode,
+        t5.flgt_aptarea_code AS flgtAptareaCode,
+        t5.flgt_flno AS flgtFlno,
+        t5.flgt_flop AS flgtFlop,
+        t5.flgt_acname AS flgtAcname,
+        t5.flgt_regn AS flgtRegn,
+        t5.flgt_placecode AS flgtPlacecode,
+        t5.flgt_al2c AS flgtAl2c,
+        t5.flgt_alcname AS flgtAlcname,
+        t5.flgt_vialc AS flgtVialc,
+        t5.flgt_a_stot AS flgtAStot,
+        t5.flgt_a_etot AS flgtAEtot,
+        t5.flgt_a_atot AS flgtAAtot,
+        t5.flgt_d_stot AS flgtDStot,
+        t5.flgt_d_etot AS flgtDEtot,
+        t5.flgt_d_atot AS flgtDAtot,
+        t5.flgt_org3c AS flgtOrg3c,
+        t5.flgt_orgnm AS flgtOrgnm,
+        t5.flgt_trs3c1 AS flgtTrs3c1,
+        t5.flgt_trs3c2 AS flgtTrs3c2,
+        t5.flgt_trs3c3 AS flgtTrs3c3,
+        t5.flgt_trs3c4 AS flgtTrs3c4,
+        t5.flgt_trs3c5 AS flgtTrs3c5,
+        t5.flgt_trsnm1 AS flgtTrsnm1,
+        t5.flgt_trsnm2 AS flgtTrsnm2,
+        t5.flgt_trsnm3 AS flgtTrsnm3,
+        t5.flgt_trsnm4 AS flgtTrsnm4,
+        t5.flgt_trsnm5 AS flgtTrsnm5,
+        t5.flgt_des3c AS flgtDes3c,
+        t5.flgt_desnm AS flgtDesnm,
+        t5.flgt_adid AS flgtAdid,
+        t5.flgt_flti AS flgtFlti,
+        t5.flgt_ftyp AS flgtFtyp,
+        t5.flgt_proxy AS flgtProxy,
+        t5.flgt_link_flno AS flgtLinkFlno,
+        t5.flgt_fnflag AS flgtFnflag,
+        t5.flgt_game AS flgtGame,
+        t5.flgt_chocks_in AS flgtChocksIn,
+        t5.flgt_chocks_out AS flgtChocksOut,
+        t5.flgt_vip AS flgtVip,
+        tainscode.alcd_arln_name AS alcdArlnName,
+        tainscode.alcd_arln_name_s AS alcdArlnNames,
+        taport.apcd_airport_name AS apcdSAirportName,
+        taport.apcd_airport_name_s AS apcdSAirportNames,
+        taport1.apcd_airport_name AS apcdEAirportNames,
+        taport1.apcd_airport_name_s AS apcdEAirportNames,
+        CONCAT(taport.apcd_airport_name_s,'-',taport1.apcd_airport_name_s) AS flightValic
+        from (
+        select t1.* from T_FLIGHT t1,
+        (
+        select flgt_regn from T_FLIGHT where flgt_flop BETWEEN DATE_SUB(curdate(),INTERVAL 1 DAY) AND CURDATE() and
+        flgt_regn &lt;&gt; '' and flgt_game = 'Y' and
+        flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        GROUP BY flgt_regn
+        having count(1) > 1
+        )t2
+        where
+        t1.flgt_regn = t2.flgt_regn
+        and t1.flgt_adid = 'D'
+        UNION
+        select t3.* from T_FLIGHT t3,
+        (
+        select flgt_regn from T_FLIGHT where flgt_flop = CURDATE() and flgt_game = 'Y' and flgt_regn &lt;&gt; '' and
+        flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        GROUP BY flgt_regn
+        having count(1) = 1
+        )t4
+        where
+        t4.flgt_regn = t3.flgt_regn) t5
+        LEFT JOIN
+        T_AIRLINES_CODE tainscode
+        ON tainscode.alcd_icao_code=t5.flgt_al2c
+        LEFT JOIN T_AIRPORT_CODE taport
+        ON taport.apcd_iata_code=t5.flgt_org3c
+        LEFT JOIN T_AIRPORT_CODE taport1
+        ON taport1.apcd_iata_code=t5.flgt_des3c
+        left join
+        T_TASK task ON t5.flgt_id = task.task_flight_id
+        ORDER BY t5.flgt_d_stot
+    </select>
+    <!-- 根据当前系统时间获取当日的航班列表,按照本场查询,按照预计起飞时间排序 PAD端 -->
+    <select id="getCurrentFlight" resultType="com.zh.bean.flight.MyFlightTask">
+        select
+        t5.flgt_id AS flgtId,
+        t5.flgt_ffid AS flgtFfid,
+        t5.flgt_airport_code AS flgtAirportCode,
+        t5.flgt_aptarea_code AS flgtAptareaCode,
+        t5.flgt_flno AS flgtFlno,
+        t5.flgt_flop AS flgtFlop,
+        t5.flgt_acname AS flgtAcname,
+        t5.flgt_regn AS flgtRegn,
+        t5.flgt_placecode AS flgtPlacecode,
+        t5.flgt_al2c AS flgtAl2c,
+        t5.flgt_alcname AS flgtAlcname,
+        t5.flgt_vialc AS flgtVialc,
+        t5.flgt_a_stot AS flgtAStot,
+        t5.flgt_a_etot AS flgtAEtot,
+        t5.flgt_a_atot AS flgtAAtot,
+        t5.flgt_d_stot AS flgtDStot,
+        t5.flgt_d_etot AS flgtDEtot,
+        t5.flgt_d_atot AS flgtDAtot,
+        t5.flgt_org3c AS flgtOrg3c,
+        t5.flgt_orgnm AS flgtOrgnm,
+        t5.flgt_trs3c1 AS flgtTrs3c1,
+        t5.flgt_trs3c2 AS flgtTrs3c2,
+        t5.flgt_trs3c3 AS flgtTrs3c3,
+        t5.flgt_trs3c4 AS flgtTrs3c4,
+        t5.flgt_trs3c5 AS flgtTrs3c5,
+        t5.flgt_trsnm1 AS flgtTrsnm1,
+        t5.flgt_trsnm2 AS flgtTrsnm2,
+        t5.flgt_trsnm3 AS flgtTrsnm3,
+        t5.flgt_trsnm4 AS flgtTrsnm4,
+        t5.flgt_trsnm5 AS flgtTrsnm5,
+        t5.flgt_des3c AS flgtDes3c,
+        t5.flgt_desnm AS flgtDesnm,
+        t5.flgt_adid AS flgtAdid,
+        t5.flgt_flti AS flgtFlti,
+        t5.flgt_ftyp AS flgtFtyp,
+        t5.flgt_proxy AS flgtProxy,
+        t5.flgt_link_flno AS flgtLinkFlno,
+        t5.flgt_fnflag AS flgtFnflag,
+        t5.flgt_game AS flgtGame,
+        t5.flgt_chocks_in AS flgtChocksIn,
+        t5.flgt_chocks_out AS flgtChocksOut,
+        t5.flgt_vip AS flgtVip,
+        t5.flgt_otc AS flgtOtc,
+        t5.flgt_num AS flgtNum,
+        t5.flgt_repeat AS flgtRepeat,
+        t5.flgt_link_flop AS flgtLinkFlop,
+        t5.flgt_link_repeat AS flgtLinkRepeat,
+        t5.flgt_otc AS flgtOtc,
+        t6.flgt_d_stot AS flgtLinkDStot,
+        t6.flgt_d_etot AS flgtLinkDEtot,
+        t6.flgt_d_atot AS flgtLinkDAtot,
+        t6.flgt_adid AS flgtLinkAdid,
+        t6.flgt_a_stot AS flgtLinkAStot,
+        t6.flgt_a_etot AS flgtLinkAEtot,
+        t6.flgt_a_atot AS flgtLinkAAtot,
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        CASE WHEN t7.flgt_rflno is not null THEN 1 ELSE 0 END
+        AS flgtstatus
+        from T_FLIGHT t5
+        LEFT JOIN T_TASK task
+        ON t5.flgt_id=task.task_flight_id
+        LEFT JOIN T_FLIGHT t6
+        ON t6.flgt_regn=t5.flgt_regn AND
+        t6.flgt_flno=t5.flgt_link_flno
+        AND t5.flgt_flop=t6.flgt_link_flop
+        AND t5.flgt_repeat=t6.flgt_link_repeat
+        LEFT JOIN T_FLIGHT_SUBSCRIPTION t7
+        ON t7.flgt_rflno=t5.flgt_flno
+        AND t7.flgt_rflop =t5.flgt_flop
+        where t5.flgt_flop = CURDATE()
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND t5.flgt_airport_code=#{staffAirportCode}
+        </if>
+        <if test="staffAptareaCode!=null and staffAptareaCode!=''">
+            AND t5.flgt_aptarea_code=#{staffAptareaCode}
+        </if>
+        ORDER BY t5.flgt_d_stot
+    </select>
+
+    <!-- 根据航班号，航班日期，进离港检索航班表（DB） -->
+    <select id="getFlightInfo" resultType="com.zh.bean.flight.MyFlight">
+        select
+        flgt_id AS flgtId,
+        flgt_ffid AS flgtFfid,
+        flgt_airport_code AS flgtAirportCode,
+        flgt_aptarea_code AS flgtAptareaCode,
+        flgt_flno AS flgtFlno,
+        flgt_flop AS flgtFlop,
+        flgt_acname AS flgtAcname,
+        flgt_regn AS flgtRegn,
+        flgt_placecode AS flgtPlacecode,
+        flgt_al2c AS flgtAl2c,
+        flgt_alcname AS flgtAlcname,
+        flgt_vialc AS flgtVialc,
+        flgt_a_stot AS flgtAStot,
+        flgt_a_etot AS flgtAEtot,
+        flgt_a_atot AS flgtAAtot,
+        flgt_d_stot AS flgtDStot,
+        flgt_d_etot AS flgtDEtot,
+        flgt_d_atot AS flgtDAtot,
+        flgt_org3c AS flgtOrg3c,
+        flgt_orgnm AS flgtOrgnm,
+        flgt_trs3c1 AS flgtTrs3c1,
+        flgt_trs3c2 AS flgtTrs3c2,
+        flgt_trs3c3 AS flgtTrs3c3,
+        flgt_trs3c4 AS flgtTrs3c4,
+        flgt_trs3c5 AS flgtTrs3c5,
+        flgt_trsnm1 AS flgtTrsnm1,
+        flgt_trsnm2 AS flgtTrsnm2,
+        flgt_trsnm3 AS flgtTrsnm3,
+        flgt_trsnm4 AS flgtTrsnm4,
+        flgt_trsnm5 AS flgtTrsnm5,
+        flgt_des3c AS flgtDes3c,
+        flgt_desnm AS flgtDesnm,
+        flgt_adid AS flgtAdid,
+        flgt_mission_prop AS flgtMissionProp,
+        flgt_nature AS flgtNature,
+        flgt_sub_nature AS flgtSubNature,
+        flgt_flti AS flgtFlti,
+        flgt_ftyp AS flgtFtyp,
+        flgt_delaycode AS flgtDelaycode,
+        flgt_proxy AS flgtProxy,
+        flgt_link_flno AS flgtLinkFlno,
+        flgt_fnflag AS flgtFnflag,
+        flgt_ifsr AS flgtIfsr,
+        flgt_game AS flgtGame,
+        flgt_dep_runway AS flgtDepRunway,
+        flgt_arr_runway AS flgtArrRunway,
+        flgt_gate AS flgtGate,
+        flgt_crew_in_place AS flgtCrewInPlace,
+        flgt_chocks_in AS flgtChocksIn,
+        flgt_chocks_out AS flgtChocksOut,
+        flgt_first_lugg AS flgtFirstLugg,
+        flgt_last_lugg AS flgtLastLugg,
+        flgt_ptax AS flgtPtax,
+        flgt_etax AS flgtEtax,
+        flgt_atax AS flgtAtax,
+        flgt_takeoff_fuel AS flgtTakeoffFuel,
+        flgt_chock_fuel AS flgtChockFuel,
+        flgt_vip AS flgtVip,
+        flgt_starmark AS flgtStarmark,
+        flgt_task_asign AS flgtTaskAsign
+        from T_FLIGHT where flgt_flno = #{flight.flgtFlno}
+        and flgt_flop = CURDATE() and flgt_adid = #{flight.flgtAdid}
+        and flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+    </select>
+    <!-- 更新航班的任务下发标识 -->
+    <update id="updateFlightInfoOne">
+        update T_FLIGHT
+        set flgt_task_asign = #{i}
+        where flgt_id = #{taskFlightId}
+    </update>
+    <!-- 根据航班号查询预创建航班表 -->
+    <select id="getFlightTemp" resultType="com.zh.bean.flight.MyFlightTemp">
+        select flgt_flno         AS flgtFlno,
+               flgt_d_stot       AS flgtDStot,
+               flgt_acname       AS flgtAcname,
+               flgt_regn         AS flgtRegn,
+               flgt_placecode    AS flgtPlacecode,
+               flgt_al2c         AS flgtAl2c,
+               flgt_alcname      AS flgtAlcname,
+               flgt_vialc        AS flgtVialc,
+               flgt_a_stot       AS flgtAStot,
+               flgt_org3c        AS flgtOrg3c,
+               flgt_orgnm        AS flgtOrgnm,
+               flgt_des3c        AS flgtDes3c,
+               flgt_desnm        AS flgtDesnm,
+               flgt_adid         AS flgtAdid,
+               flgt_start_date   AS flgtStartDate,
+               flgt_end_date     AS flgtEndDate,
+               flgt_airport_code AS flgtAirportCode,
+               flgt_trs3c        AS flgtTrs3c,
+               flgt_trsnm        AS flgtTrsnm
+        from T_FLIGHT_TEMP
+        where flgt_flno = #{flgtFlno}
+          and flgt_airport_code = #{staffAirportCode}
+    </select>
+    <select id="getAirportNames" resultType="java.lang.String">
+        select apcd_airport_name
+        from T_AIRPORT_CODE
+        where apcd_cnaf_airport_code = #{apcdIcaoCode}
+    </select>
+
+    <!-- 根据不同的机场三字码去DB中查出对应的机场简称 -->
+    <select id="getAirportNamess" resultType="java.lang.String">
+        select apcd_airport_name_s
+        from T_AIRPORT_CODE
+        where apcd_iata_code = #{airport3c}
+    </select>
+
+    <select id="getFlightListThree" resultType="com.zh.bean.flight.TFlight">
+        select flgt_id        as flgtId,
+               flgt_regn      as flgtRegn,
+               flgt_placecode as flgtPlacecode,
+               flgt_flno      as flgtFlno,
+               flgt_fnflag    as flgtFnflag,
+               flgt_acname    as flgtAcname,
+               flgt_vip       as flgtVip,
+               flgt_ftyp      as flgtFtyp,
+               flgt_alcname   as flgtAlcname,
+               flgt_a_stot    as flgtAStot,
+               flgt_d_atot    as flgtDAtot,
+               flgt_a_atot    as flgtAAtot,
+               flgt_d_stot    as flgtDStot,
+               flgt_adid      as flgtAdid
+        from T_FLIGHT
+        where flgt_flno = #{flgtLinkFlno}
+          AND flgt_flop = #{flgtLinkFlop}
+          AND flgt_repeat = #{flgtLinkRepeat}
+          AND flgt_adid = 'D'
+    </select>
+    <!-- Excele导出 -->
+    <select id="selectFlightDateList" resultType="com.zh.bean.flight.MyFlightTask">
+        SELECT
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        flight.flgt_id AS flgtId,
+        flight.flgt_ffid AS flgtFfid,
+        flight.flgt_airport_code AS flgtAirportCode,
+        flight.flgt_aptarea_code AS flgtAptareaCode,
+        flight.flgt_flno AS flgtFlno,
+        flight.flgt_flop AS flgtFlop,
+        flight.flgt_acname AS flgtAcname,
+        flight.flgt_regn AS flgtRegn,
+        flight.flgt_placecode AS flgtPlacecode,
+        flight.flgt_al2c AS flgtAl2c,
+        flight.flgt_alcname AS flgtAlcname,
+        flight.flgt_d_stot AS flgtDStot,
+        flight.flgt_d_etot AS flgtDEtot,
+        flight.flgt_d_atot AS flgtDAtot,
+        flight.flgt_org3c AS flgtOrg3c,
+        flight.flgt_orgnm AS flgtOrgnm,
+        flight.flgt_trs3c1 AS flgtTrs3c1,
+        flight.flgt_trs3c2 AS flgtTrs3c2,
+        flight.flgt_trs3c3 AS flgtTrs3c3,
+        flight.flgt_trs3c4 AS flgtTrs3c4,
+        flight.flgt_trs3c5 AS flgtTrs3c5,
+        flight.flgt_trsnm1 AS flgtTrsnm1,
+        flight.flgt_trsnm2 AS flgtTrsnm2,
+        flight.flgt_trsnm3 AS flgtTrsnm3,
+        flight.flgt_trsnm4 AS flightValic,
+        flight.flgt_trsnm5 AS flgtVialc,
+        flight.flgt_des3c AS flgtDes3c,
+        flight.flgt_desnm AS flgtDesnm,
+        flight.flgt_adid AS flgtAdid,
+        flight.flgt_flti AS flgtFlti,
+        flight.flgt_ftyp AS flgtFtyp,
+        flight.flgt_proxy AS flgtProxy,
+        flight.flgt_fnflag AS flgtFnflag,
+        flight.flgt_game AS flgtGame,
+        flight.flgt_chocks_in AS flgtChocksIn,
+        flight.flgt_chocks_out AS flgtChocksOut,
+        flight.flgt_vip AS flgtVip,
+        flight.flgt_num AS flgtNum,
+        flight.flgt_otc AS flgtOtc,
+        flight.flgt_repeat AS flgtRepeat,
+        flight.flgt_link_flop AS flgtLinkFlop,
+        flight.flgt_link_repeat AS flgtLinkRepeat,
+        flight.flgt_otc AS flgtOtc,
+        tf2.flgt_flno AS flgtLinkFlno,
+        tf2.flgt_org3c AS beorg3c,
+        tf2.flgt_a_stot AS flgtAStot,
+        tf2.flgt_a_etot AS flgtAEtot,
+        tf2.flgt_a_atot AS flgtAAtot,
+        tf2.flgt_placecode AS flgtPlacecodeIn,
+        tf2.flgt_flti AS flgtFltiIn
+        FROM T_TASK AS task,
+        T_FLIGHT AS flight
+        LEFT JOIN T_FLIGHT tf2
+        ON IF (
+        tf2.flgt_a_atot is not null,
+        tf2.flgt_a_atot &gt; DATE_ADD(CURDATE(),INTERVAL 0 HOUR),
+        tf2.flgt_a_stot &gt; DATE_ADD(CURDATE(),INTERVAL 0 HOUR)
+        )
+        AND tf2.flgt_adid = 'A'
+        AND flight.flgt_airport_code = tf2.flgt_airport_code
+        AND ((flight.flgt_link_flno IS NOT NULL AND flight.flgt_link_flno &lt;&gt; '' AND tf2.flgt_flno LIKE
+        CONCAT('%',flight.flgt_link_flno,'%')))
+        AND ((tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND flight.flgt_flno LIKE
+        CONCAT('%',tf2.flgt_link_flno,'%')))
+        AND flight.flgt_regn = tf2.flgt_regn
+        AND flight.flgt_link_flop = tf2.flgt_flop
+        AND flight.flgt_flop = tf2.flgt_link_flop
+        AND flight.flgt_repeat = tf2.flgt_link_repeat
+        AND flight.flgt_link_repeat = tf2.flgt_repeat
+        WHERE task.task_flight_id = flight.flgt_id
+        AND flight.flgt_ftyp &lt;&gt; 'NO' AND flight.flgt_ftyp &lt;&gt; 'CX'AND flight.flgt_ftyp &lt;&gt; 'DE' AND
+        flight.flgt_adid = 'D' AND
+        IF (
+        flight.flgt_d_etot is null,
+        flight.flgt_d_stot &gt;= DATE_ADD(#{date},INTERVAL 4 HOUR)
+        AND flight.flgt_d_stot &lt; DATE_ADD(#{date},INTERVAL 28 HOUR),
+        flight.flgt_d_etot &gt;= DATE_ADD(#{date},INTERVAL 4 HOUR)
+        AND flight.flgt_d_etot &lt; DATE_ADD(#{date},INTERVAL 28 HOUR)
+        )
+        AND flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            AND flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        ORDER BY flight.flgt_d_stot , flight.flgt_num ASC
+    </select>
+
+    <!-- Excele导出 -->
+    <select id="selectFlightDateListLock" resultType="com.zh.bean.flight.MyFlightTask">
+        SELECT
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        flight.flgt_id AS flgtId,
+        flight.flgt_ffid AS flgtFfid,
+        flight.flgt_airport_code AS flgtAirportCode,
+        flight.flgt_aptarea_code AS flgtAptareaCode,
+        flight.flgt_flno AS flgtFlno,
+        flight.flgt_flop AS flgtFlop,
+        flight.flgt_acname AS flgtAcname,
+        flight.flgt_regn AS flgtRegn,
+        flight.flgt_placecode AS flgtPlacecode,
+        flight.flgt_al2c AS flgtAl2c,
+        flight.flgt_alcname AS flgtAlcname,
+        flight.flgt_d_stot AS flgtDStot,
+        flight.flgt_d_etot AS flgtDEtot,
+        flight.flgt_d_atot AS flgtDAtot,
+        flight.flgt_org3c AS flgtOrg3c,
+        flight.flgt_orgnm AS flgtOrgnm,
+        flight.flgt_trs3c1 AS flgtTrs3c1,
+        flight.flgt_trs3c2 AS flgtTrs3c2,
+        flight.flgt_trs3c3 AS flgtTrs3c3,
+        flight.flgt_trs3c4 AS flgtTrs3c4,
+        flight.flgt_trs3c5 AS flgtTrs3c5,
+        flight.flgt_trsnm1 AS flgtTrsnm1,
+        flight.flgt_trsnm2 AS flgtTrsnm2,
+        flight.flgt_trsnm3 AS flgtTrsnm3,
+        flight.flgt_trsnm4 AS flightValic,
+        flight.flgt_trsnm5 AS flgtVialc,
+        flight.flgt_des3c AS flgtDes3c,
+        flight.flgt_desnm AS flgtDesnm,
+        flight.flgt_adid AS flgtAdid,
+        flight.flgt_flti AS flgtFlti,
+        flight.flgt_ftyp AS flgtFtyp,
+        flight.flgt_proxy AS flgtProxy,
+        flight.flgt_fnflag AS flgtFnflag,
+        flight.flgt_game AS flgtGame,
+        flight.flgt_chocks_in AS flgtChocksIn,
+        flight.flgt_chocks_out AS flgtChocksOut,
+        flight.flgt_vip AS flgtVip,
+        flight.flgt_num AS flgtNum,
+        flight.flgt_otc AS flgtOtc,
+        flight.flgt_repeat AS flgtRepeat,
+        flight.flgt_link_flop AS flgtLinkFlop,
+        flight.flgt_link_repeat AS flgtLinkRepeat,
+        flight.flgt_otc AS flgtOtc,
+        tf2.flgt_flno AS flgtLinkFlno,
+        tf2.flgt_org3c AS beorg3c,
+        tf2.flgt_a_stot AS flgtAStot,
+        tf2.flgt_a_etot AS flgtAEtot,
+        tf2.flgt_a_atot AS flgtAAtot,
+        tf2.flgt_placecode AS flgtPlacecodeIn,
+        tf2.flgt_flti AS flgtFltiIn
+        FROM T_TASK AS task,
+        T_FLIGHT AS flight
+        LEFT JOIN T_FLIGHT tf2
+        ON IF (
+        tf2.flgt_a_atot is not null,
+        tf2.flgt_a_atot &gt; DATE_ADD(CURDATE(),INTERVAL 0 HOUR),
+        tf2.flgt_a_stot &gt; DATE_ADD(CURDATE(),INTERVAL 0 HOUR)
+        )
+        AND tf2.flgt_adid = 'A'
+        AND flight.flgt_airport_code = tf2.flgt_airport_code
+        AND ((flight.flgt_link_flno IS NOT NULL AND flight.flgt_link_flno &lt;&gt; '' AND tf2.flgt_flno LIKE
+        CONCAT('%',flight.flgt_link_flno,'%')))
+        AND ((tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND flight.flgt_flno LIKE
+        CONCAT('%',tf2.flgt_link_flno,'%')))
+        AND flight.flgt_regn = tf2.flgt_regn
+        AND flight.flgt_link_flop = tf2.flgt_flop
+        AND flight.flgt_flop = tf2.flgt_link_flop
+        AND flight.flgt_repeat = tf2.flgt_link_repeat
+        AND flight.flgt_link_repeat = tf2.flgt_repeat
+        WHERE task.task_flight_id = flight.flgt_id
+        AND flight.flgt_ftyp &lt;&gt; 'NO' AND flight.flgt_ftyp &lt;&gt; 'CX'AND flight.flgt_ftyp &lt;&gt; 'DE' AND
+        flight.flgt_adid = 'D' AND
+        IF (
+        flight.flgt_d_etot is null,
+        flight.flgt_d_stot &gt;= DATE_ADD(#{date},INTERVAL 0 HOUR)
+        AND flight.flgt_d_stot &lt;= DATE_ADD(#{date},INTERVAL 24 HOUR),
+        flight.flgt_d_etot &gt;= DATE_ADD(#{date},INTERVAL 0 HOUR)
+        AND flight.flgt_d_etot &lt;= DATE_ADD(#{date},INTERVAL 24 HOUR)
+        )
+        AND flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            AND flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        ORDER BY flight.flgt_d_stot ASC
+    </select>
+
+    <!-- 查询飞机号码表 -->
+    <select id="getFLIGHTCODE" resultType="com.zh.bean.flight.MyFlightCode">
+        SELECT tf.arcr_regn       AS arcrRegn,
+               tf.arcr_acname     AS arcrAcname,
+               tf.arcr_custom_num AS arcrCustomNum,
+               tf.arcr_start_date AS arcrStartDate,
+               tf.arcr_end_date   AS arcrEndDate,
+               tc.cstm_name       AS arcrName,
+               tc.cstm_region     AS cstmRegion
+        from T_FLIGHT_CODE tf
+                 LEFT JOIN T_CUSTOM tc ON TRIM(LEADING '0' FROM tf.arcr_custom_num) = TRIM(LEADING '0' FROM tc.cstm_num)
+    </select>
+    <!-- 查询航空加油客户表 -->
+    <select id="getCUSTOM" resultType="com.zh.bean.flight.MyCustom">
+        SELECT cstm_num    AS cstmNum,
+               cstm_region AS cstmRegion,
+               cstm_name   AS cstmName
+        from T_CUSTOM
+    </select>
+    <!-- 删除飞机号码表信息 -->
+    <delete id="deleteFLIGHTCODE">
+        DELETE
+        from T_FLIGHT_CODE
+        where arcr_regn = #{arcrRegn}
+          and arcr_start_date = #{startDate}
+    </delete>
+    <!-- 删除航空加油客户表信息 -->
+    <delete id="deleteCUSTOM">
+        DELETE
+        from T_CUSTOM
+        where cstm_num = #{cstmNum}
+    </delete>
+    <!-- 新增飞机号码表信息 -->
+    <insert id="addFLIGHTCODE">
+        INSERT INTO T_FLIGHT_CODE (arcr_regn, arcr_acname, arcr_custom_num, arcr_start_date, arcr_end_date)
+        VALUES (#{flightCode.arcrRegn},
+                #{flightCode.arcrAcname},
+                #{flightCode.arcrCustomNum},
+                #{flightCode.arcrStartDate},
+                #{flightCode.arcrEndDate})
+    </insert>
+    <!-- 新增航空加油客户表信息 -->
+    <insert id="addCUSTOM">
+        INSERT INTO T_CUSTOM (cstm_num, cstm_region, cstm_name)
+        VALUES (#{custom.cstmNum},
+                #{custom.cstmRegion},
+                #{custom.cstmName})
+    </insert>
+    <!-- 修改飞机号码表信息 -->
+    <update id="updateFLIGHTCODE">
+        UPDATE T_FLIGHT_CODE
+        <set>
+            <if test="flightCode.arcrAcname != null and flightCode.arcrAcname != ''">
+                arcr_acname = #{flightCode.arcrAcname},
+            </if>
+            <if test="flightCode.arcrCustomNum != null and flightCode.arcrCustomNum != ''">
+                arcr_custom_num = #{flightCode.arcrCustomNum},
+            </if>
+            <if test="flightCode.arcrEndDate != null">
+                arcr_end_date = #{flightCode.arcrEndDate},
+            </if>
+        </set>
+        where
+        arcr_regn = #{flightCode.arcrRegn} and arcr_start_date = #{startDate}
+    </update>
+    <!-- 修改航空加油客户表信息 -->
+    <update id="updateCUSTOM">
+        UPDATE T_CUSTOM
+        <set>
+            <if test="custom.cstmRegion != null and custom.cstmRegion != ''">
+                cstm_region = #{custom.cstmRegion},
+            </if>
+            <if test="custom.cstmName != null and custom.cstmName != ''">
+                cstm_name = #{custom.cstmName} ,
+            </if>
+        </set>
+        where
+        cstm_num = #{custom.cstmNum}
+    </update>
+
+    <select id="getFLIGHTCODEFind" resultType="com.zh.bean.flight.MyFlightCode">
+        SELECT tf.arcr_regn       AS arcrRegn,
+               tf.arcr_acname     AS arcrAcname,
+               tf.arcr_custom_num AS arcrCustomNum,
+               tf.arcr_start_date AS arcrStartDate,
+               tf.arcr_end_date   AS arcrEndDate,
+               tc.cstm_name       AS arcrName,
+               tc.cstm_region     AS cstmRegion
+        from T_FLIGHT_CODE tf
+                 LEFT JOIN T_CUSTOM tc ON TRIM(LEADING '0' FROM tf.arcr_custom_num) = TRIM(LEADING '0' FROM tc.cstm_num)
+        WHERE tf.arcr_regn = #{arcrRegn}
+          and tf.arcr_start_date = #{startDate}
+    </select>
+
+    <select id="getCUSTOMFind" resultType="com.zh.bean.flight.MyCustom">
+        SELECT cstm_num    AS cstmNum,
+               cstm_region AS cstmRegion,
+               cstm_name   AS cstmName
+        from T_CUSTOM
+        WHERE cstm_num = #{cstmNum}
+    </select>
+    <!-- 获取规划数据 -->
+    <select id="getProjectData" resultType="com.zh.bean.flight.TProjectData">
+        SELECT
+        flgt_a_atot AS flgtAAtot,
+        flgt_crew_in_place AS flgtCrewInPlace
+        from T_FLIGHT where
+        flgt_ffid = #{flgtFfid} and
+        flgt_airport_code = #{flgtAirportCode}
+        <if test="flgtAptareaCode != null and flgtAptareaCode != ''">
+            and flgt_aptarea_code = #{flgtAptareaCode}
+        </if>
+    </select>
+    <select id="selectFlightOnlyIn" resultType="com.zh.bean.flight.MyFlightTask">
+        SELECT
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        flight.flgt_id AS flgtId,
+        flight.flgt_ffid AS flgtFfid,
+        flight.flgt_airport_code AS flgtAirportCode,
+        flight.flgt_aptarea_code AS flgtAptareaCode,
+        flight.flgt_flno AS flgtFlno,
+        flight.flgt_flop AS flgtFlop,
+        flight.flgt_acname AS flgtAcname,
+        flight.flgt_regn AS flgtRegn,
+        flight.flgt_placecode AS flgtPlacecode,
+        flight.flgt_al2c AS flgtAl2c,
+        flight.flgt_alcname AS flgtAlcname,
+        flight.flgt_a_stot AS flgtAStot,
+        flight.flgt_a_etot AS flgtAEtot,
+        flight.flgt_a_atot AS flgtAAtot,
+        flight.flgt_org3c AS flgtOrg3c,
+        flight.flgt_orgnm AS flgtOrgnm,
+        flight.flgt_trs3c1 AS flgtTrs3c1,
+        flight.flgt_trs3c2 AS flgtTrs3c2,
+        flight.flgt_trs3c3 AS flgtTrs3c3,
+        flight.flgt_trs3c4 AS flgtTrs3c4,
+        flight.flgt_trs3c5 AS flgtTrs3c5,
+        flight.flgt_trsnm1 AS flgtTrsnm1,
+        flight.flgt_trsnm2 AS flgtTrsnm2,
+        flight.flgt_trsnm3 AS flgtTrsnm3,
+        flight.flgt_trsnm4 AS flightValic,
+        flight.flgt_trsnm5 AS flgtVialc,
+        flight.flgt_des3c AS flgtDes3c,
+        flight.flgt_desnm AS flgtDesnm,
+        flight.flgt_adid AS flgtAdid,
+        flight.flgt_flti AS flgtFlti,
+        flight.flgt_ftyp AS flgtFtyp,
+        flight.flgt_proxy AS flgtProxy,
+        flight.flgt_fnflag AS flgtFnflag,
+        flight.flgt_game AS flgtGame,
+        flight.flgt_chocks_in AS flgtChocksIn,
+        flight.flgt_chocks_out AS flgtChocksOut,
+        flight.flgt_vip AS flgtVip,
+        flight.flgt_num AS flgtNum,
+        flight.flgt_otc AS flgtOtc,
+        flight.flgt_repeat AS flgtRepeat,
+        flight.flgt_link_flop AS flgtLinkFlop,
+        flight.flgt_link_repeat AS flgtLinkRepeat,
+        flight.flgt_otc AS flgtOtc,
+        flight.flgt_link_flno AS flgtLinkFlno
+        FROM T_FLIGHT flight
+        LEFT JOIN T_TASK task
+        ON task.task_flight_id = flight.flgt_id
+        WHERE
+        flight.flgt_ftyp &lt;&gt; 'NO' AND flight.flgt_ftyp &lt;&gt; 'CX' AND flight.flgt_adid = 'A'
+        AND flight.flgt_a_stot IS NOT NULL AND flight.flgt_a_stot &lt;&gt; ''
+        AND DATE_FORMAT(DATE_ADD(flight.flgt_a_stot,INTERVAL -4 HOUR),'%Y%m%d') = DATE_FORMAT(DATE_ADD(NOW(),INTERVAL -4
+        HOUR),'%Y%m%d')
+        AND flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            AND flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+        AND NOT EXISTS (
+        SELECT 1 FROM (
+        SELECT
+        tf1.flgt_flno
+        ,tf2.flgt_flno AS flgt_flno_out
+        ,tf1.flgt_a_stot
+        ,tf2.flgt_d_stot
+        ,tf2.flgt_d_etot
+        ,tf2.flgt_d_atot
+        ,tf2.flgt_org3c
+        ,tf1.flgt_id
+        FROM T_FLIGHT tf1
+        INNER JOIN T_FLIGHT tf2
+        ON tf1.flgt_adid = 'A'
+        AND tf2.flgt_adid = 'D'
+        AND tf1.flgt_link_flno IS NOT NULL AND tf1.flgt_link_flno &lt;&gt; '' AND tf2.flgt_flno LIKE
+        CONCAT('%',tf1.flgt_link_flno,'%')
+        AND tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND tf1.flgt_flno LIKE
+        CONCAT('%',tf2.flgt_link_flno,'%')
+        AND tf1.flgt_a_stot IS NOT NULL AND tf1.flgt_a_stot &lt;&gt; ''
+        AND DATE_FORMAT(DATE_ADD(tf1.flgt_a_stot,INTERVAL -4 HOUR),'%Y%m%d') = DATE_FORMAT(DATE_ADD(NOW(),INTERVAL -4
+        HOUR),'%Y%m%d')
+        AND tf2.flgt_d_stot IS NOT NULL AND tf2.flgt_d_stot &lt;&gt; ''
+        AND DATE_FORMAT(DATE_ADD(tf2.flgt_d_stot,INTERVAL -4 HOUR),'%Y%m%d') = DATE_FORMAT(DATE_ADD(NOW(),INTERVAL -4
+        HOUR),'%Y%m%d')
+        AND tf1.flgt_link_flop = tf2.flgt_flop
+        AND tf1.flgt_flop = tf2.flgt_link_flop
+        AND tf1.flgt_repeat = tf2.flgt_link_repeat
+        AND tf1.flgt_link_repeat = tf2.flgt_repeat
+        ) tf3
+        WHERE tf3.flgt_flno = flight.flgt_flno
+        AND tf3.flgt_id = flight.flgt_id
+        )
+        ORDER BY flight.flgt_a_stot
+    </select>
+    <!-- 根据出港的航班ID取得对应进港的航班ID -->
+    <select id="selectInFlightID" resultType="java.lang.String">
+        SELECT
+        tf2.flgt_id AS flgtId
+        FROM T_FLIGHT AS flight
+        LEFT JOIN T_FLIGHT tf2
+        ON tf2.flgt_adid = 'A'
+        AND flight.flgt_airport_code = tf2.flgt_airport_code
+        AND ((flight.flgt_link_flno IS NOT NULL AND flight.flgt_link_flno &lt;&gt; '' AND tf2.flgt_flno LIKE
+        CONCAT('%',flight.flgt_link_flno,'%')))
+        AND ((tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND flight.flgt_flno LIKE
+        CONCAT('%',tf2.flgt_link_flno,'%')))
+        AND flight.flgt_regn = tf2.flgt_regn
+        AND flight.flgt_link_flop = tf2.flgt_flop
+        AND flight.flgt_flop = tf2.flgt_link_flop
+        AND flight.flgt_repeat = tf2.flgt_link_repeat
+        AND flight.flgt_link_repeat = tf2.flgt_repeat
+        WHERE flight.flgt_id = #{flgtId}
+        AND flight.flgt_ftyp &lt;&gt; 'NO' AND flight.flgt_ftyp &lt;&gt; 'CX' AND flight.flgt_adid = 'D'
+        AND flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            AND flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+    </select>
+
+    <!-- 根据出港的航班ID取得对应进港的航班ID -->
+    <select id="selectInFlightIds" resultType="java.lang.String">
+        SELECT
+        tf2.flgt_id AS flgtId
+        FROM T_FLIGHT AS flight
+        LEFT JOIN T_FLIGHT tf2
+        ON tf2.flgt_adid = 'D'
+        AND flight.flgt_airport_code = tf2.flgt_airport_code
+        AND ((flight.flgt_link_flno IS NOT NULL AND flight.flgt_link_flno &lt;&gt; '' AND tf2.flgt_flno LIKE
+        CONCAT('%',flight.flgt_link_flno,'%')))
+        AND ((tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND flight.flgt_flno LIKE
+        CONCAT('%',tf2.flgt_link_flno,'%')))
+        AND flight.flgt_regn = tf2.flgt_regn
+        AND flight.flgt_link_flop = tf2.flgt_flop
+        AND flight.flgt_flop = tf2.flgt_link_flop
+        AND flight.flgt_repeat = tf2.flgt_link_repeat
+        AND flight.flgt_link_repeat = tf2.flgt_repeat
+        WHERE flight.flgt_id = #{flgtId}
+        AND flight.flgt_ftyp &lt;&gt; 'NO' AND flight.flgt_ftyp &lt;&gt; 'CX' AND flight.flgt_adid = 'A'
+        AND flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            AND flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+    </select>
+
+    <!-- 新建航班闹钟提示 -->
+    <insert id="addFlightAlarm">
+        INSERT into T_FLIGHT_ALARM (flal_id, flal_staff_id,
+                                    flal_set_col, flal_set_time, flal_cre_date,
+                                    flal_airport_rcode, flal_aptarea_rcode)
+        values (#{flightAlarm.flalId}, #{flightAlarm.flalStaffId},
+                #{flightAlarm.flalSetCol}, #{flightAlarm.flalSetTime}, CURDATE(),
+                #{flightAlarm.flalAirportRcode}, #{flightAlarm.flalAptareaRcode})
+    </insert>
+
+    <!-- 删除航班闹钟提示 -->
+    <delete id="deleteFlightAlarm">
+        DELETE
+        from T_FLIGHT_ALARM
+        where flal_id = #{flalId}
+          and flal_staff_id = #{staffId}
+    </delete>
+
+    <!-- 查询航班闹钟提示 -->
+    <select id="getFlightAlarm" resultType="com.zh.bean.flight.MyFlightAlarm">
+        SELECT
+        flal_id as flalId,
+        flal_staff_id as flalStaffId,
+        flal_set_col as flalSetCol,
+        flal_set_time as flalSetTime,
+        flal_cre_date as flalCreDate,
+        flal_airport_rcode as flalAirportRcode,
+        flal_aptarea_rcode as flalAptareaRcode
+        from T_FLIGHT_ALARM where
+        flal_staff_id = #{staffId}
+        <if test="flalId != null and flalId != ''">
+            and flal_id = #{flalId}
+        </if>
+    </select>
+
+    <!-- 修改航班闹钟提示 -->
+    <update id="updateFlightAlarm">
+        UPDATE T_FLIGHT_ALARM
+        set flal_set_col  = #{flightAlarm.flalSetCol},
+            flal_set_time = #{flightAlarm.flalSetTime}
+        where flal_id = #{flightAlarm.flalId}
+          and flal_staff_id = #{flightAlarm.flalStaffId}
+    </update>
+    <!-- 根据飞机号码查询飞机类型 -->
+    <select id="getFlgtAcname" resultType="java.lang.String">
+        SELECT arcr_acname
+        from T_FLIGHT_CODE
+        where arcr_regn = #{flgtRegn}
+        order by arcr_end_date limit 1
+    </select>
+
+
+    <select id="findMaxFlgtRepeat" resultType="java.lang.Integer">
+        SELECT MAX(flgt_repeat)
+        from T_FLIGHT
+        where flgt_flop = CURDATE()
+    </select>
+
+    <!-- 当天航班序号最大值 -->
+    <select id="getMaxflgtNum" resultType="java.lang.Integer">
+        SELECT max(flgt_num)
+        from T_FLIGHT
+        where flgt_adid = 'D'
+        AND flgt_d_stot &gt;= DATE_ADD(#{date},INTERVAL 4 HOUR)
+        AND flgt_d_stot &lt; DATE_ADD(#{date},INTERVAL 28 HOUR)
+        AND flgt_airport_code = #{airportCode}
+        <if test="airportAreaCode != null and airportAreaCode != ''">
+            AND flgt_aptarea_code = #{airportAreaCode}
+        </if>
+    </select>
+
+    <select id="getPageTaskAndFlight" resultType="com.zh.bean.flight.MyFlightTask">
+        select tmp.* from (
+        SELECT
+        DISTINCT
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        task.task_takeoff_fuel as flgtTakeoffFuel,
+        task.task_chock_fuel as flgtChockFuel,
+        flight.flgt_id AS flgtId,
+        flight.flgt_ffid AS flgtFfid,
+        flight.flgt_airport_code AS flgtAirportCode,
+        flight.flgt_aptarea_code AS flgtAptareaCode,
+        flight.flgt_flno AS flgtFlno,
+        flight.flgt_flop AS flgtFlop,
+        flight.flgt_acname AS flgtAcname,
+        flight.flgt_regn AS flgtRegn,
+        flight.flgt_placecode AS flgtPlacecode,
+        flight.flgt_al2c AS flgtAl2c,
+        flight.flgt_alcname AS flgtAlcname,
+        flight.flgt_d_stot AS flgtDStot,
+        flight.flgt_d_etot AS flgtDEtot,
+        flight.flgt_d_atot AS flgtDAtot,
+        flight.flgt_org3c AS flgtOrg3c,
+        flight.flgt_orgnm AS flgtOrgnm,
+        flight.flgt_trs3c1 AS flgtTrs3c1,
+        flight.flgt_trs3c2 AS flgtTrs3c2,
+        flight.flgt_trs3c3 AS flgtTrs3c3,
+        flight.flgt_trs3c4 AS flgtTrs3c4,
+        flight.flgt_trs3c5 AS flgtTrs3c5,
+        flight.flgt_trsnm1 AS flgtTrsnm1,
+        flight.flgt_trsnm2 AS flgtTrsnm2,
+        flight.flgt_trsnm3 AS flgtTrsnm3,
+        flight.flgt_trsnm4 AS flightValic,
+        flight.flgt_trsnm5 AS flgtVialc,
+        flight.flgt_des3c AS flgtDes3c,
+        flight.flgt_desnm AS flgtDesnm,
+        flight.flgt_adid AS flgtAdid,
+        flight.flgt_flti AS flgtFlti,
+        flight.flgt_ftyp AS flgtFtyp,
+        flight.flgt_proxy AS flgtProxy,
+        flight.flgt_fnflag AS flgtFnflag,
+        flight.flgt_game AS flgtGame,
+        flight.flgt_chocks_in AS flgtChocksIn,
+        flight.flgt_chocks_out AS flgtChocksOut,
+        flight.flgt_vip AS flgtVip,
+        flight.flgt_num AS flgtNum,
+        flight.flgt_repeat AS flgtRepeat,
+        flight.flgt_link_flop AS flgtLinkFlop,
+        flight.flgt_link_repeat AS flgtLinkRepeat,
+        flight.flgt_otc AS flgtOtc,
+        tf2.flgt_flno AS flgtLinkFlno,
+        tf2.flgt_org3c AS beorg3c,
+        tf2.flgt_a_stot AS flgtAStot,
+        tf2.flgt_a_etot AS flgtAEtot,
+        tf2.flgt_a_atot AS flgtAAtot,
+        tf2.flgt_placecode AS flgtPlacecodeIn
+        FROM T_TASK AS task,
+        T_FLIGHT AS flight
+        LEFT JOIN T_FLIGHT tf2
+        ON tf2.flgt_adid = 'A'
+        AND flight.flgt_airport_code = tf2.flgt_airport_code
+        AND ((flight.flgt_link_flno IS NOT NULL AND flight.flgt_link_flno &lt;&gt; '' AND tf2.flgt_flno LIKE
+        CONCAT('%',flight.flgt_link_flno,'%')))
+        AND ((tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND flight.flgt_flno LIKE
+        CONCAT('%',tf2.flgt_link_flno,'%')))
+        AND flight.flgt_regn = tf2.flgt_regn
+        AND flight.flgt_link_flop = tf2.flgt_flop
+        AND flight.flgt_flop = tf2.flgt_link_flop
+        AND flight.flgt_repeat = tf2.flgt_link_repeat
+        AND flight.flgt_link_repeat = tf2.flgt_repeat
+        WHERE task.task_flight_id = flight.flgt_id
+        AND flight.flgt_ftyp &lt;&gt; 'NO' AND flight.flgt_ftyp &lt;&gt; 'CX' AND flight.flgt_adid = 'D'
+        AND
+        IF (
+        flight.flgt_d_etot is null,
+        flight.flgt_d_stot &gt;= DATE_ADD(#{date},INTERVAL 4 HOUR)
+        AND flight.flgt_d_stot &lt; DATE_ADD(#{date},INTERVAL 28 HOUR),
+        flight.flgt_d_etot &gt;= DATE_ADD(#{date},INTERVAL 4 HOUR)
+        AND flight.flgt_d_etot &lt; DATE_ADD(#{date},INTERVAL 28 HOUR)
+        )
+        AND flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            AND flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+
+        order by flight.flgt_num ASC
+        ) tmp
+        <if test="queryString != null and queryString != ''">
+            where tmp.flgtRegn like CONCAT('%',#{queryString},'%')
+            OR tmp.flgtFlno like CONCAT('%',#{queryString},'%')
+        </if>
+
+    </select>
+
+    <select id="getPageTaskAndFlightCount" resultType="java.lang.Integer">
+        select count(*) from (
+        SELECT
+        task.task_id AS taskId,
+        task.task_ope_staff_id AS taskOpeStaffId,
+        task.task_content AS taskContent,
+        task.task_status AS taskStatus,
+        task.task_asg_time AS taskAsgTime,
+        task.task_acc_time AS taskAccTime,
+        task.task_chag_sta_time AS taskChagStaTime,
+        task.task_chag_end_time AS taskChagEndTime,
+        task.task_done_time AS taskDoneTime,
+        task.task_fuel_recpt_no AS taskFuelRecptNo,
+        task.task_vehi_no AS taskVehiNo,
+        task.task_cre_staff_id AS taskCreStaffId,
+        task.task_starmark AS taskStarmark,
+        task.task_rec_cre_time AS taskRecCreTime,
+        task.task_takeoff_fuel as flgtTakeoffFuel,
+        task.task_chock_fuel as flgtChockFuel,
+        flight.flgt_id AS flgtId,
+        flight.flgt_ffid AS flgtFfid,
+        flight.flgt_airport_code AS flgtAirportCode,
+        flight.flgt_aptarea_code AS flgtAptareaCode,
+        flight.flgt_flno AS flgtFlno,
+        flight.flgt_flop AS flgtFlop,
+        flight.flgt_acname AS flgtAcname,
+        flight.flgt_regn AS flgtRegn,
+        flight.flgt_placecode AS flgtPlacecode,
+        flight.flgt_al2c AS flgtAl2c,
+        flight.flgt_alcname AS flgtAlcname,
+        flight.flgt_d_stot AS flgtDStot,
+        flight.flgt_d_etot AS flgtDEtot,
+        flight.flgt_d_atot AS flgtDAtot,
+        flight.flgt_org3c AS flgtOrg3c,
+        flight.flgt_orgnm AS flgtOrgnm,
+        flight.flgt_trs3c1 AS flgtTrs3c1,
+        flight.flgt_trs3c2 AS flgtTrs3c2,
+        flight.flgt_trs3c3 AS flgtTrs3c3,
+        flight.flgt_trs3c4 AS flgtTrs3c4,
+        flight.flgt_trs3c5 AS flgtTrs3c5,
+        flight.flgt_trsnm1 AS flgtTrsnm1,
+        flight.flgt_trsnm2 AS flgtTrsnm2,
+        flight.flgt_trsnm3 AS flgtTrsnm3,
+        flight.flgt_trsnm4 AS flightValic,
+        flight.flgt_trsnm5 AS flgtVialc,
+        flight.flgt_des3c AS flgtDes3c,
+        flight.flgt_desnm AS flgtDesnm,
+        flight.flgt_adid AS flgtAdid,
+        flight.flgt_flti AS flgtFlti,
+        flight.flgt_ftyp AS flgtFtyp,
+        flight.flgt_proxy AS flgtProxy,
+        flight.flgt_fnflag AS flgtFnflag,
+        flight.flgt_game AS flgtGame,
+        flight.flgt_chocks_in AS flgtChocksIn,
+        flight.flgt_chocks_out AS flgtChocksOut,
+        flight.flgt_vip AS flgtVip,
+        flight.flgt_num AS flgtNum,
+        flight.flgt_repeat AS flgtRepeat,
+        flight.flgt_link_flop AS flgtLinkFlop,
+        flight.flgt_link_repeat AS flgtLinkRepeat,
+        flight.flgt_otc AS flgtOtc,
+        tf2.flgt_flno AS flgtLinkFlno,
+        tf2.flgt_org3c AS beorg3c,
+        tf2.flgt_a_stot AS flgtAStot,
+        tf2.flgt_a_etot AS flgtAEtot,
+        tf2.flgt_a_atot AS flgtAAtot,
+        tf2.flgt_placecode AS flgtPlacecodeIn
+        FROM T_TASK AS task,
+        T_FLIGHT AS flight
+        LEFT JOIN T_FLIGHT tf2
+        ON tf2.flgt_adid = 'A'
+        AND flight.flgt_airport_code = tf2.flgt_airport_code
+        AND ((flight.flgt_link_flno IS NOT NULL AND flight.flgt_link_flno &lt;&gt; '' AND tf2.flgt_flno LIKE
+        CONCAT('%',flight.flgt_link_flno,'%')))
+        AND ((tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND flight.flgt_flno LIKE
+        CONCAT('%',tf2.flgt_link_flno,'%')))
+        AND flight.flgt_regn = tf2.flgt_regn
+        AND flight.flgt_link_flop = tf2.flgt_flop
+        AND flight.flgt_flop = tf2.flgt_link_flop
+        AND flight.flgt_repeat = tf2.flgt_link_repeat
+        AND flight.flgt_link_repeat = tf2.flgt_repeat
+        WHERE task.task_flight_id = flight.flgt_id
+        AND flight.flgt_ftyp &lt;&gt; 'NO' AND flight.flgt_ftyp &lt;&gt; 'CX' AND flight.flgt_adid = 'D'
+        AND
+        IF (
+        flight.flgt_d_etot is null,
+        flight.flgt_d_stot &gt;= DATE_ADD(#{date},INTERVAL 4 HOUR)
+        AND flight.flgt_d_stot &lt; DATE_ADD(#{date},INTERVAL 28 HOUR),
+        flight.flgt_d_etot &gt;= DATE_ADD(#{date},INTERVAL 4 HOUR)
+        AND flight.flgt_d_etot &lt; DATE_ADD(#{date},INTERVAL 28 HOUR)
+        )
+        AND flight.flgt_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            AND flight.flgt_aptarea_code = #{staffAptareaCode}
+        </if>
+
+        order by flight.flgt_num ASC
+        ) tmp
+        <if test="queryString != null and queryString != ''">
+            where tmp.flgtRegn like CONCAT('%',#{queryString},'%')
+            OR tmp.flgtFlno like CONCAT('%',#{queryString},'%')
+        </if>
+
+    </select>
+    <select id="findMyFlightByFfid" resultType="com.zh.bean.flight.MyFlight">
+        select flgt_id            AS flgtId,
+               flgt_ffid          AS flgtFfid,
+               flgt_airport_code  AS flgtAirportCode,
+               flgt_aptarea_code  AS flgtAptareaCode,
+               flgt_flno          AS flgtFlno,
+               flgt_flop          AS flgtFlop,
+               flgt_acname        AS flgtAcname,
+               flgt_regn          AS flgtRegn,
+               flgt_placecode     AS flgtPlacecode,
+               flgt_al2c          AS flgtAl2c,
+               flgt_alcname       AS flgtAlcname,
+               flgt_vialc         AS flgtVialc,
+               flgt_a_stot        AS flgtAStot,
+               flgt_a_etot        AS flgtAEtot,
+               flgt_a_atot        AS flgtAAtot,
+               flgt_d_stot        AS flgtDStot,
+               flgt_d_etot        AS flgtDEtot,
+               flgt_d_atot        AS flgtDAtot,
+               flgt_org3c         AS flgtOrg3c,
+               flgt_orgnm         AS flgtOrgnm,
+               flgt_trs3c1        AS flgtTrs3c1,
+               flgt_trs3c2        AS flgtTrs3c2,
+               flgt_trs3c3        AS flgtTrs3c3,
+               flgt_trs3c4        AS flgtTrs3c4,
+               flgt_trs3c5        AS flgtTrs3c5,
+               flgt_trsnm1        AS flgtTrsnm1,
+               flgt_trsnm2        AS flgtTrsnm2,
+               flgt_trsnm3        AS flgtTrsnm3,
+               flgt_trsnm4        AS flgtTrsnm4,
+               flgt_trsnm5        AS flgtTrsnm5,
+               flgt_des3c         AS flgtDes3c,
+               flgt_desnm         AS flgtDesnm,
+               flgt_adid          AS flgtAdid,
+               flgt_mission_prop  AS flgtMissionProp,
+               flgt_nature        AS flgtNature,
+               flgt_sub_nature    AS flgtSubNature,
+               flgt_flti          AS flgtFlti,
+               flgt_ftyp          AS flgtFtyp,
+               flgt_delaycode     AS flgtDelaycode,
+               flgt_proxy         AS flgtProxy,
+               flgt_link_flno     AS flgtLinkFlno,
+               flgt_fnflag        AS flgtFnflag,
+               flgt_ifsr          AS flgtIfsr,
+               flgt_game          AS flgtGame,
+               flgt_dep_runway    AS flgtDepRunway,
+               flgt_arr_runway    AS flgtArrRunway,
+               flgt_gate          AS flgtGate,
+               flgt_crew_in_place AS flgtCrewInPlace,
+               flgt_chocks_in     AS flgtChocksIn,
+               flgt_chocks_out    AS flgtChocksOut,
+               flgt_first_lugg    AS flgtFirstLugg,
+               flgt_last_lugg     AS flgtLastLugg,
+               flgt_ptax          AS flgtPtax,
+               flgt_etax          AS flgtEtax,
+               flgt_atax          AS flgtAtax,
+               flgt_takeoff_fuel  AS flgtTakeoffFuel,
+               flgt_chock_fuel    AS flgtChockFuel,
+               flgt_vip           AS flgtVip,
+               flgt_starmark      AS flgtStarmark,
+               flgt_task_asign    AS flgtTaskAsign
+        from T_FLIGHT
+        where flgt_ffid = #{ffid}
+    </select>
+
+    <select id="findMyFlightByFlgtId" resultType="com.zh.bean.flight.MyFlight">
+        select flgt_id            AS flgtId,
+               flgt_ffid          AS flgtFfid,
+               flgt_airport_code  AS flgtAirportCode,
+               flgt_aptarea_code  AS flgtAptareaCode,
+               flgt_flno          AS flgtFlno,
+               flgt_flop          AS flgtFlop,
+               flgt_acname        AS flgtAcname,
+               flgt_regn          AS flgtRegn,
+               flgt_placecode     AS flgtPlacecode,
+               flgt_al2c          AS flgtAl2c,
+               flgt_alcname       AS flgtAlcname,
+               flgt_vialc         AS flgtVialc,
+               flgt_a_stot        AS flgtAStot,
+               flgt_a_etot        AS flgtAEtot,
+               flgt_a_atot        AS flgtAAtot,
+               flgt_d_stot        AS flgtDStot,
+               flgt_d_etot        AS flgtDEtot,
+               flgt_d_atot        AS flgtDAtot,
+               flgt_org3c         AS flgtOrg3c,
+               flgt_orgnm         AS flgtOrgnm,
+               flgt_trs3c1        AS flgtTrs3c1,
+               flgt_trs3c2        AS flgtTrs3c2,
+               flgt_trs3c3        AS flgtTrs3c3,
+               flgt_trs3c4        AS flgtTrs3c4,
+               flgt_trs3c5        AS flgtTrs3c5,
+               flgt_trsnm1        AS flgtTrsnm1,
+               flgt_trsnm2        AS flgtTrsnm2,
+               flgt_trsnm3        AS flgtTrsnm3,
+               flgt_trsnm4        AS flgtTrsnm4,
+               flgt_trsnm5        AS flgtTrsnm5,
+               flgt_des3c         AS flgtDes3c,
+               flgt_desnm         AS flgtDesnm,
+               flgt_adid          AS flgtAdid,
+               flgt_mission_prop  AS flgtMissionProp,
+               flgt_nature        AS flgtNature,
+               flgt_sub_nature    AS flgtSubNature,
+               flgt_flti          AS flgtFlti,
+               flgt_ftyp          AS flgtFtyp,
+               flgt_delaycode     AS flgtDelaycode,
+               flgt_proxy         AS flgtProxy,
+               flgt_link_flno     AS flgtLinkFlno,
+               flgt_fnflag        AS flgtFnflag,
+               flgt_ifsr          AS flgtIfsr,
+               flgt_game          AS flgtGame,
+               flgt_dep_runway    AS flgtDepRunway,
+               flgt_arr_runway    AS flgtArrRunway,
+               flgt_gate          AS flgtGate,
+               flgt_crew_in_place AS flgtCrewInPlace,
+               flgt_chocks_in     AS flgtChocksIn,
+               flgt_chocks_out    AS flgtChocksOut,
+               flgt_first_lugg    AS flgtFirstLugg,
+               flgt_last_lugg     AS flgtLastLugg,
+               flgt_ptax          AS flgtPtax,
+               flgt_etax          AS flgtEtax,
+               flgt_atax          AS flgtAtax,
+               flgt_takeoff_fuel  AS flgtTakeoffFuel,
+               flgt_chock_fuel    AS flgtChockFuel,
+               flgt_vip           AS flgtVip,
+               flgt_starmark      AS flgtStarmark,
+               flgt_task_asign    AS flgtTaskAsign
+        from T_FLIGHT
+        where flgt_id = #{flgtId}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.StaffMapper">
+
+    <!-- 获取人员信息 -->
+    <select id="getStaffList" resultType="com.zh.bean.login.MyStaff">
+        select
+        staff_id AS staffId,
+        staff_name AS staffName
+        from T_STAFF
+        where
+        staff_airport_code = #{staffAirportCode}
+        <if test="staffAptareaCode != null and staffAptareaCode != ''">
+            and staff_aptarea_code = #{staffAptareaCode}
+        </if>
+        <if test="staffType != null and staffType != ''">
+            and staff_type = #{staffType}
+        </if>
+    </select>
+
+
+</mapper>

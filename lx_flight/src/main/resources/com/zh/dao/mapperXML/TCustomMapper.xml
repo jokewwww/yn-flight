@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.TCustomMapper">
+
+    <resultMap type="com.zh.entity.TCustom" id="TCustomMap">
+        <result property="cstmNum" column="cstm_num" jdbcType="VARCHAR"/>
+        <result property="cstmRegion" column="cstm_region" jdbcType="VARCHAR"/>
+        <result property="cstmName" column="cstm_name" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="TCustomMap">
+        select cstm_num,
+               cstm_region,
+               cstm_name
+        from t_custom
+        where cstm_num = #{cstmNum}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryList" resultMap="TCustomMap">
+        select
+        cstm_num,
+        cstm_region,
+        cstm_name
+        from t_custom
+        <where>
+            <if test="cstmNum != null and cstmNum != ''">
+                and cstm_num = #{cstmNum}
+            </if>
+            <if test="cstmRegion != null and cstmRegion != ''">
+                and cstm_region = #{cstmRegion}
+            </if>
+            <if test="cstmName != null and cstmName != ''">
+                and cstm_name LIKE CONCAT('%',#{cstmName},'%')
+            </if>
+        </where>
+    </select>
+
+    <!--统计总行数-->
+    <select id="count" resultType="java.lang.Long">
+        select count(1)
+        from t_custom
+        <where>
+            <if test="cstmNum != null and cstmNum != ''">
+                and cstm_num = #{cstmNum}
+            </if>
+            <if test="cstmRegion != null and cstmRegion != ''">
+                and cstm_region = #{cstmRegion}
+            </if>
+            <if test="cstmName != null and cstmName != ''">
+                and cstm_name = #{cstmName}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="cstmNum" useGeneratedKeys="true">
+        insert into t_custom(cstm_num, cstm_region, cstm_name)
+        values (#{cstmNum}, #{cstmRegion}, #{cstmName})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="cstmNum" useGeneratedKeys="true">
+        insert into t_custom(cstm_num,cstm_region,cstm_name)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{cstmNum},#{entity.cstmRegion}#{entity.cstmName})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="cstmNum" useGeneratedKeys="true">
+        insert into t_custom(cstm_num,cstm_region,cstm_name)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{cstmNum},#{entity.cstmRegion}#{entity.cstmName})
+        </foreach>
+        on duplicate key update
+        cstm_num=values(cstm_num),
+        cstm_region = values(cstm_region),
+        cstm_name = values(cstm_name)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update t_custom
+        <set>
+            <if test="cstmNum != null and cstmNum != ''">
+                cstm_num = #{cstmNum},
+            </if>
+            <if test="cstmRegion != null and cstmRegion != ''">
+                cstm_region = #{cstmRegion},
+            </if>
+            <if test="cstmName != null and cstmName != ''">
+                cstm_name = #{cstmName},
+            </if>
+        </set>
+        where cstm_num = #{cstmNum}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from t_custom
+        where cstm_num = #{cstmNum}
+    </delete>
+
+</mapper>
+

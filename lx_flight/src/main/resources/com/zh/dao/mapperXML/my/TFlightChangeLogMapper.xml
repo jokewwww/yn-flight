@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TFlightChangeLogMapper">
+
+    <resultMap type="com.zh.bean.flight.TFlightChangeLog" id="TFlightChangeLogResult">
+        <result property="id"    column="id"    />
+        <result property="ffid"    column="ffid"    />
+        <result property="flgtFlno"    column="flgt_flno"    />
+        <result property="jsonData"    column="json_data"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="bz"    column="bz"    />
+    </resultMap>
+
+    <sql id="selectTFlightChangeLogVo">
+        select id, ffid, flgt_flno, json_data, create_time, bz from T_FLIGHT_CHANGE_LOG
+    </sql>
+
+    <select id="selectTFlightChangeLogList" parameterType="com.zh.bean.flight.TFlightChangeLog" resultMap="TFlightChangeLogResult">
+        <include refid="selectTFlightChangeLogVo"/>
+        <where>
+            <if test="ffid != null  and ffid != ''"> and ffid = #{ffid}</if>
+            <if test="flgtFlno != null  and flgtFlno != ''"> and flgt_flno = #{flgtFlno}</if>
+            <if test="jsonData != null  and jsonData != ''"> and json_data = #{jsonData}</if>
+            <if test="bz != null  and bz != ''"> and bz = #{bz}</if>
+        </where>
+    </select>
+
+    <select id="selectTFlightChangeLogById" parameterType="Long" resultMap="TFlightChangeLogResult">
+        <include refid="selectTFlightChangeLogVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertTFlightChangeLog" parameterType="com.zh.bean.flight.TFlightChangeLog">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT seq_T_FLIGHT_CHANGE_LOG.NEXTVAL as id FROM DUAL
+        </selectKey>
+        insert into T_FLIGHT_CHANGE_LOG
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null ">id,</if>
+            <if test="ffid != null  and ffid != ''">ffid,</if>
+            <if test="flgtFlno != null  and flgtFlno != ''">flgt_flno,</if>
+            <if test="jsonData != null  and jsonData != ''">json_data,</if>
+            <if test="createTime != null ">create_time,</if>
+            <if test="bz != null  and bz != ''">bz,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null ">#{id},</if>
+            <if test="ffid != null  and ffid != ''">#{ffid},</if>
+            <if test="flgtFlno != null  and flgtFlno != ''">#{flgtFlno},</if>
+            <if test="jsonData != null  and jsonData != ''">#{jsonData},</if>
+            <if test="createTime != null ">#{createTime},</if>
+            <if test="bz != null  and bz != ''">#{bz},</if>
+        </trim>
+    </insert>
+
+    <update id="updateTFlightChangeLog" parameterType="com.zh.bean.flight.TFlightChangeLog">
+        update T_FLIGHT_CHANGE_LOG
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="ffid != null  and ffid != ''">ffid = #{ffid},</if>
+            <if test="flgtFlno != null  and flgtFlno != ''">flgt_flno = #{flgtFlno},</if>
+            <if test="jsonData != null  and jsonData != ''">json_data = #{jsonData},</if>
+            <if test="createTime != null ">create_time = #{createTime},</if>
+            <if test="bz != null  and bz != ''">bz = #{bz},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTFlightChangeLogById" parameterType="Long">
+        delete from T_FLIGHT_CHANGE_LOG where id = #{id}
+    </delete>
+
+    <delete id="deleteTFlightChangeLogByIds" parameterType="String">
+        delete from T_FLIGHT_CHANGE_LOG where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <select id="findChangeLog" resultMap="TFlightChangeLogResult">
+        select id, ffid, flgt_flno, json_data, create_time, bz from T_FLIGHT_CHANGE_LOG
+        WHERE
+        1 = 1
+        <if test="startTime!=null and startTime!=''">
+            and   create_time >= #{ startTime }
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and   create_time &lt;=  #{ endTime }
+        </if>
+        <if test="flgtFlno!=null and flgtFlno!=''">
+            AND flgt_flno like CONCAT('%',#{flgtFlno},'%')
+        </if>
+        order by create_time desc
+    </select>
+</mapper>

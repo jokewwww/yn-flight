@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TOrderInfoMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.TOrderInfo">
+    <id column="order_id" jdbcType="BIGINT" property="orderId" />
+    <result column="iud" jdbcType="VARCHAR" property="iud" />
+    <result column="luts" jdbcType="VARCHAR" property="luts" />
+    <result column="order_no" jdbcType="VARCHAR" property="orderNo" />
+    <result column="addoil_type" jdbcType="VARCHAR" property="addoilType" />
+    <result column="apc3" jdbcType="VARCHAR" property="apc3" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="order_date" jdbcType="DATE" property="orderDate" />
+    <result column="cstno" jdbcType="VARCHAR" property="cstno" />
+    <result column="cstnm" jdbcType="VARCHAR" property="cstnm" />
+    <result column="estimated_volume" jdbcType="INTEGER" property="estimatedVolume" />
+    <result column="estimated_time" jdbcType="TIMESTAMP" property="estimatedTime" />
+    <result column="oil_type" jdbcType="INTEGER" property="oilType" />
+    <result column="order_status" jdbcType="INTEGER" property="orderStatus" />
+    <result column="oil_user_nm" jdbcType="VARCHAR" property="oilUserNm" />
+    <result column="oil_user_tel" jdbcType="VARCHAR" property="oilUserTel" />
+    <result column="tanker_no" jdbcType="VARCHAR" property="tankerNo" />
+    <result column="flno" jdbcType="VARCHAR" property="flno" />
+    <result column="ttyp" jdbcType="VARCHAR" property="ttyp" />
+    <result column="regn" jdbcType="VARCHAR" property="regn" />
+    <result column="act3" jdbcType="VARCHAR" property="act3" />
+    <result column="actn" jdbcType="VARCHAR" property="actn" />
+    <result column="alc2" jdbcType="VARCHAR" property="alc2" />
+    <result column="alcnm" jdbcType="VARCHAR" property="alcnm" />
+    <result column="org3" jdbcType="VARCHAR" property="org3" />
+    <result column="orgnm" jdbcType="VARCHAR" property="orgnm" />
+    <result column="des3" jdbcType="VARCHAR" property="des3" />
+    <result column="desnm" jdbcType="VARCHAR" property="desnm" />
+    <result column="via3" jdbcType="VARCHAR" property="via3" />
+    <result column="vianm" jdbcType="VARCHAR" property="vianm" />
+    <result column="cdat" jdbcType="TIMESTAMP" property="cdat" />
+    <result column="lstu" jdbcType="TIMESTAMP" property="lstu" />
+    <result column="otst" jdbcType="VARCHAR" property="otst" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="plan_date_begin" jdbcType="TIMESTAMP" property="planDateBegin" />
+    <result column="plan_date_end" jdbcType="TIMESTAMP" property="planDateEnd" />
+    <result column="close_content" jdbcType="VARCHAR" property="closeContent" />
+    <result column="otyp" jdbcType="VARCHAR" property="otyp" />
+
+  </resultMap>
+  <sql id="Base_Column_List">
+    order_id, iud, luts, order_no, addoil_type, apc3, address, order_date, cstno, cstnm, 
+    estimated_volume, estimated_time, oil_type, order_status, oil_user_nm, oil_user_tel, 
+    tanker_no, flno, ttyp, regn, act3, actn, alc2, alcnm, org3, orgnm, des3, desnm, via3, 
+    vianm, cdat, lstu, otst,status,plan_date_begin,plan_date_end,close_content,otyp
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from T_ORDER_INFO
+    where order_id = #{orderId,jdbcType=BIGINT}
+  </select>
+
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from T_ORDER_INFO
+        where order_no = #{orderNo,jdbcType=VARCHAR}
+    </select>
+
+  <select id="selectOrderInfo" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from T_ORDER_INFO
+    </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from T_ORDER_INFO
+    where order_id = #{orderId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.flight.TOrderInfo">
+    insert into T_ORDER_INFO (order_id, iud, luts, 
+      order_no, addoil_type, apc3, 
+      address, order_date, cstno, 
+      cstnm, estimated_volume, estimated_time, 
+      oil_type, order_status, oil_user_nm, 
+      oil_user_tel, tanker_no, flno, 
+      ttyp, regn, act3, actn, 
+      alc2, alcnm, org3, 
+      orgnm, des3, desnm, 
+      via3, vianm, cdat, 
+      lstu, otst,status,plan_date_begin,plan_date_end,close_content,otyp)
+    values (#{orderId,jdbcType=BIGINT}, #{iud,jdbcType=VARCHAR}, #{luts,jdbcType=VARCHAR}, 
+      #{orderNo,jdbcType=VARCHAR}, #{addoilType,jdbcType=VARCHAR}, #{apc3,jdbcType=VARCHAR}, 
+      #{address,jdbcType=VARCHAR}, #{orderDate,jdbcType=DATE}, #{cstno,jdbcType=VARCHAR},
+      #{cstnm,jdbcType=VARCHAR}, #{estimatedVolume,jdbcType=INTEGER}, #{estimatedTime,jdbcType=TIMESTAMP}, 
+      #{oilType,jdbcType=INTEGER}, #{orderStatus,jdbcType=INTEGER}, #{oilUserNm,jdbcType=VARCHAR}, 
+      #{oilUserTel,jdbcType=VARCHAR}, #{tankerNo,jdbcType=VARCHAR}, #{flno,jdbcType=VARCHAR}, 
+      #{ttyp,jdbcType=VARCHAR}, #{regn,jdbcType=VARCHAR}, #{act3,jdbcType=VARCHAR}, #{actn,jdbcType=VARCHAR}, 
+      #{alc2,jdbcType=VARCHAR}, #{alcnm,jdbcType=VARCHAR}, #{org3,jdbcType=VARCHAR}, 
+      #{orgnm,jdbcType=VARCHAR}, #{des3,jdbcType=VARCHAR}, #{desnm,jdbcType=VARCHAR}, 
+      #{via3,jdbcType=VARCHAR}, #{vianm,jdbcType=VARCHAR}, #{cdat,jdbcType=TIMESTAMP}, 
+      #{lstu,jdbcType=TIMESTAMP}, #{otst,jdbcType=VARCHAR},#{status,jdbcType=INTEGER},
+      #{planDateBegin,jdbcType=TIMESTAMP}, #{planDateEnd,jdbcType=TIMESTAMP}, #{closeContent,jdbcType=VARCHAR},#{otyp,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.zh.bean.flight.TOrderInfo">
+    insert into T_ORDER_INFO
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="orderId != null">
+        order_id,
+      </if>
+      <if test="iud != null">
+        iud,
+      </if>
+      <if test="luts != null">
+        luts,
+      </if>
+      <if test="orderNo != null">
+        order_no,
+      </if>
+      <if test="addoilType != null">
+        addoil_type,
+      </if>
+      <if test="apc3 != null">
+        apc3,
+      </if>
+      <if test="address != null">
+        address,
+      </if>
+      <if test="orderDate != null">
+        order_date,
+      </if>
+      <if test="cstno != null">
+        cstno,
+      </if>
+      <if test="cstnm != null">
+        cstnm,
+      </if>
+      <if test="estimatedVolume != null">
+        estimated_volume,
+      </if>
+      <if test="estimatedTime != null">
+        estimated_time,
+      </if>
+      <if test="oilType != null">
+        oil_type,
+      </if>
+      <if test="orderStatus != null">
+        order_status,
+      </if>
+      <if test="oilUserNm != null">
+        oil_user_nm,
+      </if>
+      <if test="oilUserTel != null">
+        oil_user_tel,
+      </if>
+      <if test="tankerNo != null">
+        tanker_no,
+      </if>
+      <if test="flno != null">
+        flno,
+      </if>
+      <if test="ttyp != null">
+        ttyp,
+      </if>
+      <if test="regn != null">
+        regn,
+      </if>
+      <if test="act3 != null">
+        act3,
+      </if>
+      <if test="actn != null">
+        actn,
+      </if>
+      <if test="alc2 != null">
+        alc2,
+      </if>
+      <if test="alcnm != null">
+        alcnm,
+      </if>
+      <if test="org3 != null">
+        org3,
+      </if>
+      <if test="orgnm != null">
+        orgnm,
+      </if>
+      <if test="des3 != null">
+        des3,
+      </if>
+      <if test="desnm != null">
+        desnm,
+      </if>
+      <if test="via3 != null">
+        via3,
+      </if>
+      <if test="vianm != null">
+        vianm,
+      </if>
+      <if test="cdat != null">
+        cdat,
+      </if>
+      <if test="lstu != null">
+        lstu,
+      </if>
+      <if test="otst != null">
+        otst,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="planDateBegin != null">
+        plan_date_begin,
+      </if>
+      <if test="planDateEnd != null">
+        plan_date_end,
+      </if>
+      <if test="closeContent != null">
+        close_content,
+      </if>
+      <if test="otyp != null">
+        otyp,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="orderId != null">
+        #{orderId,jdbcType=BIGINT},
+      </if>
+      <if test="iud != null">
+        #{iud,jdbcType=VARCHAR},
+      </if>
+      <if test="luts != null">
+        #{luts,jdbcType=VARCHAR},
+      </if>
+      <if test="orderNo != null">
+        #{orderNo,jdbcType=VARCHAR},
+      </if>
+      <if test="addoilType != null">
+        #{addoilType,jdbcType=VARCHAR},
+      </if>
+      <if test="apc3 != null">
+        #{apc3,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="orderDate != null">
+        #{orderDate,jdbcType=DATE},
+      </if>
+      <if test="cstno != null">
+        #{cstno,jdbcType=VARCHAR},
+      </if>
+      <if test="cstnm != null">
+        #{cstnm,jdbcType=VARCHAR},
+      </if>
+      <if test="estimatedVolume != null">
+        #{estimatedVolume,jdbcType=INTEGER},
+      </if>
+      <if test="estimatedTime != null">
+        #{estimatedTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="oilType != null">
+        #{oilType,jdbcType=INTEGER},
+      </if>
+      <if test="orderStatus != null">
+        #{orderStatus,jdbcType=INTEGER},
+      </if>
+      <if test="oilUserNm != null">
+        #{oilUserNm,jdbcType=VARCHAR},
+      </if>
+      <if test="oilUserTel != null">
+        #{oilUserTel,jdbcType=VARCHAR},
+      </if>
+      <if test="tankerNo != null">
+        #{tankerNo,jdbcType=VARCHAR},
+      </if>
+      <if test="flno != null">
+        #{flno,jdbcType=VARCHAR},
+      </if>
+      <if test="ttyp != null">
+        #{ttyp,jdbcType=VARCHAR},
+      </if>
+      <if test="regn != null">
+        #{regn,jdbcType=VARCHAR},
+      </if>
+      <if test="act3 != null">
+        #{act3,jdbcType=VARCHAR},
+      </if>
+      <if test="actn != null">
+        #{actn,jdbcType=VARCHAR},
+      </if>
+      <if test="alc2 != null">
+        #{alc2,jdbcType=VARCHAR},
+      </if>
+      <if test="alcnm != null">
+        #{alcnm,jdbcType=VARCHAR},
+      </if>
+      <if test="org3 != null">
+        #{org3,jdbcType=VARCHAR},
+      </if>
+      <if test="orgnm != null">
+        #{orgnm,jdbcType=VARCHAR},
+      </if>
+      <if test="des3 != null">
+        #{des3,jdbcType=VARCHAR},
+      </if>
+      <if test="desnm != null">
+        #{desnm,jdbcType=VARCHAR},
+      </if>
+      <if test="via3 != null">
+        #{via3,jdbcType=VARCHAR},
+      </if>
+      <if test="vianm != null">
+        #{vianm,jdbcType=VARCHAR},
+      </if>
+      <if test="cdat != null">
+        #{cdat,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lstu != null">
+        #{lstu,jdbcType=TIMESTAMP},
+      </if>
+      <if test="otst != null">
+        #{otst,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="planDateBegin != null">
+        #{planDateBegin,jdbcType=TIMESTAMP},
+      </if>
+      <if test="planDateEnd != null">
+        #{planDateEnd,jdbcType=TIMESTAMP},
+      </if>
+      <if test="closeContent != null">
+        #{closeContent,jdbcType=VARCHAR},
+      </if>
+      <if test="otyp != null">
+        #{otyp,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.flight.TOrderInfo">
+    update T_ORDER_INFO
+    <set>
+      <if test="iud != null">
+        iud = #{iud,jdbcType=VARCHAR},
+      </if>
+      <if test="luts != null">
+        luts = #{luts,jdbcType=VARCHAR},
+      </if>
+      <if test="orderNo != null">
+        order_no = #{orderNo,jdbcType=VARCHAR},
+      </if>
+      <if test="addoilType != null">
+        addoil_type = #{addoilType,jdbcType=VARCHAR},
+      </if>
+      <if test="apc3 != null">
+        apc3 = #{apc3,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        address = #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="orderDate != null">
+        order_date = #{orderDate,jdbcType=DATE},
+      </if>
+      <if test="cstno != null">
+        cstno = #{cstno,jdbcType=VARCHAR},
+      </if>
+      <if test="cstnm != null">
+        cstnm = #{cstnm,jdbcType=VARCHAR},
+      </if>
+      <if test="estimatedVolume != null">
+        estimated_volume = #{estimatedVolume,jdbcType=INTEGER},
+      </if>
+      <if test="estimatedTime != null">
+        estimated_time = #{estimatedTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="oilType != null">
+        oil_type = #{oilType,jdbcType=INTEGER},
+      </if>
+      <if test="orderStatus != null">
+        order_status = #{orderStatus,jdbcType=INTEGER},
+      </if>
+      <if test="oilUserNm != null">
+        oil_user_nm = #{oilUserNm,jdbcType=VARCHAR},
+      </if>
+      <if test="oilUserTel != null">
+        oil_user_tel = #{oilUserTel,jdbcType=VARCHAR},
+      </if>
+      <if test="tankerNo != null">
+        tanker_no = #{tankerNo,jdbcType=VARCHAR},
+      </if>
+      <if test="flno != null">
+        flno = #{flno,jdbcType=VARCHAR},
+      </if>
+      <if test="ttyp != null">
+        ttyp = #{ttyp,jdbcType=VARCHAR},
+      </if>
+      <if test="regn != null">
+        regn = #{regn,jdbcType=VARCHAR},
+      </if>
+      <if test="act3 != null">
+        act3 = #{act3,jdbcType=VARCHAR},
+      </if>
+      <if test="actn != null">
+        actn = #{actn,jdbcType=VARCHAR},
+      </if>
+      <if test="alc2 != null">
+        alc2 = #{alc2,jdbcType=VARCHAR},
+      </if>
+      <if test="alcnm != null">
+        alcnm = #{alcnm,jdbcType=VARCHAR},
+      </if>
+      <if test="org3 != null">
+        org3 = #{org3,jdbcType=VARCHAR},
+      </if>
+      <if test="orgnm != null">
+        orgnm = #{orgnm,jdbcType=VARCHAR},
+      </if>
+      <if test="des3 != null">
+        des3 = #{des3,jdbcType=VARCHAR},
+      </if>
+      <if test="desnm != null">
+        desnm = #{desnm,jdbcType=VARCHAR},
+      </if>
+      <if test="via3 != null">
+        via3 = #{via3,jdbcType=VARCHAR},
+      </if>
+      <if test="vianm != null">
+        vianm = #{vianm,jdbcType=VARCHAR},
+      </if>
+      <if test="cdat != null">
+        cdat = #{cdat,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lstu != null">
+        lstu = #{lstu,jdbcType=TIMESTAMP},
+      </if>
+      <if test="otst != null">
+        otst = #{otst,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="planDateBegin != null">
+        plan_date_begin = #{planDateBegin,jdbcType=TIMESTAMP},
+      </if>
+      <if test="planDateEnd != null">
+        plan_date_end = #{planDateEnd,jdbcType=TIMESTAMP},
+      </if>
+      <if test="closeContent != null">
+        close_content = #{closeContent,jdbcType=VARCHAR},
+      </if>
+      <if test="otyp != null">
+        otyp = #{otyp,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where order_id = #{orderId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TOrderInfo">
+    update T_ORDER_INFO
+    set iud = #{iud,jdbcType=VARCHAR},
+      luts = #{luts,jdbcType=VARCHAR},
+      order_no = #{orderNo,jdbcType=VARCHAR},
+      addoil_type = #{addoilType,jdbcType=VARCHAR},
+      apc3 = #{apc3,jdbcType=VARCHAR},
+      address = #{address,jdbcType=VARCHAR},
+      order_date = #{orderDate,jdbcType=DATE},
+      cstno = #{cstno,jdbcType=VARCHAR},
+      cstnm = #{cstnm,jdbcType=VARCHAR},
+      estimated_volume = #{estimatedVolume,jdbcType=INTEGER},
+      estimated_time = #{estimatedTime,jdbcType=TIMESTAMP},
+      oil_type = #{oilType,jdbcType=INTEGER},
+      order_status = #{orderStatus,jdbcType=INTEGER},
+      oil_user_nm = #{oilUserNm,jdbcType=VARCHAR},
+      oil_user_tel = #{oilUserTel,jdbcType=VARCHAR},
+      tanker_no = #{tankerNo,jdbcType=VARCHAR},
+      flno = #{flno,jdbcType=VARCHAR},
+      ttyp = #{ttyp,jdbcType=VARCHAR},
+      regn = #{regn,jdbcType=VARCHAR},
+      act3 = #{act3,jdbcType=VARCHAR},
+      actn = #{actn,jdbcType=VARCHAR},
+      alc2 = #{alc2,jdbcType=VARCHAR},
+      alcnm = #{alcnm,jdbcType=VARCHAR},
+      org3 = #{org3,jdbcType=VARCHAR},
+      orgnm = #{orgnm,jdbcType=VARCHAR},
+      des3 = #{des3,jdbcType=VARCHAR},
+      desnm = #{desnm,jdbcType=VARCHAR},
+      via3 = #{via3,jdbcType=VARCHAR},
+      vianm = #{vianm,jdbcType=VARCHAR},
+      cdat = #{cdat,jdbcType=TIMESTAMP},
+      lstu = #{lstu,jdbcType=TIMESTAMP},
+      otst = #{otst,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      plan_date_begin = #{planDateBegin,jdbcType=TIMESTAMP},
+      plan_date_end = #{planDateEnd,jdbcType=TIMESTAMP},
+      close_content = #{closeContent,jdbcType=VARCHAR},
+      otyp = #{otyp,jdbcType=VARCHAR},
+    where order_id = #{orderId,jdbcType=BIGINT}
+  </update>
+
+  <select id="selectOrderInfoByAir" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from T_ORDER_INFO
+    where
+    apc3 = #{apc3,jdbcType=VARCHAR}
+    and DATE_FORMAT(now(),'%Y-%m-%d') BETWEEN DATE_FORMAT(plan_date_begin,'%Y-%m-%d') and  DATE_FORMAT(DATE_ADD(
+    now(),
+    INTERVAL 7 DAY
+    ),'%Y-%m-%d')
+  </select>
+
+
+  <select id="selectOrderInfoByRegnAndNo" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from T_ORDER_INFO
+    where
+    flno = #{flno} and
+    regn = #{regn} and
+    apc3 = #{apc3,jdbcType=VARCHAR}
+    and DATE_FORMAT(now(),'%Y-%m-%d') BETWEEN DATE_FORMAT(plan_date_begin,'%Y-%m-%d') and  DATE_FORMAT(DATE_ADD(
+    now(),
+    INTERVAL 7 DAY
+    ),'%Y-%m-%d')
+  </select>
+</mapper>

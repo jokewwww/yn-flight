@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TOilSignMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.TOilSign">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="flgt_id" jdbcType="VARCHAR" property="flgtId" />
+    <result column="flgt_takeoff_fuel" jdbcType="INTEGER" property="flgtTakeoffFuel" />
+    <result column="flgt_chock_fuel" jdbcType="INTEGER" property="flgtChockFuel" />
+    <result column="flgt_otat_fuel" jdbcType="INTEGER" property="flgtOtatFuel" />
+    <result column="left_fuel" jdbcType="INTEGER" property="leftFuel" />
+    <result column="right_fuel" jdbcType="INTEGER" property="rightFuel" />
+    <result column="center_fuel" jdbcType="INTEGER" property="centerFuel" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.zh.bean.flight.TOilSign">
+    <result column="fuel_sign" jdbcType="LONGVARCHAR" property="fuelSign" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, flgt_id, flgt_takeoff_fuel, flgt_chock_fuel, flgt_otat_fuel, left_fuel, right_fuel, 
+    center_fuel
+  </sql>
+  <sql id="Blob_Column_List">
+    fuel_sign
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from t_oil_sign
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="select" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from t_oil_sign
+  </select>
+  <select id="selectByFlgtId" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from t_oil_sign
+    where flgt_id = #{flgtId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from t_oil_sign
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.flight.TOilSign">
+    insert into t_oil_sign (id, flgt_id, flgt_takeoff_fuel, 
+      flgt_chock_fuel, flgt_otat_fuel, left_fuel, 
+      right_fuel, center_fuel, fuel_sign
+      )
+    values (#{id,jdbcType=BIGINT}, #{flgtId,jdbcType=VARCHAR}, #{flgtTakeoffFuel,jdbcType=INTEGER}, 
+      #{flgtChockFuel,jdbcType=INTEGER}, #{flgtOtatFuel,jdbcType=INTEGER}, #{leftFuel,jdbcType=INTEGER}, 
+      #{rightFuel,jdbcType=INTEGER}, #{centerFuel,jdbcType=INTEGER}, #{fuelSign,jdbcType=LONGVARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.zh.bean.flight.TOilSign">
+    insert into t_oil_sign
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="flgtId != null">
+        flgt_id,
+      </if>
+      <if test="flgtTakeoffFuel != null">
+        flgt_takeoff_fuel,
+      </if>
+      <if test="flgtChockFuel != null">
+        flgt_chock_fuel,
+      </if>
+      <if test="flgtOtatFuel != null">
+        flgt_otat_fuel,
+      </if>
+      <if test="leftFuel != null">
+        left_fuel,
+      </if>
+      <if test="rightFuel != null">
+        right_fuel,
+      </if>
+      <if test="centerFuel != null">
+        center_fuel,
+      </if>
+      <if test="fuelSign != null">
+        fuel_sign,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="flgtId != null">
+        #{flgtId,jdbcType=VARCHAR},
+      </if>
+      <if test="flgtTakeoffFuel != null">
+        #{flgtTakeoffFuel,jdbcType=INTEGER},
+      </if>
+      <if test="flgtChockFuel != null">
+        #{flgtChockFuel,jdbcType=INTEGER},
+      </if>
+      <if test="flgtOtatFuel != null">
+        #{flgtOtatFuel,jdbcType=INTEGER},
+      </if>
+      <if test="leftFuel != null">
+        #{leftFuel,jdbcType=INTEGER},
+      </if>
+      <if test="rightFuel != null">
+        #{rightFuel,jdbcType=INTEGER},
+      </if>
+      <if test="centerFuel != null">
+        #{centerFuel,jdbcType=INTEGER},
+      </if>
+      <if test="fuelSign != null">
+        #{fuelSign,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.flight.TOilSign">
+    update t_oil_sign
+    <set>
+      <if test="flgtId != null">
+        flgt_id = #{flgtId,jdbcType=VARCHAR},
+      </if>
+      <if test="flgtTakeoffFuel != null">
+        flgt_takeoff_fuel = #{flgtTakeoffFuel,jdbcType=INTEGER},
+      </if>
+      <if test="flgtChockFuel != null">
+        flgt_chock_fuel = #{flgtChockFuel,jdbcType=INTEGER},
+      </if>
+      <if test="flgtOtatFuel != null">
+        flgt_otat_fuel = #{flgtOtatFuel,jdbcType=INTEGER},
+      </if>
+      <if test="leftFuel != null">
+        left_fuel = #{leftFuel,jdbcType=INTEGER},
+      </if>
+      <if test="rightFuel != null">
+        right_fuel = #{rightFuel,jdbcType=INTEGER},
+      </if>
+      <if test="centerFuel != null">
+        center_fuel = #{centerFuel,jdbcType=INTEGER},
+      </if>
+      <if test="fuelSign != null">
+        fuel_sign = #{fuelSign,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.zh.bean.flight.TOilSign">
+    update t_oil_sign
+    set flgt_id = #{flgtId,jdbcType=VARCHAR},
+      flgt_takeoff_fuel = #{flgtTakeoffFuel,jdbcType=INTEGER},
+      flgt_chock_fuel = #{flgtChockFuel,jdbcType=INTEGER},
+      flgt_otat_fuel = #{flgtOtatFuel,jdbcType=INTEGER},
+      left_fuel = #{leftFuel,jdbcType=INTEGER},
+      right_fuel = #{rightFuel,jdbcType=INTEGER},
+      center_fuel = #{centerFuel,jdbcType=INTEGER},
+      fuel_sign = #{fuelSign,jdbcType=LONGVARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TOilSign">
+    update t_oil_sign
+    set flgt_id = #{flgtId,jdbcType=VARCHAR},
+      flgt_takeoff_fuel = #{flgtTakeoffFuel,jdbcType=INTEGER},
+      flgt_chock_fuel = #{flgtChockFuel,jdbcType=INTEGER},
+      flgt_otat_fuel = #{flgtOtatFuel,jdbcType=INTEGER},
+      left_fuel = #{leftFuel,jdbcType=INTEGER},
+      right_fuel = #{rightFuel,jdbcType=INTEGER},
+      center_fuel = #{centerFuel,jdbcType=INTEGER}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.TStaffMapper">
+    <resultMap id="BaseResultMap" type="com.zh.bean.auto.TStaff">
+        <id column="staffid" jdbcType="VARCHAR" property="staffid"/>
+        <result column="password" jdbcType="VARCHAR" property="password"/>
+        <result column="staffname" jdbcType="VARCHAR" property="staffname"/>
+        <result column="gangwei" jdbcType="VARCHAR" property="gangwei"/>
+        <result column="zhuangtai" jdbcType="INTEGER" property="zhuangtai"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        staffid
+        , password, staffname, gangwei, zhuangtai
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_staff
+        where staffid = #{staffid,jdbcType=VARCHAR}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+        delete
+        from t_staff
+        where staffid = #{staffid,jdbcType=VARCHAR}
+    </delete>
+    <insert id="insert" parameterType="com.zh.bean.auto.TStaff">
+        insert into t_staff (staffid, password, staffname,
+                             gangwei, zhuangtai)
+        values (#{staffid,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{staffname,jdbcType=VARCHAR},
+                #{gangwei,jdbcType=VARCHAR}, #{zhuangtai,jdbcType=INTEGER})
+    </insert>
+    <insert id="insertSelective" parameterType="com.zh.bean.auto.TStaff">
+        insert into t_staff
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="staffid != null">
+                staffid,
+            </if>
+            <if test="password != null">
+                password,
+            </if>
+            <if test="staffname != null">
+                staffname,
+            </if>
+            <if test="gangwei != null">
+                gangwei,
+            </if>
+            <if test="zhuangtai != null">
+                zhuangtai,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="staffid != null">
+                #{staffid,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="staffname != null">
+                #{staffname,jdbcType=VARCHAR},
+            </if>
+            <if test="gangwei != null">
+                #{gangwei,jdbcType=VARCHAR},
+            </if>
+            <if test="zhuangtai != null">
+                #{zhuangtai,jdbcType=INTEGER},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.auto.TStaff">
+        update t_staff
+        <set>
+            <if test="password != null">
+                password = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="staffname != null">
+                staffname = #{staffname,jdbcType=VARCHAR},
+            </if>
+            <if test="gangwei != null">
+                gangwei = #{gangwei,jdbcType=VARCHAR},
+            </if>
+            <if test="zhuangtai != null">
+                zhuangtai = #{zhuangtai,jdbcType=INTEGER},
+            </if>
+        </set>
+        where staffid = #{staffid,jdbcType=VARCHAR}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.zh.bean.auto.TStaff">
+        update t_staff
+        set password  = #{password,jdbcType=VARCHAR},
+            staffname = #{staffname,jdbcType=VARCHAR},
+            gangwei   = #{gangwei,jdbcType=VARCHAR},
+            zhuangtai = #{zhuangtai,jdbcType=INTEGER}
+        where staffid = #{staffid,jdbcType=VARCHAR}
+    </update>
+</mapper>

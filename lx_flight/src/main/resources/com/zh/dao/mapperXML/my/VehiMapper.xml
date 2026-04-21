@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.VehiMapper">
+	<!-- 以（所属机场，所属区域）的条件，统计车辆表（DB）中的所有记录数，作为画面中的车辆_总数 -->
+	<select id="getVehiSum" resultType="java.lang.Integer">
+		select count(*) from T_VEHI where vehi_airport_code = #{staffAirportCode} 
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and vehi_aptarea_code = #{staffAptareaCode}
+		</if>
+	</select>
+	<!-- 以（所属机场，所属区域，是否可用＝'1：空闲'）的条件，统计车辆表（DB）中的所有记录数，作为画面中的车辆_在线 -->
+	<select id="getNoLineSum" resultType="java.lang.Integer">
+		SELECT count(*) from T_STAFF_VEHI as tsv,T_STAFF as ts where 
+		tsv.sfvh_staff_id = ts.staff_id and
+		ts.staff_airport_code = #{staffAirportCode}
+		and sfvh_staff_status =1
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and ts.staff_aptarea_code = #{staffAptareaCode}
+		</if>
+	</select>
+	<!-- 以（所属机场，所属区域，是否可用＝'2：使用中'）的条件，统计车辆表（DB）中的所有记录数，作为画面中的车辆_保障中 -->
+	<select id="getAafeguardSum" resultType="java.lang.Integer">
+		SELECT count(*) from T_STAFF_VEHI as tsv,T_STAFF as ts where
+		tsv.sfvh_staff_id = ts.staff_id and
+		ts.staff_airport_code = #{staffAirportCode}
+		and sfvh_staff_status =2
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and ts.staff_aptarea_code = #{staffAptareaCode}
+		</if>
+	</select>
+	<!-- 以（所属机场代码＝输入_机场ID）的条件，取得车辆表 -->
+	<select id="getVehiList" resultType="com.zh.bean.login.TVehiInfo">
+		select 
+		vehi_no as carID,
+		vehi_type as carType,
+		vehi_availability as status,
+		vehi_plate_no as carNum, 
+		vehi_height as vehiHeight
+		from T_VEHI where 
+		vehi_airport_code = #{flgtAirportCode}
+	</select>
+	<!-- 遍历1中取得的所有记录，以（加油车编号＝1_车辆编号）的条件，取得人员车辆表（DB）中加油员ID字段 -->
+	<select id="getStaffVehiList" resultType="com.zh.bean.login.TStaff">
+		select sfvh_staff_id as staffId from T_STAFF_VEHI where sfvh_vehi_no = #{vehiNo}
+	</select>
+	<!-- 遍历2中取得的所有记录，以（员工ID＝2_加油员ID）的条件，取得员工表（DB）中如下字段，写入输出接 -->
+	<select id="getStaffName" resultType="com.zh.bean.login.TStaff">
+		select staff_name as staffName,staff_phone as staffPhone from T_STAFF where staff_id = #{vehiStaffId}
+	</select>
+	<!-- 添加车辆信息 -->
+	<insert id="addVehiInfo">
+		insert into T_VEHI (
+		vehi_id, vehi_no, vehi_nickname, 
+		vehi_type, vehi_brand, vehi_availability, 
+		vehi_fuel_figu, vehi_company, vehi_serv_station, 
+		vehi_airport_code, vehi_aptarea_code, 
+		<if test="vehi.vehiHeight != null">
+			vehi_height,
+		</if>
+		vehi_plate_no,vehi_fuel_code,
+	    vehi_fuel_sno
+		)values (
+		#{vehi.vehiId}, #{vehi.vehiNo}, #{vehi.vehiNickname}, 
+		#{vehi.vehiType}, #{vehi.vehiBrand}, #{vehi.vehiAvailability}, 
+		#{vehi.vehiFuelFigu}, #{vehi.vehiCompany}, #{vehi.vehiServStation}, 
+		#{vehi.vehiAirportCode}, #{vehi.vehiAptareaCode}, 
+		<if test="vehi.vehiHeight != null">
+			#{vehi.vehiHeight},
+		</if>
+		#{vehi.vehiPlateNo},#{vehi.vehiFuelCode},#{vehi.vehiFuelSno}
+		)
+	</insert>
+	<!-- 根据机场代码和车辆号获取车辆油单编号 -->
+	<select id="getFuelRecptNo" resultType="java.lang.String">
+		select vehi_fuel_code from T_VEHI where vehi_airport_code = #{vehiAirportCode} and vehi_plate_no = #{vehiPlateNo}
+	</select>
+
+	<!-- 根据机场代码和车辆号获取车辆油单编号和序号 -->
+	<select id="getFuelRecptNoAndFuelSno" resultType="com.zh.bean.login.MyVehi">
+		select vehi_fuel_code as vehiFuelCode,
+		vehi_fuel_sno as vehiFuelSno,
+		vehi_no as vehiNo from T_VEHI where vehi_airport_code = #{vehiAirportCode} and vehi_plate_no = #{vehiPlateNo}
+	</select>
+	<update id="updateVehiSno">
+		UPDATE T_VEHI SET vehi_fuel_sno=#{vehiFuelSno}
+		where vehi_airport_code = #{vehiAirportCode} and vehi_plate_no = #{vehiPlateNo}
+	</update>
+	<select id="selectoilcode" resultType="com.zh.bean.login.MyVehi">
+       SELECT MAX(vehi_fuel_code)AS vehiFuelCode FROM T_VEHI
+	</select>
+
+	<select id="findVehiById" resultType="com.zh.bean.login.MyVehi">
+		SELECT
+			vehi_id as vehiId,
+			vehi_no as vehiNo,
+			vehi_nickname as vehiNickname,
+			vehi_type as  vehiType,
+			vehi_plate_no as vehiPlateNo,
+			vehi_brand as vehiBrand,
+			vehi_availability as vehiAvailability,
+			vehi_fuel_figu as vehiFuelFigu,
+			vehi_company as vehiCompany,
+			vehi_serv_station as vehiServStation,
+			vehi_airport_code as vehiAirportCode,
+			vehi_aptarea_code as vehiAptareaCode,
+			vehi_height as vehiHeight,
+			vehi_fuel_code as vehiFuelCode,
+			vehi_fuel_sno as vehiFuelSno
+		from T_VEHI where vehi_no = #{vehiNo} and vehi_airport_code=#{airportCode}
+	</select>
+</mapper>

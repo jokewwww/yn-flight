@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.TRolePermissionMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.auto.TRolePermission">
+    <id column="roleId" jdbcType="INTEGER" property="roleid" />
+    <id column="permissionId" jdbcType="INTEGER" property="permissionid" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from t_role_permission
+    where roleId = #{roleid,jdbcType=INTEGER}
+      and permissionId = #{permissionid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.auto.TRolePermission">
+    insert into t_role_permission (roleId, permissionId)
+    values (#{roleid,jdbcType=INTEGER}, #{permissionid,jdbcType=INTEGER})
+  </insert>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select roleId, permissionId
+    from t_role_permission
+  </select>
+</mapper>

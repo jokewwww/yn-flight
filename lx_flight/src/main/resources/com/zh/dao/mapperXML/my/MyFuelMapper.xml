@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.MyFuelMapper">
+
+<select id="findfuel"  resultType="com.zh.bean.login.TFuel">
+	SELECT  fuel_date AS fuelDate,fuel_test_bill_no AS fuelTestBillNo,fuel_name AS fuelName,
+	fuel_temp AS fuelTemp,fuel_dnst AS fuelDnst	 FROM  T_FUEL
+	WHERE fuel_airport_code=#{staffAirportCode} and fuel_logic_del_flg = 0 and fuel_date &lt; now()  ORDER BY fuel_date DESC LIMIT 1
+</select>
+   
+   <select id="findfuels" resultType="com.zh.bean.login.TFuel">
+     SELECT  fuel_date AS fuelDate,fuel_test_bill_no AS fuelTestBillNo,
+	fuel_temp AS fuelTemp,fuel_dnst AS fuelDnst
+	 FROM  
+	T_FUEL WHERE fuel_date IN (SELECT MAX(fuel_date) FROM T_FUEL )
+	AND fuel_airport_code=#{staffAirportCode}
+</select>
+   
+<select id="getStaffById" resultType="com.zh.bean.login.TStaff">
+select 
+		staff_id AS staffId, 
+		staff_pwd AS staffPwd,
+		staff_name AS staffName,
+		staff_age AS staffAge,
+		staff_gender AS staffGender,
+		staff_type AS staffType,
+		staff_phone AS staffPhone,
+		staff_company AS staffCompany,
+		staff_serv_station AS staffServStation,
+		staff_airport_code AS staffAirportCode,
+		staff_aptarea_code AS staffAptareaCode,
+		staff_group_id AS staffGroupId
+		from T_STAFF 
+		where staff_id = #{taskOpeStaffId}
+	
+</select> 
+
+<select id="findFuel" resultType="com.zh.bean.login.MyFuel">
+		SELECT
+        id,
+		fuel_test_bill_no AS fuelTestBillNo,
+		fuel_date AS fuelDate, fuel_name AS fuelName,
+		fuel_temp AS fuelTemp,fuel_dnst AS fuelDnst,
+		fuel_airport_code AS fuelAirportCode
+		,fuel_staff_name AS fuelStaffName,
+		fuel_logic_del_flg AS fuelLogicDelFlg
+		FROM T_FUEL 
+		 WHERE DATE_FORMAT(fuel_date,'%Y-%m-%d') IN (CURDATE(),DATE_SUB(CURDATE(), INTERVAL 1 DAY),DATE_SUB(CURDATE(),INTERVAL 2 DAY),
+	          DATE_SUB(CURDATE(), INTERVAL 3 DAY),DATE_SUB(CURDATE(), INTERVAL 4 DAY),
+	          DATE_SUB(CURDATE(), INTERVAL 5 DAY),DATE_SUB(CURDATE(), INTERVAL 6 DAY),DATE_SUB(CURDATE(),interval 7 day))
+		<if test="staffAirportCode != null and staffAirportCode != ''">
+			AND fuel_airport_code=#{staffAirportCode} 
+		</if>
+-- 		and fuel_logic_del_flg = 0
+			 ORDER BY fuel_date DESC 
+</select>
+
+
+ <insert id="setFuel">
+   INSERT into T_FUEL(fuel_test_bill_no,fuel_date,fuel_name,fuel_temp,fuel_dnst,fuel_airport_code
+   ,fuel_staff_name,fuel_logic_del_flg) 
+   values(#{fuel.fuelTestBillNo},NOW(),#{fuel.fuelName},#{fuel.fuelTemp},#{fuel.fuelDnst},#{fuel.fuelAirportCode}
+   ,#{staffName},0)
+ </insert>
+ 
+ <update id="updatestaff">
+ UPDATE T_STAFF set staff_up_code=#{staffUpCode} where staff_id=#{staffId}
+ </update>
+ 
+ <!-- 根据新区域代码  旧区域代码 修改所有区域代码   -->
+	<update id="updateAirprtcodeServ">
+	UPDATE T_SERV_AIRPORT SET svap_aptarea_code=#{taskAptareaCode} WHERE svap_aptarea_code=#{staffAptareaCode}
+	</update>
+	
+		<!-- 根据新区域代码 旧区域代码 修改所有区域代码  -->
+	<update id="updateAirprtcodeStaff">
+	UPDATE T_STAFF SET 	staff_aptarea_code=#{taskAptareaCode} WHERE staff_aptarea_code=#{staffAptareaCode}
+	</update>
+	
+		<!-- 根据新区域代码 旧区域代码 修改所有区域代码 -->
+	<update id="updateAirprtcodeVehi">
+	UPDATE T_VEHI SET vehi_aptarea_code=#{taskAptareaCode} WHERE vehi_aptarea_code=#{staffAptareaCode}
+	</update>
+	
+	<select id="selectstaffvehi" resultType="com.zh.bean.login.MyStaffVehi">
+	 SELECT sfvh_vehi_no AS  sfvhVehiNo FROM T_STAFF_VEHI WHERE sfvh_staff_id=#{sfvhStaffId}
+	</select>
+	<!-- 根据化验单编号查询是否存在 -->
+	<select id="getFuel" resultType="com.zh.bean.login.MyFuel">
+		select 
+		fuel_test_bill_no as fuelTestBillNo,
+		fuel_date as fuelDate,
+		fuel_name as fuelName,
+		fuel_temp as fuelTemp,
+		fuel_dnst as fuelDnst,
+		fuel_airport_code as fuelAirportCode 
+		from T_FUEL where fuel_test_bill_no = #{fuelTestBillNo} and fuel_date = NOW() and fuel_logic_del_flg = 0
+	</select>
+	
+	<update id="updatefuelLogicDelFlg">
+	UPDATE T_FUEL SET fuel_logic_del_flg=1 WHERE fuel_test_bill_no=#{fuelTestBillNo}
+	</update>
+</mapper>

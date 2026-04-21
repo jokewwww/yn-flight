@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.FlightCodeTemporaryMapper">
+
+    <select id="getCstmNameAndArcrAcnameByArcrRegnTemporary" resultType="com.zh.bean.flight.MyFlightCode">
+        SELECT
+        tf.arcr_acname AS arcrName,
+        tc.cstm_name AS cstmRegion,
+        tc.cstm_region AS newCstmRegion ,
+        tc.cstm_num arcrCustomNum
+        FROM T_CUSTOM tc ,  T_FLIGHT_CODE_TEMPORARY tf
+        WHERE
+        TRIM(LEADING '0' FROM tf.arcr_custom_num) =  TRIM(LEADING '0' FROM tc.cstm_num)
+        and  tf.arcr_regn=#{flgtRegn}
+        <if test="flgtFlno != null and flgtFlno !=  '' ">
+            and tf.flno = #{flgtFlno}
+        </if>
+        <if test="flgtFlno ==null or flgtFlno=='' ">
+            and (tf.flno is null or tf.flno='')
+        </if>
+        and  CURDATE() BETWEEN tf.arcr_start_date  and tf.arcr_end_date
+        ORDER BY tf.update_time DESC
+        LIMIT 0,1
+    </select>
+
+    <!-- 客户名称 -->
+    <select id="getCstmName" resultType="com.zh.bean.flight.MyCustom">
+        SELECT
+            cstm_num cstmNum,
+            cstm_name cstmName
+        FROM T_CUSTOM
+        WHERE cstm_num =#{cstmNum}
+    </select>
+
+
+
+</mapper>

@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flight-service
+  namespace: $NAMESPACE
+  labels:
+    app:  $NAMESPACE
+    service: flight
+spec:
+  selector:
+    matchLabels:
+      service: flight
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        service: flight
+    spec:
+      containers:
+      - name:  flight-service
+        image:  $REGISTRY/$NAMESPACE/flight-service:SNAPSHOT-$BUILD_NUMBER
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 1500m
+            memory: 4096Mi
+          limits:
+            cpu: 2000m
+            memory: 6144Mi
+        livenessProbe:
+          httpGet:
+            path: /flight/health
+            port: 30100
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /flight/health
+            port: 30100
+          initialDelaySeconds: 120
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        ports:
+        - containerPort:  30100
+          name:  http
+        envFrom:
+        - configMapRef:
+            name: zhoil-yn-baseinfo
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flight-service
+  namespace: $NAMESPACE
+spec:
+  selector:
+    service: flight
+  type: NodePort
+  ports:
+  - name: http
+    protocol: TCP
+    port: 30100
+    targetPort: 30100
+    nodePort: 30100
+
+

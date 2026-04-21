@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zuul-service
+  namespace: $NAMESPACE
+  labels:
+    app:  $NAMESPACE
+    service: zuul
+spec:
+  selector:
+    matchLabels:
+      service: zuul
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        service: zuul
+    spec:
+      containers:
+      - name:  zuul-service
+        image:  $REGISTRY/$NAMESPACE/zuul-service:SNAPSHOT-$BUILD_NUMBER
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 4096Mi
+          limits:
+            cpu: 1500m
+            memory: 6144Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 30130
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 30130
+          initialDelaySeconds: 120
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        ports:
+        - containerPort:  30130
+          name:  http
+        envFrom:
+          - configMapRef:
+              name: zhoil-yn-baseinfo
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zuul-service
+  namespace: $NAMESPACE
+spec:
+  selector:
+    service: zuul
+  type: NodePort
+  ports:
+  - name: http
+    protocol: TCP
+    port: 30130
+    targetPort: 30130
+    nodePort: 30130

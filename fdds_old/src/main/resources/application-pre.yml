@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: FDDSService
+  kafka:
+    producer:
+      retries: 0
+      batch-size: 16384
+      buffer-memory: 33554432
+      bootstrap-servers: ${kafka:k1:9092,k2:9092,k3:9092}
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+  datasource:
+    url: jdbc:mysql://${MYSQL_ROOT_IP:172.16.1.10}:${MYSQL_ROOT_PORT:3306}/tflight_cache?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_ROOT_PASSWORD:Abcd-1234}
+    driver-class-name: com.mysql.jdbc.Driver
+
+logging:
+  level: ${LOGLEVEL:debug}
+
+kafka:
+  msgtopic: flight1
+
+
+millsTimeOut: ${MILLSTIMEOUT:300000}
+
+ibmmq:
+  hostname: ${IBMMQHOSTNAME:10.0.252.140}
+  channelname: ${IBMMQCHANNELNAME:SVRCONN.HY}
+  CCSID: ${IBMMQCCSID:1208}
+  listener: ${IBMMQLISTENER:1415}
+  QMGRname: ${IBMMQQMGRNAME:QMOUT1}
+  loginuser: ${IBMMQLOGINUSER:ICPProUser}
+  password: ${IBMMQPASSWORD:}
+  queue: ${IBMMQQUEUE:FDDS_HY}

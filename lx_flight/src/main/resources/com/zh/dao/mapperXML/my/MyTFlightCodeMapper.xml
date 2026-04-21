@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.MyTFlightCodeMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.TFlightCode">
+    <id column="arcr_regn" jdbcType="VARCHAR" property="arcrRegn" />
+    <id column="arcr_start_date" jdbcType="DATE" property="arcrStartDate" />
+    <result column="arcr_acname" jdbcType="VARCHAR" property="arcrAcname" />
+    <result column="arcr_custom_num" jdbcType="VARCHAR" property="arcrCustomNum" />
+    <result column="arcr_end_date" jdbcType="DATE" property="arcrEndDate" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from T_FLIGHT_CODE
+    where arcr_regn = #{arcrRegn,jdbcType=VARCHAR}
+      and arcr_start_date = #{arcrStartDate,jdbcType=DATE}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.flight.TFlightCode">
+    insert into T_FLIGHT_CODE (arcr_regn, arcr_start_date, arcr_acname, 
+      arcr_custom_num, arcr_end_date)
+    values (#{arcrRegn,jdbcType=VARCHAR}, #{arcrStartDate,jdbcType=DATE}, #{arcrAcname,jdbcType=VARCHAR}, 
+      #{arcrCustomNum,jdbcType=VARCHAR}, #{arcrEndDate,jdbcType=DATE})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TFlightCode">
+    update T_FLIGHT_CODE
+    set arcr_acname = #{arcrAcname,jdbcType=VARCHAR},
+      arcr_custom_num = #{arcrCustomNum,jdbcType=VARCHAR},
+      arcr_end_date = #{arcrEndDate,jdbcType=DATE}
+    where arcr_regn = #{arcrRegn,jdbcType=VARCHAR}
+      and arcr_start_date = #{arcrStartDate,jdbcType=DATE}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select arcr_regn, arcr_start_date, arcr_acname, arcr_custom_num, arcr_end_date
+    from T_FLIGHT_CODE
+    where arcr_regn = #{arcrRegn,jdbcType=VARCHAR}
+      and arcr_start_date = #{arcrStartDate,jdbcType=DATE}
+  </select>
+
+
+  <select id="selectByArcrRegn" parameterType="map" resultMap="BaseResultMap">
+    select arcr_regn, arcr_start_date, arcr_acname, arcr_custom_num, arcr_end_date
+    from T_FLIGHT_CODE
+    where arcr_regn = #{arcrRegn,jdbcType=VARCHAR} AND (flno is null or flno='')
+      AND CURDATE() BETWEEN arcr_start_date AND arcr_end_date
+  </select>
+
+    <select id="selectByArcrRegnAndFlno" parameterType="map" resultMap="BaseResultMap">
+        select arcr_regn, arcr_start_date, arcr_acname, arcr_custom_num, arcr_end_date
+        from T_FLIGHT_CODE
+        where arcr_regn = #{arcrRegn,jdbcType=VARCHAR} AND flno = #{flno,jdbcType=VARCHAR}
+          AND CURDATE() BETWEEN arcr_start_date AND arcr_end_date
+    </select>
+
+
+  <select id="selectAll" resultMap="BaseResultMap">
+    select arcr_regn, arcr_start_date, arcr_acname, arcr_custom_num, arcr_end_date
+    from T_FLIGHT_CODE
+  </select>
+</mapper>

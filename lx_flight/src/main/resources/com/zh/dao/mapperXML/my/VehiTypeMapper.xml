@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.VehiTypeMapper">
+
+    <!-- 获取人员和不准驾车型 -->
+    <select id="getVehiNoByStaffId" resultType="com.zh.bean.login.VehiTypeStaff">
+        SELECT
+            v.vehi_no AS vehiNo,
+            v.vehi_type AS vehiType,
+            case when isnull( vts.vehi_no ) then '0' else '1' end  AS bind
+        FROM T_VEHI v
+        LEFT JOIN T_VEHI_TYPE_STAFF vts
+        ON v.vehi_no = vts.vehi_no
+        AND vts.staff_id = #{staffId}
+        WHERE v.vehi_airport_code =#{vehiAirportCode}
+    </select>
+
+    <!-- 删除绑定关系 -->
+    <delete id="deleteBindByStaffId">
+        DELETE FROM T_VEHI_TYPE_STAFF WHERE staff_id = #{staffId}
+    </delete>
+
+    <!-- 绑定车辆人员关系 -->
+    <update id="bindVehiNoByStaffId">
+        insert into T_VEHI_TYPE_STAFF(staff_id,vehi_no) VALUES
+        <foreach collection="ids" item="id" separator=",">
+            (#{staffId},#{id})
+        </foreach>
+    </update>
+
+    <!-- 车型列表 -->
+    <select id="getVehiType" resultType="com.zh.bean.login.VehiType">
+        SELECT
+            id,
+            type AS vehiType
+        FROM T_VEHI_TYPE
+        <where>
+            <if test="vehiType !=null and vehiType != '' ">
+                and type LIKE CONCAT('%',#{vehiType},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getOneVehiType" resultType="com.zh.bean.login.VehiType">
+        SELECT
+            id,
+            type AS vehiType
+        FROM T_VEHI_TYPE
+        where type = #{vehiType}
+    </select>
+
+    <!-- 新增车型 -->
+    <update id="addVehiType">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into T_VEHI_TYPE(type) VALUES (#{vehiType})
+    </update>
+
+    <!-- 修改车型 -->
+    <update id="updateVehiType" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        update T_VEHI_TYPE SET type = #{vehiType} WHERE id = #{id}
+    </update>
+
+    <!-- 删除车型 -->
+    <delete id="deleteVehiType">
+        DELETE FROM T_VEHI_TYPE WHERE id = #{id}
+    </delete>
+
+    <!-- 根据人员id获取不准驾车型 -->
+    <select id="getNoVehiNoByStaffId" resultType="com.zh.bean.login.VehiTypeStaff">
+        SELECT
+            v.vehi_no AS vehiNo,
+            v.vehi_type AS vehiType,
+            case when isnull( vts.vehi_no ) then '0' else '1' end  AS bind
+        FROM T_VEHI v
+        LEFT JOIN T_VEHI_TYPE_STAFF vts
+        ON v.vehi_no = vts.vehi_no
+        WHERE vts.staff_id = #{staffId}
+    </select>
+
+
+
+</mapper>

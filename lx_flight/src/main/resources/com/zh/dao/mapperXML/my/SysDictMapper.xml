@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.SysDictMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.SysDict">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="data_code" jdbcType="VARCHAR" property="dataCode" />
+    <result column="data_value" jdbcType="VARCHAR" property="dataValue" />
+    <result column="data_label" jdbcType="VARCHAR" property="dataLabel" />
+    <result column="sort_no" jdbcType="INTEGER" property="sortNo" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="data_desc" jdbcType="VARCHAR" property="dataDesc" />
+    <result column="update_time" jdbcType="DATE" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, data_code,data_value,data_label, sort_no, status, data_desc,update_time
+  </sql>
+  <select id="selectList"  resultMap="BaseResultMap">
+    select 
+        <include refid="Base_Column_List" />
+    from sys_dict
+    <where>
+        <if test="dataCode != null and dataCode != '' ">
+            and data_code = #{dataCode}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+    </where>
+  </select>
+
+</mapper>

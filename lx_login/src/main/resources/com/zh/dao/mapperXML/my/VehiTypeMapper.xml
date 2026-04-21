@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.VehiTypeMapper">
+
+    <!-- 根据人员id获取不准驾车型 -->
+    <select id="getNoVehiNoByStaffIdSfvhVehiNo" resultType="com.zh.bean.login.VehiTypeStaff">
+        SELECT v.vehi_no                                           AS vehiNo,
+               v.vehi_type                                         AS vehiType,
+               case when isnull(vts.vehi_no) then '0' else '1' end AS bind
+        FROM T_VEHI v
+                 LEFT JOIN T_VEHI_TYPE_STAFF vts
+                           ON v.vehi_no = vts.vehi_no
+        WHERE vts.staff_id = #{staffId}
+          and vts.vehi_no = #{sfvhVehiNo}
+          and v.vehi_airport_code = #{vehiAirportCode}
+    </select>
+
+
+</mapper>

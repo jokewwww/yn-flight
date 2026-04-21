@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.StaffMapper">
+	<!-- 通过人员id查询人员信息（供地图使用） -->
+	<select id="getStaffById" resultType="com.zh.bean.login.MyStaff">
+		select 
+		staff_id AS staffId,
+		staff_pwd AS staffPwd,
+		staff_name AS staffName,
+		staff_age AS staffAge,
+		staff_gender AS staffGender,
+		staff_type AS staffType,
+		staff_phone AS staffPhone,
+		staff_company AS staffCompany,
+		staff_serv_station AS staffServStation,
+		staff_airport_code AS staffAirportCode,
+		staff_aptarea_code AS staffAptareaCode,
+		staff_group_id AS staffGroupId,
+        print_server_url AS printServerUrl
+		from T_STAFF 
+		where staff_id = #{staffId}
+	</select>
+	<!-- 通过人员ID去查询出该人员的信息 -->
+	<select id="getStaffInfo" resultType="com.zh.bean.login.MyStaff">
+		select 
+		staff_id AS staffId,
+		staff_pwd AS staffPwd,
+		staff_name AS staffName,
+		staff_age AS staffAge,
+		staff_gender AS staffGender,
+		staff_type AS staffType,
+		staff_phone AS staffPhone,
+		staff_company AS staffCompany,
+		staff_serv_station AS staffServStation,
+		staff_airport_code AS staffAirportCode,
+		staff_aptarea_code AS staffAptareaCode,
+		staff_group_id AS staffGroupId,
+        print_server_url AS printServerUrl
+		from T_STAFF 
+		where staff_id = #{staffId}
+	</select>
+	<!-- 获取调度员ID -->
+	<select id="getStaffList" resultType="com.zh.bean.login.MyStaff">
+		select 
+		staff_id AS staffId,
+		staff_name AS staffName
+		from T_STAFF 
+		where staff_type = '2' and 
+		staff_airport_code = #{staffAirportCode} 
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and staff_aptarea_code = #{staffAptareaCode}
+		</if>
+	</select>
+	<resultMap id="AttributeResultMap" type="com.zh.bean.login.MyStaff">
+	    <id column="staffId" jdbcType="VARCHAR" property="staffId" />
+	    <result column="staffName" jdbcType="VARCHAR" property="staffName" />
+	</resultMap>
+	<!-- 获取调度员ID -->
+	<select id="getAllStaffList" resultMap="AttributeResultMap">
+		select 
+		staff_id AS staffId,
+		staff_name AS staffName
+		from T_STAFF
+		where
+		staff_airport_code = #{staffAirportCode}
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and staff_aptarea_code = #{staffAptareaCode}
+		</if>
+		<if test="staffType != null and staffType != ''">
+			and staff_type=#{staffType}
+		</if>
+	</select>
+	
+	<!-- 人员车辆绑定 -->
+	<insert id="staffAndVehi">
+		INSERT into T_STAFF_VEHI (sfvh_staff_id,sfvh_vehi_no) values (#{sfvhStaffId},#{sfvhVehiNo})
+	</insert>
+	<!-- 根据人员id去查询人员车辆表，是否绑定车辆 -->
+	<select id="getStaffVehiInfo" resultType="com.zh.bean.login.MyStaffVehi">
+		select 
+		sfvh_staff_id as sfvhStaffId,
+		sfvh_vehi_no as sfvhVehiNo,
+		sfvh_staff_status as sfvhStaffStatus
+		from T_STAFF_VEHI where sfvh_staff_id = #{staffId}
+	</select>
+    <!-- 根据车辆编号去查询车辆是否被绑定 -->
+    <select id="getVehiBindInfo" resultType="com.zh.bean.login.MyStaffVehi">
+        select
+            sv.sfvh_staff_id as sfvhStaffId,
+            sv.sfvh_vehi_no as sfvhVehiNo,
+            sv.sfvh_staff_status as sfvhStaffStatus,
+            v.vehi_plate_no as vehiPlateNo
+        from T_STAFF_VEHI sv LEFT JOIN  T_VEHI v on sv.sfvh_vehi_no = v.vehi_no
+        where sfvh_vehi_no = #{vehiNo} and v.vehi_airport_code=#{airportCode}
+    </select>
+	<!-- 根据车辆编号去获取车牌号 -->
+	<select id="getVehiNo" resultType="java.lang.String">
+		select 
+		vehi_plate_no as vehiNo
+		from T_VEHI where vehi_no = #{sfvhVehiNo}
+	</select>
+	<!-- 获取所有人员ID -->
+	<select id="getStaffLists" resultType="com.zh.bean.login.MyStaff">
+		select 
+		staff_id AS staffId,
+		staff_name AS staffName
+		from T_STAFF 
+		where staff_type in ('2','3','4','5')
+		<if test="staffAirportCode != null and staffAirportCode != ''">
+			and staff_airport_code = #{staffAirportCode} 
+		</if>
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and staff_aptarea_code = #{staffAptareaCode}
+		</if>
+	</select>
+	<delete id="deleteStaffVehi">
+		delete from T_STAFF_VEHI where sfvh_staff_id = #{staffId}
+	</delete>
+	<!-- 根据机场代码获取人员的分组名 -->
+	<select id="getStaffGroupName" resultType="com.zh.bean.login.MyStaff">
+		SELECT staff_group_id AS staffGroupId from T_STAFF where 
+		staff_airport_code = #{staffAirportCode} 
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and staff_aptarea_code = #{staffAptareaCode}
+		</if>
+		and staff_type=3
+		GROUP BY staff_group_id
+	</select>
+	
+	<update id="updateGruop">
+	UPDATE T_STAFF SET staff_group_id=#{staffGroupId}
+	where staff_id=#{sfvhStaffId}
+	<if test="staffAirportCode!=null and staffAirportCode!=''">
+	AND staff_airport_code=#{staffAirportCode}
+	</if>
+	<if test="staffAptareaCode!=null and staffAptareaCode!=''">
+	AND staff_aptarea_code=#{staffAptareaCode}
+	</if>
+	</update>
+
+	<update id="updateGruopAndLevel">
+		UPDATE T_STAFF SET
+		staff_group_id=#{staffGroupId},
+		staff_level=#{staffLevel,jdbcType=INTEGER}
+		where staff_id=#{sfvhStaffId}
+		<if test="staffAirportCode!=null and staffAirportCode!=''">
+			AND staff_airport_code=#{staffAirportCode}
+		</if>
+		<if test="staffAptareaCode!=null and staffAptareaCode!=''">
+			AND staff_aptarea_code=#{staffAptareaCode}
+		</if>
+	</update>
+
+
+	<!-- 根据角色类型查出该角色的常用消息 -->
+	<select id="getStaffMessageByType" resultType="com.zh.bean.login.MyMessage">
+		SELECT 
+		msg_id AS msgId,
+		msg_role AS msgRole,
+		msg_content AS msgContent,
+		msg_airport_code AS msgAirportCode 
+		from T_MESSAGE where 
+		msg_role = #{staffType} and msg_airport_code = #{staffAirportCode}
+	</select>
+	<!-- 根据机场代码查出该角色的常用消息 -->
+	<select id="getStaffMessageByCode" resultType="com.zh.bean.login.MyMessage">
+		SELECT 
+		msg_id AS msgId,
+		msg_role AS msgRole,
+		msg_content AS msgContent,
+		msg_airport_code AS msgAirportCode 
+		from T_MESSAGE where 
+		msg_airport_code = #{staffAirportCode}
+	</select>
+	<!-- 根据消息ID删除消息 -->
+	<delete id="deleteStaffMessage">
+		DELETE from T_MESSAGE where msg_id = #{msgId}
+	</delete>
+	<!-- 新增消息内容 -->
+	<insert id="addStaffMessage">
+		INSERT INTO T_MESSAGE (
+		msg_id,msg_role, msg_content, msg_airport_code
+		)
+   		VALUES (
+   		#{msgId},#{staffType}, #{msgContent}, #{staffAirportCode}
+   		)
+	</insert>
+	<!-- 查询销售信息 -->
+	<select id="getSalesInfo" resultType="com.zh.bean.login.MySalesInfo">
+		SELECT 
+		sales_id AS salesId,
+		sales_airport_code AS salesAirportCode,
+		sales_aptarea_code AS salesAptareaCode,
+		sales_vkorg AS salesVkorg,
+		sales_vtweg AS salesVtweg,
+		sales_vtdpt AS salesVtdpt,
+		sales_bwtar AS salesBwtar,
+		sales_werks AS salesWerks,
+		sales_vstel AS salesVstel,
+		sales_lgort AS salesLgort,
+		sales_matnr AS salesMatnr,
+		sales_vkbur AS salesVkbur,
+		sales_vkgrp AS salesVkgrp
+		from T_SALES_INFO where sales_airport_code = #{staffAirportCode}
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and sales_aptarea_code = #{staffAptareaCode}
+		</if>
+	</select>
+	<!-- 删除销售信息 -->
+	<delete id="deleteSalesInfo">
+		DELETE from T_SALES_INFO where sales_id = #{salesId}
+	</delete>
+	<!-- 新增销售信息 -->
+	<insert id="addSalesInfo">
+		INSERT INTO T_SALES_INFO (
+			sales_id,sales_airport_code,sales_aptarea_code,
+			sales_vkorg,sales_vtweg,sales_vtdpt,
+			sales_bwtar,sales_werks,sales_vstel,
+			sales_lgort,sales_matnr,sales_vkbur,sales_vkgrp
+		) VALUES (
+			#{salesInfo.salesId},#{salesInfo.salesAirportCode},#{salesInfo.salesAptareaCode},
+			#{salesInfo.salesVkorg},#{salesInfo.salesVtweg},#{salesInfo.salesVtdpt},
+			#{salesInfo.salesBwtar},#{salesInfo.salesWerks},#{salesInfo.salesVstel},
+			#{salesInfo.salesLgort},#{salesInfo.salesMatnr},
+			#{salesInfo.salesVkbur},#{salesInfo.salesVkgrp}
+		)
+	</insert>
+	<!-- 销售信息详情 -->
+	<select id="getSalesInfoById" resultType="com.zh.bean.login.MySalesInfo">
+		SELECT 
+		sales_id AS salesId,
+		sales_airport_code AS salesAirportCode,
+		sales_aptarea_code AS salesAptareaCode,
+		sales_vkorg AS salesVkorg,
+		sales_vtweg AS salesVtweg,
+		sales_vtdpt AS salesVtdpt,
+		sales_bwtar AS salesBwtar,
+		sales_werks AS salesWerks,
+		sales_vstel AS salesVstel,
+		sales_lgort AS salesLgort,
+		sales_matnr AS salesMatnr,
+		sales_vkbur AS salesVkbur,
+		sales_vkgrp AS salesVkgrp
+		from T_SALES_INFO where sales_id = #{salesId}
+	</select>
+	<!-- 修改销售信息 -->
+	<update id="updateSalesInfo">
+		update T_SALES_INFO
+	    <set>
+	      <if test="salesInfo.salesAirportCode != null and salesInfo.salesAirportCode != ''">
+	        sales_airport_code = #{salesInfo.salesAirportCode},
+	      </if>
+	      <if test="salesInfo.salesAptareaCode != null and salesInfo.salesAptareaCode != ''">
+	        sales_aptarea_code = #{salesInfo.salesAptareaCode},
+	      </if>
+	      <if test="salesInfo.salesVkorg != null and salesInfo.salesVkorg != ''">
+	        sales_vkorg = #{salesInfo.salesVkorg},
+	      </if>
+	      <if test="salesInfo.salesVtweg != null and salesInfo.salesVtweg != ''">
+	        sales_vtweg = #{salesInfo.salesVtweg},
+	      </if>
+	      <if test="salesInfo.salesVtdpt != null and salesInfo.salesVtdpt != ''">
+	        sales_vtdpt = #{salesInfo.salesVtdpt},
+	      </if>
+	      <if test="salesInfo.salesBwtar != null and salesInfo.salesBwtar != ''">
+	        sales_bwtar = #{salesInfo.salesBwtar},
+	      </if>
+	      <if test="salesInfo.salesWerks != null and salesInfo.salesWerks != ''">
+	        sales_werks = #{salesInfo.salesWerks},
+	      </if>
+	      <if test="salesInfo.salesVstel != null and salesInfo.salesVstel != ''">
+	        sales_vstel = #{salesInfo.salesVstel},
+	      </if>
+	      <if test="salesInfo.salesLgort != null and salesInfo.salesLgort != ''">
+	        sales_lgort = #{salesInfo.salesLgort},
+	      </if>
+	      <if test="salesInfo.salesMatnr != null and salesInfo.salesMatnr != ''">
+	        sales_matnr = #{salesInfo.salesMatnr},
+	      </if>
+	      <if test="salesInfo.salesVkbur != null and salesInfo.salesVkbur != ''">
+	        sales_vkbur = #{salesInfo.salesVkbur},
+	      </if>
+	      <if test="salesInfo.salesVkgrp != null and salesInfo.salesVkgrp != ''">
+	        sales_vkgrp = #{salesInfo.salesVkgrp},
+	      </if>
+	    </set>
+	    where sales_id = #{salesInfo.salesId}
+	</update>
+	<select id="getStaffInfoList" resultType="com.zh.bean.login.MyStaff">
+		SELECT 
+		staff_id AS staffId,
+		staff_name AS staffName,
+		staff_type AS staffType,
+		staff_company AS staffCompany,
+		staff_serv_station AS staffServStation,
+		staff_airport_code AS staffAirportCode,
+		staff_aptarea_code AS staffAptareaCode,
+		staff_group_id AS staffGroupId
+		from T_STAFF 
+		where staff_airport_code = #{staffAirportCode} and staff_type = '3' 
+		<if test="staffAptareaCode != null and staffAptareaCode != ''">
+			and staff_aptarea_code = #{staffAptareaCode}
+		</if>
+	</select>
+	<!-- 更新人员车辆绑定 -->
+	<update id="updateStaffAndVehi">
+		UPDATE T_STAFF_VEHI set sfvh_vehi_no = #{sfvhVehiNo} where sfvh_staff_id = #{sfvhStaffId}
+	</update>
+	<!-- 查询最大的排序值 -->
+	<select id="findMaxLevel" resultType="java.lang.Integer">
+		select max(staff_level) from T_STAFF where staff_group_id = #{staffGroupId}
+	</select>
+	<!-- 根据车辆编号查询此车是否已经被绑定 -->
+	<select id="getVehiInfo" resultType="com.zh.bean.login.MyStaffVehi">
+		select 
+		sfvh_staff_id as sfvhStaffId,
+		sfvh_vehi_no as sfvhVehiNo,
+		sfvh_staff_status as sfvhStaffStatus
+		from T_STAFF_VEHI where sfvh_vehi_no = #{sfvhVehiNo}
+	</select>
+
+	<!-- 根据车辆编号查询此车是否已经被绑定 -->
+	<select id="findByName" resultType="com.zh.bean.login.MyStaff">
+			select
+		staff_id AS staffId,
+		staff_pwd AS staffPwd,
+		staff_name AS staffName,
+		staff_age AS staffAge,
+		staff_gender AS staffGender,
+		staff_type AS staffType,
+		staff_phone AS staffPhone,
+		staff_company AS staffCompany,
+		staff_serv_station AS staffServStation,
+		staff_airport_code AS staffAirportCode,
+		staff_aptarea_code AS staffAptareaCode,
+		staff_group_id AS staffGroupId
+		from T_STAFF
+		where staffName like CONCAT('%',#{name},'%')
+	</select>
+
+    <!-- 查询系统目前注册用户的所有机场编号 -->
+    <select id="getAirportCodes" resultType="java.lang.String">
+        SELECT
+            staff_airport_code
+        FROM
+            T_STAFF
+        WHERE
+            staff_airport_code IS NOT NULL  AND staff_airport_code != ''
+        GROUP BY
+            staff_airport_code
+    </select>
+
+
+</mapper>

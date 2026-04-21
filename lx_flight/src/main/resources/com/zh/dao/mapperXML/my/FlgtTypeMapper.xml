@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.FlgtTypeMapper">
+
+    <!-- 获取人员和不保障机型 -->
+    <select id="getFlgtTypeByStaffId" resultType="com.zh.bean.login.FlgtTypeStaff">
+        SELECT
+            f.id AS flgtTypeId,
+            f.flgt_acname AS type,
+            case when isnull( vts.flgt_type_id ) then '0' else '1' end  AS bind
+        FROM T_FLGT_TYPE f
+        LEFT JOIN T_FLGT_TYPE_STAFF vts
+        ON f.id = vts.flgt_type_id
+        AND vts.staff_id = #{staffId}
+    </select>
+
+    <!-- 删除绑定关系 -->
+    <delete id="deleteBindByStaffId">
+        DELETE FROM T_FLGT_TYPE_STAFF WHERE staff_id = #{staffId}
+    </delete>
+
+    <!-- 绑定保障机型人员关系 -->
+    <update id="bindFlgtTypeByStaffId">
+        insert into T_FLGT_TYPE_STAFF(staff_id,flgt_type_id) VALUES
+        <foreach collection="ids" item="id" separator=",">
+            (#{staffId},#{id})
+        </foreach>
+    </update>
+
+    <!-- 保障机型列表 -->
+    <select id="getFlgtType" resultType="com.zh.bean.login.FlgtType">
+        SELECT
+            id,
+            flgt_acname AS flgtAcname,
+            alarm_time AS alarmTime,
+            interval_time AS intervalTime
+        FROM T_FLGT_TYPE
+        <where>
+            <if test="flgtAcname !=null and flgtAcname != '' ">
+                and flgt_acname LIKE CONCAT('%',#{flgtAcname},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getOne" resultType="com.zh.bean.login.FlgtType">
+        SELECT
+        id,
+        flgt_acname AS flgtAcname,
+        alarm_time AS alarmTime,
+        interval_time AS intervalTime
+        FROM T_FLGT_TYPE
+        where flgt_acname = #{flgtAcname}
+    </select>
+
+    <!-- 新增保障机型 -->
+    <insert id="addFlgtType"  useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into T_FLGT_TYPE(flgt_acname,alarm_time,interval_time) VALUES (#{flgtAcname},#{alarmTime},#{intervalTime})
+    </insert>
+
+    <!-- 修改保障机型 -->
+    <update id="updateFlgtType">
+        update T_FLGT_TYPE
+        SET flgt_acname = #{flgtAcname},
+                               alarm_time = #{alarmTime},
+                               interval_time = #{intervalTime}
+                               WHERE id = #{id}
+    </update>
+
+    <!-- 删除机型 -->
+    <delete id="deleteFlgtType">
+        DELETE FROM T_FLGT_TYPE WHERE id = #{id}
+    </delete>
+
+    <!-- 根据人员id获取不保障机型 -->
+    <select id="getNoFlgtTypeByStaffId" resultType="com.zh.bean.login.FlgtTypeStaff">
+        SELECT
+            f.id AS flgtTypeId,
+            f.flgt_acname AS type,
+            case when isnull( vts.flgt_type_id ) then '0' else '1' end  AS bind
+        FROM T_FLGT_TYPE f
+        LEFT JOIN T_FLGT_TYPE_STAFF vts
+        ON f.id = vts.flgt_type_id
+        WHERE vts.staff_id = #{staffId}
+    </select>
+
+    <!-- 获取车型和不保障机型 -->
+    <select id="getFlgtTypeByVehi" resultType="com.zh.bean.login.FlgtTypeVehi">
+        SELECT
+            f.id AS flgtTypeId,
+            f.flgt_acname AS type,
+            v.id AS vehiTypeId,
+            v.type AS vehiType,
+            case when isnull( f.id ) then '0' else '1' end  AS bind
+        FROM T_VEHI_TYPE v
+        LEFT JOIN T_FLGT_TYPE_VEHI vts
+        ON v.id = vts.vehi_type_id
+        AND vts.flgt_type_id = #{flgtTypeId}
+        LEFT JOIN T_FLGT_TYPE f
+        ON f.id = vts.flgt_type_id
+    </select>
+
+    <!-- 删除绑定关系 -->
+    <delete id="deleteBindByVehi">
+        DELETE FROM T_FLGT_TYPE_VEHI WHERE flgt_type_id = #{flgtTypeId}
+    </delete>
+
+    <!-- 绑定保障机型人员关系 -->
+    <update id="bindFlgtTypeBySVehi">
+        insert into T_FLGT_TYPE_VEHI(flgt_type_id,vehi_type_id) VALUES
+        <foreach collection="ids" item="id" separator=",">
+            (#{flgtTypeId},#{id})
+        </foreach>
+    </update>
+
+    <!-- 根据人员id获取不保障机型 -->
+    <select id="getNoFlgtByStaffId" resultType="com.zh.bean.login.FlgtTypeStaff">
+        SELECT
+            f.id AS flgtTypeId,
+            f.flgt_acname AS type,
+            case when isnull( vts.flgt_type_id ) then '0' else '1' end  AS bind
+        FROM T_FLGT_TYPE f
+        LEFT JOIN T_FLGT_TYPE_STAFF vts
+        ON f.id = vts.flgt_type_id
+        WHERE vts.staff_id = #{staffId}
+        AND f.flgt_acname = #{type}
+    </select>
+
+    <!-- 根据人员id查询绑定车号 -->
+    <select id="getSfvhVehiNo" resultType="com.zh.bean.login.MyStaffVehi">
+        SELECT
+            sfvh_vehi_no AS sfvhVehiNo
+        FROM T_STAFF_VEHI
+        WHERE sfvh_staff_id = #{staffId}
+        limit 1
+    </select>
+
+    <!-- 根据加油车编号获取不保障机型 -->
+    <select id="getNoFlgtByVehiNo" resultType="com.zh.bean.login.FlgtTypeVehi">
+        SELECT
+            f.id AS flgtTypeId,
+            f.flgt_acname AS type,
+            v.id AS vehiTypeId,
+            v.type AS vehiType,
+            case when isnull( f.id ) then '0' else '1' end  AS bind
+        FROM T_VEHI_TYPE v
+        LEFT JOIN T_FLGT_TYPE_VEHI vts
+        ON v.id = vts.vehi_type_id
+        LEFT JOIN T_FLGT_TYPE f
+        ON f.id = vts.flgt_type_id
+        LEFT JOIN T_VEHI tv
+        ON v.type = tv.vehi_type
+        where tv.vehi_no = #{sfvhVehiNo}
+        and f.flgt_acname =#{type}
+    </select>
+
+
+</mapper>

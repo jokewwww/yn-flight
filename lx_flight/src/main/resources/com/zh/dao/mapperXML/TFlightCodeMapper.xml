@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.TFlightCodeMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.TFlightCode">
+    <id column="arcr_regn" jdbcType="VARCHAR" property="arcrRegn" />
+    <id column="arcr_start_date" jdbcType="DATE" property="arcrStartDate" />
+    <result column="arcr_acname" jdbcType="VARCHAR" property="arcrAcname" />
+    <result column="arcr_custom_num" jdbcType="VARCHAR" property="arcrCustomNum" />
+    <result column="arcr_end_date" jdbcType="DATE" property="arcrEndDate" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from t_flight_code
+    where arcr_regn = #{arcrRegn,jdbcType=VARCHAR}
+      and arcr_start_date = #{arcrStartDate,jdbcType=DATE}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.flight.TFlightCode">
+    insert into t_flight_code (arcr_regn, arcr_start_date, arcr_acname, 
+      arcr_custom_num, arcr_end_date)
+    values (#{arcrRegn,jdbcType=VARCHAR}, #{arcrStartDate,jdbcType=DATE}, #{arcrAcname,jdbcType=VARCHAR}, 
+      #{arcrCustomNum,jdbcType=VARCHAR}, #{arcrEndDate,jdbcType=DATE})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TFlightCode">
+    update t_flight_code
+    set arcr_acname = #{arcrAcname,jdbcType=VARCHAR},
+      arcr_custom_num = #{arcrCustomNum,jdbcType=VARCHAR},
+      arcr_end_date = #{arcrEndDate,jdbcType=DATE}
+    where arcr_regn = #{arcrRegn,jdbcType=VARCHAR}
+      and arcr_start_date = #{arcrStartDate,jdbcType=DATE}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select arcr_regn, arcr_start_date, arcr_acname, arcr_custom_num, arcr_end_date
+    from t_flight_code
+    where arcr_regn = #{arcrRegn,jdbcType=VARCHAR}
+      and arcr_start_date = #{arcrStartDate,jdbcType=DATE}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select arcr_regn, arcr_start_date, arcr_acname, arcr_custom_num, arcr_end_date
+    from t_flight_code
+  </select>
+</mapper>

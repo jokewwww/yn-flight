@@ -1,0 +1,109 @@
+@CHARSET "UTF-8";
+
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, p, pre, form, fieldset, input, textarea, blockquote, th, td {
+    padding: 0;
+    margin: 0;
+    word-break: break-all;
+}
+
+table {
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+table td, th {
+    border: 0px solid #ccc;
+}
+
+.buttonStyle {
+    background: url(../images/button.png) left top;
+    width: 60px;
+    height: 27px;
+    border: none;
+    padding-top: 1px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.buttonStyle:hover {
+    background: url(../images/buttoncurr.png);
+}
+
+.buttonStyle1 {
+    background: url(../images/button.png) left top;
+    width: 120px;
+    height: 27px;
+    border: none;
+    padding-top: 1px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.buttonStyle1:hover {
+    background: url(../images/buttoncurr.png);
+}
+
+/*===============编辑表格样式=====================*/
+.edit_table {
+    margin-top: 0px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 12px;
+    width: 100%;
+    height: 100%;
+}
+
+.edit_table .edit_table_left {
+    background-color: #F1F1F1;
+    text-align: right;
+    padding-right: 10px;
+}
+
+.edit_table .edit_table_right {
+    text-align: left;
+    padding-left: 11px;
+}
+
+.edit_table .edit_table_notice {
+    text-align: left;
+    color: red;
+}
+
+.edit_table #centerinfo {
+    height: 100px;
+}
+
+.edit_table td {
+    border: 1px solid #D3D3D3;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.logo {
+    width: 431px;
+    height: 53px;
+    float: left;
+    background: url(../images/logo.png) no-repeat;
+}
+
+#fm {
+    margin: 0;
+    padding: 10px 30px;
+}
+
+.ftitle {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 5px 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.fitem {
+    margin-bottom: 5px;
+}
+
+.fitem label {
+    display: inline-block;
+    width: 80px;
+}

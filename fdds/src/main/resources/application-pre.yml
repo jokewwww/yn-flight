@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: FDDSService
+  kafka:
+    consumer:
+      group-id: ntt
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      bootstrap-servers: ${kafka:k1:9092,k2:9092,k3:9092}
+    producer:
+      retries: 0
+      batch-size: 16384
+      buffer-memory: 33554432
+      bootstrap-servers: ${kafka:k1:9092,k2:9092,k3:9092}
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+  datasource:
+    url: jdbc:mysql://${MYSQL_ROOT_IP:172.16.1.10}:${MYSQL_ROOT_PORT:3306}/tflight_cache?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_ROOT_PASSWORD:Abcd-1234}
+    driver-class-name: com.mysql.jdbc.Driver
+
+logging:
+  level: ${LOGLEVEL:DEBUG}
+
+kafka:
+  msgtopic: flight1
+
+ibmmq:
+  hostname: ${IBMMQHOSTNAME:10.0.252.140}
+  channelname: ${IBMMQCHANNELNAME:SVRCONN.HY}
+  CCSID: ${IBMMQCCSID:1208}
+  listener: ${IBMMQLISTENER:1415}
+  QMGRname: ${IBMMQQMGRNAME:QMOUT1}
+  loginuser: ${IBMMQLOGINUSER:ICPProUser}
+  password: ${IBMMQPASSWORD:}
+  queue: ${IBMMQQUEUE:FDDS_HY}
+
+newibmmq:
+  hostname: 10.0.252.140
+  channelname: SVRCONN.HY
+  CCSID: 1208
+  listener: 1414
+  QMGRname: QMIN1
+  loginuser: ICPProUser
+  password:
+  queue: HY_IN
+
+millsTimeOut: ${MILLSTIMEOUT:300000}

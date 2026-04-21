@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TFuelNoMapper">
+    <resultMap id="BaseResultMap" type="com.zh.bean.flight.TFuelNo">
+        <id column="id" jdbcType="VARCHAR" property="id" />
+        <result column="flrc_no" jdbcType="VARCHAR" property="flrcNo" />
+        <result column="fuel_type" jdbcType="INTEGER" property="fuelType" />
+        <result column="status" jdbcType="INTEGER" property="status" />
+        <result column="remark" jdbcType="VARCHAR" property="remark" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, flrc_no, fuel_type, status, remark
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from T_FUEL_NO
+        where id = #{id,jdbcType=VARCHAR}
+    </select>
+    <select id="selectByFlrcNo" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from T_FUEL_NO
+        where flrc_no = #{flrcNo,jdbcType=VARCHAR}
+    </select>
+    <select id="selectByAll" parameterType="com.zh.bean.flight.TFuelNo" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from T_FUEL_NO
+        where 1=1
+        <if test="id != null">
+            and id =  #{id,jdbcType=VARCHAR}
+        </if>
+        <if test="flrcNo != null and flrcNo != ''">
+            and flrc_no like  CONCAT('%',#{flrcNo,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="fuelType != null">
+            and fuel_type =  #{fuelType,jdbcType=INTEGER}
+        </if>
+        <if test="status != null">
+            and status = #{status,jdbcType=INTEGER}
+        </if>
+        <if test="remark != null">
+            and remark = #{remark,jdbcType=VARCHAR}
+        </if>
+        order by flrc_no
+    </select>
+
+    <select id="selectMaxNO" resultMap="BaseResultMap">
+        select MAX(flrc_no) flrc_no from T_FUEL_NO where fuel_type = #{fuelType} and remark = #{remark}
+    </select>
+
+    <select id="selectMaxNOByStatus" resultMap="BaseResultMap">
+
+        SELECT <include refid="Base_Column_List" /> FROM T_FUEL_NO WHERE flrc_no =
+        (SELECT MIN(flrc_no) flrc_no FROM T_FUEL_NO WHERE fuel_type = #{fuelType} AND remark = #{remark} AND STATUS = 0)
+
+    </select>
+
+    <select id="getMaxFuelNo" resultMap="BaseResultMap">
+        select MAX(flrc_no) flrc_no,fuel_type from T_FUEL_NO  where remark = #{remark} GROUP BY fuel_type
+    </select>
+
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+        delete from T_FUEL_NO
+        where id = #{id,jdbcType=VARCHAR}
+    </delete>
+
+    <insert id="insert" parameterType="com.zh.bean.flight.TFuelNo">
+        insert into T_FUEL_NO (id, flrc_no, fuel_type,
+                               status, remark)
+        values (#{id,jdbcType=VARCHAR}, #{flrcNo,jdbcType=VARCHAR}, #{fuelType,jdbcType=INTEGER},
+                #{status,jdbcType=INTEGER}, #{remark,jdbcType=VARCHAR})
+    </insert>
+
+    <insert id="insertList">
+        insert into T_FUEL_NO (id, flrc_no, fuel_type,
+        status, remark)
+        values
+        <foreach collection="list" item="emp" separator=",">
+            (#{emp.id},#{emp.flrcNo},#{emp.fuelType},#{emp.status},#{emp.remark})
+        </foreach>
+    </insert>
+
+    <insert id="insertSelective" parameterType="com.zh.bean.flight.TFuelNo">
+        insert into T_FUEL_NO
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="flrcNo != null">
+                flrc_no,
+            </if>
+            <if test="fuelType != null">
+                fuel_type,
+            </if>
+            <if test="status != null">
+                status,
+            </if>
+            <if test="remark != null">
+                remark,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcNo != null">
+                #{flrcNo,jdbcType=VARCHAR},
+            </if>
+            <if test="fuelType != null">
+                #{fuelType,jdbcType=INTEGER},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=INTEGER},
+            </if>
+            <if test="remark != null">
+                #{remark,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.flight.TFuelNo">
+        update T_FUEL_NO
+        <set>
+            <if test="flrcNo != null">
+                flrc_no = #{flrcNo,jdbcType=VARCHAR},
+            </if>
+            <if test="fuelType != null">
+                fuel_type = #{fuelType,jdbcType=INTEGER},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=INTEGER},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TFuelNo">
+        update T_FUEL_NO
+        set
+        <if test="flrcNo != null">
+            flrc_no = #{flrcNo,jdbcType=VARCHAR}
+        </if>
+        <if test="fuelType != null">
+            ,fuel_type = #{fuelType,jdbcType=INTEGER}
+        </if>
+        <if test="status != null">
+            ,status = #{status,jdbcType=INTEGER}
+        </if>
+        <if test="remark != null">
+            ,remark = #{remark,jdbcType=VARCHAR}
+        </if>
+        <if test="note != null">
+            ,note = #{note,jdbcType=VARCHAR}
+        </if>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+
+    <update id="updateByFuelNo" parameterType="com.zh.bean.flight.TFuelNo">
+        update T_FUEL_NO
+        set
+            status = #{status,jdbcType=INTEGER},
+            note =  #{note,jdbcType=INTEGER}
+        where flrc_no = #{flrcNo,jdbcType=VARCHAR}
+    </update>
+
+    <select id="selectMaxNOByStatusNew" resultMap="BaseResultMap">
+        select  fuel_type , min(flrc_no) flrc_no ,remark,status
+        from T_FUEL_NO
+        group by fuel_type,remark,status
+        having  remark = #{remark} and status = 0
+
+    </select>
+
+    <select id="selectNOByStatusNew" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        FROM T_FUEL_NO
+        where
+        fuel_type = #{fuelType}
+        and status = 0
+        and remark = #{aptareaCode}
+        GROUP BY flrc_no
+        ORDER BY flrc_no
+        LIMIT 10
+    </select>
+
+    <update id="updateStatus">
+        update T_FUEL_NO set status = #{status} where
+        status = #{oldStatus}
+        AND flrc_no in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item.flrcNo}
+        </foreach>
+
+    </update>
+
+    <update id="automaticRecover">
+        update T_FUEL_NO set
+            status = #{status} where
+            flrc_no =#{flrcNo}
+    </update>
+
+    <update id="updateBatch">
+        update T_FUEL_NO set status = 1 where
+        flrc_no in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item.flrcNo}
+        </foreach>
+
+    </update>
+
+
+</mapper>

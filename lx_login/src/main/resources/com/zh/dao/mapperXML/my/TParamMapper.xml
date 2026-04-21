@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TParamMapper">
+    <resultMap id="BaseResultMap" type="com.zh.bean.login.TParam">
+        <id column="ID" jdbcType="INTEGER" property="id"/>
+        <result column="p_name" jdbcType="VARCHAR" property="pName"/>
+        <result column="value1" jdbcType="VARCHAR" property="value1"/>
+        <result column="value2" jdbcType="VARCHAR" property="value2"/>
+        <result column="remark" jdbcType="VARCHAR" property="remark"/>
+        <result column="p_type" jdbcType="INTEGER" property="pType"/>
+        <result column="flgt_airport_code" jdbcType="VARCHAR" property="flgtAirportCode"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        ID
+        , p_name, value1, value2, remark, p_type, flgt_airport_code
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from T_PARAM
+        where ID = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+        delete
+        from T_PARAM
+        where ID = #{id,jdbcType=INTEGER}
+    </delete>
+    <insert id="insert" parameterType="com.zh.bean.login.TParam">
+        insert into T_PARAM (ID, p_name, value1,
+                             value2, remark, p_type,
+                             flgt_airport_code)
+        values (#{id,jdbcType=INTEGER}, #{pName,jdbcType=VARCHAR}, #{value1,jdbcType=VARCHAR},
+                #{value2,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, #{pType,jdbcType=INTEGER},
+                #{flgtAirportCode,jdbcType=VARCHAR})
+    </insert>
+    <insert id="insertSelective" parameterType="com.zh.bean.login.TParam" keyProperty="id">
+        <selectKey keyProperty='id' resultType='java.lang.Integer' order='AFTER'>
+            select LAST_INSERT_ID();
+        </selectKey>
+        insert into T_PARAM
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                ID,
+            </if>
+            <if test="pName != null">
+                p_name,
+            </if>
+            <if test="value1 != null">
+                value1,
+            </if>
+            <if test="value2 != null">
+                value2,
+            </if>
+            <if test="remark != null">
+                remark,
+            </if>
+            <if test="pType != null">
+                p_type,
+            </if>
+            <if test="flgtAirportCode != null">
+                flgt_airport_code,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="pName != null">
+                #{pName,jdbcType=VARCHAR},
+            </if>
+            <if test="value1 != null">
+                #{value1,jdbcType=VARCHAR},
+            </if>
+            <if test="value2 != null">
+                #{value2,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="pType != null">
+                #{pType,jdbcType=INTEGER},
+            </if>
+            <if test="flgtAirportCode != null">
+                #{flgtAirportCode,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.login.TParam">
+        update T_PARAM
+        <set>
+            <if test="pName != null">
+                p_name = #{pName,jdbcType=VARCHAR},
+            </if>
+            <if test="value1 != null">
+                value1 = #{value1,jdbcType=VARCHAR},
+            </if>
+            <if test="value2 != null">
+                value2 = #{value2,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="pType != null">
+                p_type = #{pType,jdbcType=INTEGER},
+            </if>
+            <if test="flgtAirportCode != null">
+                flgt_airport_code = #{flgtAirportCode,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where ID = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.zh.bean.login.TParam">
+        update T_PARAM
+        set p_name            = #{pName,jdbcType=VARCHAR},
+            value1            = #{value1,jdbcType=VARCHAR},
+            value2            = #{value2,jdbcType=VARCHAR},
+            remark            = #{remark,jdbcType=VARCHAR},
+            p_type            = #{pType,jdbcType=INTEGER},
+            flgt_airport_code = #{flgtAirportCode,jdbcType=VARCHAR}
+        where ID = #{id,jdbcType=INTEGER}
+    </update>
+
+    <select id="selectDefaultData" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from T_PARAM
+        where p_type = 2 and flgt_airport_code='1'
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from T_PARAM
+        where flgt_airport_code=#{flgtAirportCode}
+    </select>
+
+    <select id="findByPTypeAndFlgtAirportCode" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from T_PARAM
+        where flgt_airport_code=#{flgtAirportCode} and p_type = #{pType}
+    </select>
+
+    <select id="selectByAirportCode" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from T_PARAM
+        where p_type = #{pType} and flgt_airport_code=#{flgtAirportCode} and p_name =#{pName} limit 1
+    </select>
+    <select id="selectByPName" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from T_PARAM
+        where flgt_airport_code=#{flgtAirportCode} and p_name = #{pName}
+    </select>
+
+</mapper>

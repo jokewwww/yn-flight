@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.TFuelRecptMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.auto.TFuelRecpt">
+    <id column="flrc_id" jdbcType="VARCHAR" property="flrcId" />
+    <result column="flrc_type" jdbcType="INTEGER" property="flrcType" />
+    <result column="flrc_no" jdbcType="VARCHAR" property="flrcNo" />
+    <result column="flrc_date" jdbcType="DATE" property="flrcDate" />
+    <result column="flrc_airport_code" jdbcType="VARCHAR" property="flrcAirportCode" />
+    <result column="flrc_aptarea_code" jdbcType="VARCHAR" property="flrcAptareaCode" />
+    <result column="flrc_airport" jdbcType="VARCHAR" property="flrcAirport" />
+    <result column="flrc_airl_code" jdbcType="VARCHAR" property="flrcAirlCode" />
+    <result column="flrc_airl_name" jdbcType="VARCHAR" property="flrcAirlName" />
+    <result column="flrc_flight_no" jdbcType="VARCHAR" property="flrcFlightNo" />
+    <result column="flrc_aircrft_no" jdbcType="VARCHAR" property="flrcAircrftNo" />
+    <result column="flrc_aircrft_type" jdbcType="VARCHAR" property="flrcAircrftType" />
+    <result column="flrc_departure" jdbcType="VARCHAR" property="flrcDeparture" />
+    <result column="flrc_transit" jdbcType="VARCHAR" property="flrcTransit" />
+    <result column="flrc_dest" jdbcType="VARCHAR" property="flrcDest" />
+    <result column="flrc_test_bill_no" jdbcType="VARCHAR" property="flrcTestBillNo" />
+    <result column="flrc_fuel_name" jdbcType="VARCHAR" property="flrcFuelName" />
+    <result column="flrc_fuel_temp" jdbcType="DOUBLE" property="flrcFuelTemp" />
+    <result column="flrc_fuel_dnst" jdbcType="DOUBLE" property="flrcFuelDnst" />
+    <result column="flrc_fuel_vol" jdbcType="DOUBLE" property="flrcFuelVol" />
+    <result column="flrc_meter_stat" jdbcType="INTEGER" property="flrcMeterStat" />
+    <result column="flrc_meter_fnsh" jdbcType="INTEGER" property="flrcMeterFnsh" />
+    <result column="flrc_figuars" jdbcType="INTEGER" property="flrcFiguars" />
+    <result column="flrc_figuars_word" jdbcType="VARCHAR" property="flrcFiguarsWord" />
+    <result column="flrc_quantity" jdbcType="DOUBLE" property="flrcQuantity" />
+    <result column="flrc_vehi_no" jdbcType="VARCHAR" property="flrcVehiNo" />
+    <result column="flrc_hydrt_pit_no" jdbcType="VARCHAR" property="flrcHydrtPitNo" />
+    <result column="flrc_stat_time" jdbcType="TIMESTAMP" property="flrcStatTime" />
+    <result column="flrc_fnsh_time" jdbcType="TIMESTAMP" property="flrcFnshTime" />
+    <result column="flrc_deliver_name" jdbcType="VARCHAR" property="flrcDeliverName" />
+    <result column="flrc_sign" jdbcType="VARCHAR" property="flrcSign" />
+    <result column="flrc_manual_tag" jdbcType="INTEGER" property="flrcManualTag" />
+    <result column="flrc_manual_staff" jdbcType="VARCHAR" property="flrcManualStaff" />
+    <result column="flrc_manual_time" jdbcType="VARCHAR" property="flrcManualTime" />
+    <result column="flrc_revw_status" jdbcType="INTEGER" property="flrcRevwStatus" />
+    <result column="flrc_takeback_flg" jdbcType="INTEGER" property="flrcTakebackFlg" />
+    <result column="flrc_rec_cre_time" jdbcType="TIMESTAMP" property="flrcRecCreTime" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from t_fuel_recpt
+    where flrc_id = #{flrcId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.auto.TFuelRecpt">
+    insert into t_fuel_recpt (flrc_id, flrc_type, flrc_no, 
+      flrc_date, flrc_airport_code, flrc_aptarea_code, 
+      flrc_airport, flrc_airl_code, flrc_airl_name, 
+      flrc_flight_no, flrc_aircrft_no, flrc_aircrft_type, 
+      flrc_departure, flrc_transit, flrc_dest, 
+      flrc_test_bill_no, flrc_fuel_name, flrc_fuel_temp, 
+      flrc_fuel_dnst, flrc_fuel_vol, flrc_meter_stat, 
+      flrc_meter_fnsh, flrc_figuars, flrc_figuars_word, 
+      flrc_quantity, flrc_vehi_no, flrc_hydrt_pit_no, 
+      flrc_stat_time, flrc_fnsh_time, flrc_deliver_name, 
+      flrc_sign, flrc_manual_tag, flrc_manual_staff, 
+      flrc_manual_time, flrc_revw_status, flrc_takeback_flg, 
+      flrc_rec_cre_time)
+    values (#{flrcId,jdbcType=VARCHAR}, #{flrcType,jdbcType=INTEGER}, #{flrcNo,jdbcType=VARCHAR}, 
+      #{flrcDate,jdbcType=DATE}, #{flrcAirportCode,jdbcType=VARCHAR}, #{flrcAptareaCode,jdbcType=VARCHAR}, 
+      #{flrcAirport,jdbcType=VARCHAR}, #{flrcAirlCode,jdbcType=VARCHAR}, #{flrcAirlName,jdbcType=VARCHAR}, 
+      #{flrcFlightNo,jdbcType=VARCHAR}, #{flrcAircrftNo,jdbcType=VARCHAR}, #{flrcAircrftType,jdbcType=VARCHAR}, 
+      #{flrcDeparture,jdbcType=VARCHAR}, #{flrcTransit,jdbcType=VARCHAR}, #{flrcDest,jdbcType=VARCHAR}, 
+      #{flrcTestBillNo,jdbcType=VARCHAR}, #{flrcFuelName,jdbcType=VARCHAR}, #{flrcFuelTemp,jdbcType=DOUBLE}, 
+      #{flrcFuelDnst,jdbcType=DOUBLE}, #{flrcFuelVol,jdbcType=DOUBLE}, #{flrcMeterStat,jdbcType=INTEGER}, 
+      #{flrcMeterFnsh,jdbcType=INTEGER}, #{flrcFiguars,jdbcType=INTEGER}, #{flrcFiguarsWord,jdbcType=VARCHAR}, 
+      #{flrcQuantity,jdbcType=DOUBLE}, #{flrcVehiNo,jdbcType=VARCHAR}, #{flrcHydrtPitNo,jdbcType=VARCHAR}, 
+      #{flrcStatTime,jdbcType=TIMESTAMP}, #{flrcFnshTime,jdbcType=TIMESTAMP}, #{flrcDeliverName,jdbcType=VARCHAR}, 
+      #{flrcSign,jdbcType=VARCHAR}, #{flrcManualTag,jdbcType=INTEGER}, #{flrcManualStaff,jdbcType=VARCHAR}, 
+      #{flrcManualTime,jdbcType=VARCHAR}, #{flrcRevwStatus,jdbcType=INTEGER}, #{flrcTakebackFlg,jdbcType=INTEGER}, 
+      #{flrcRecCreTime,jdbcType=TIMESTAMP})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.auto.TFuelRecpt">
+    update t_fuel_recpt
+    set flrc_type = #{flrcType,jdbcType=INTEGER},
+      flrc_no = #{flrcNo,jdbcType=VARCHAR},
+      flrc_date = #{flrcDate,jdbcType=DATE},
+      flrc_airport_code = #{flrcAirportCode,jdbcType=VARCHAR},
+      flrc_aptarea_code = #{flrcAptareaCode,jdbcType=VARCHAR},
+      flrc_airport = #{flrcAirport,jdbcType=VARCHAR},
+      flrc_airl_code = #{flrcAirlCode,jdbcType=VARCHAR},
+      flrc_airl_name = #{flrcAirlName,jdbcType=VARCHAR},
+      flrc_flight_no = #{flrcFlightNo,jdbcType=VARCHAR},
+      flrc_aircrft_no = #{flrcAircrftNo,jdbcType=VARCHAR},
+      flrc_aircrft_type = #{flrcAircrftType,jdbcType=VARCHAR},
+      flrc_departure = #{flrcDeparture,jdbcType=VARCHAR},
+      flrc_transit = #{flrcTransit,jdbcType=VARCHAR},
+      flrc_dest = #{flrcDest,jdbcType=VARCHAR},
+      flrc_test_bill_no = #{flrcTestBillNo,jdbcType=VARCHAR},
+      flrc_fuel_name = #{flrcFuelName,jdbcType=VARCHAR},
+      flrc_fuel_temp = #{flrcFuelTemp,jdbcType=DOUBLE},
+      flrc_fuel_dnst = #{flrcFuelDnst,jdbcType=DOUBLE},
+      flrc_fuel_vol = #{flrcFuelVol,jdbcType=DOUBLE},
+      flrc_meter_stat = #{flrcMeterStat,jdbcType=INTEGER},
+      flrc_meter_fnsh = #{flrcMeterFnsh,jdbcType=INTEGER},
+      flrc_figuars = #{flrcFiguars,jdbcType=INTEGER},
+      flrc_figuars_word = #{flrcFiguarsWord,jdbcType=VARCHAR},
+      flrc_quantity = #{flrcQuantity,jdbcType=DOUBLE},
+      flrc_vehi_no = #{flrcVehiNo,jdbcType=VARCHAR},
+      flrc_hydrt_pit_no = #{flrcHydrtPitNo,jdbcType=VARCHAR},
+      flrc_stat_time = #{flrcStatTime,jdbcType=TIMESTAMP},
+      flrc_fnsh_time = #{flrcFnshTime,jdbcType=TIMESTAMP},
+      flrc_deliver_name = #{flrcDeliverName,jdbcType=VARCHAR},
+      flrc_sign = #{flrcSign,jdbcType=VARCHAR},
+      flrc_manual_tag = #{flrcManualTag,jdbcType=INTEGER},
+      flrc_manual_staff = #{flrcManualStaff,jdbcType=VARCHAR},
+      flrc_manual_time = #{flrcManualTime,jdbcType=VARCHAR},
+      flrc_revw_status = #{flrcRevwStatus,jdbcType=INTEGER},
+      flrc_takeback_flg = #{flrcTakebackFlg,jdbcType=INTEGER},
+      flrc_rec_cre_time = #{flrcRecCreTime,jdbcType=TIMESTAMP}
+    where flrc_id = #{flrcId,jdbcType=VARCHAR}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select flrc_id, flrc_type, flrc_no, flrc_date, flrc_airport_code, flrc_aptarea_code, 
+    flrc_airport, flrc_airl_code, flrc_airl_name, flrc_flight_no, flrc_aircrft_no, flrc_aircrft_type, 
+    flrc_departure, flrc_transit, flrc_dest, flrc_test_bill_no, flrc_fuel_name, flrc_fuel_temp, 
+    flrc_fuel_dnst, flrc_fuel_vol, flrc_meter_stat, flrc_meter_fnsh, flrc_figuars, flrc_figuars_word, 
+    flrc_quantity, flrc_vehi_no, flrc_hydrt_pit_no, flrc_stat_time, flrc_fnsh_time, flrc_deliver_name, 
+    flrc_sign, flrc_manual_tag, flrc_manual_staff, flrc_manual_time, flrc_revw_status, 
+    flrc_takeback_flg, flrc_rec_cre_time
+    from t_fuel_recpt
+    where flrc_id = #{flrcId,jdbcType=VARCHAR}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select flrc_id, flrc_type, flrc_no, flrc_date, flrc_airport_code, flrc_aptarea_code, 
+    flrc_airport, flrc_airl_code, flrc_airl_name, flrc_flight_no, flrc_aircrft_no, flrc_aircrft_type, 
+    flrc_departure, flrc_transit, flrc_dest, flrc_test_bill_no, flrc_fuel_name, flrc_fuel_temp, 
+    flrc_fuel_dnst, flrc_fuel_vol, flrc_meter_stat, flrc_meter_fnsh, flrc_figuars, flrc_figuars_word, 
+    flrc_quantity, flrc_vehi_no, flrc_hydrt_pit_no, flrc_stat_time, flrc_fnsh_time, flrc_deliver_name, 
+    flrc_sign, flrc_manual_tag, flrc_manual_staff, flrc_manual_time, flrc_revw_status, 
+    flrc_takeback_flg, flrc_rec_cre_time
+    from t_fuel_recpt
+  </select>
+</mapper>

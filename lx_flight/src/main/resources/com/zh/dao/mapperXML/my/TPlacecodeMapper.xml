@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TPlacecodeMapper">
+  <delete id="deleteByPrimaryKey" parameterType="com.zh.bean.flight.TPlacecodeKey">
+    delete from T_PLACECODE
+    where place_code = #{placeCode,jdbcType=VARCHAR}
+      and airport_code = #{airportCode,jdbcType=VARCHAR}
+  </delete>
+  <select id="getPlaceCodeList" resultType="com.zh.bean.flight.TPlacecode">
+    SELECT t.place_code AS placeCode,t.place_code_type AS placeCodeType,tt.name AS placeCodeTypeName,t.flrc_hydrt_pit_no AS flrcHydrtPitNo,t.airport_code AS airportCode,tt.font_color AS fontColor  FROM T_PLACECODE t LEFT JOIN T_PLACECODE_TYPE tt ON t.place_code_type=tt.id
+  </select>
+  <select id="getPlaceCode" resultType="com.zh.bean.flight.TPlacecode">
+    SELECT t.place_code AS placeCode,t.place_code_type AS placeCodeType,tt.name AS placeCodeTypeName,t.flrc_hydrt_pit_no AS flrcHydrtPitNo,t.airport_code AS airportCode,tt.font_color AS fontColor  FROM T_PLACECODE t LEFT JOIN T_PLACECODE_TYPE tt ON t.place_code_type=tt.id
+    where t.place_code=#{placeCode} and t.airport_code=#{airportCode}
+  </select>
+  <insert id="insert" parameterType="com.zh.bean.flight.TPlacecode">
+    insert into T_PLACECODE (place_code, airport_code, place_code_type, 
+      flrc_hydrt_pit_no)
+    values (#{placeCode,jdbcType=VARCHAR}, #{airportCode,jdbcType=VARCHAR}, #{placeCodeType,jdbcType=VARCHAR}, 
+      #{flrcHydrtPitNo,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.zh.bean.flight.TPlacecode">
+    insert into T_PLACECODE
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="placeCode != null">
+        place_code,
+      </if>
+      <if test="airportCode != null">
+        airport_code,
+      </if>
+      <if test="placeCodeType != null">
+        place_code_type,
+      </if>
+      <if test="flrcHydrtPitNo != null">
+        flrc_hydrt_pit_no,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="placeCode != null">
+        #{placeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="airportCode != null">
+        #{airportCode,jdbcType=VARCHAR},
+      </if>
+      <if test="placeCodeType != null">
+        #{placeCodeType,jdbcType=VARCHAR},
+      </if>
+      <if test="flrcHydrtPitNo != null">
+        #{flrcHydrtPitNo,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.flight.TPlacecode">
+    update T_PLACECODE
+    <set>
+      <if test="placeCodeType != null">
+        place_code_type = #{placeCodeType,jdbcType=VARCHAR},
+      </if>
+      <if test="flrcHydrtPitNo != null">
+        flrc_hydrt_pit_no = #{flrcHydrtPitNo,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where place_code = #{placeCode,jdbcType=VARCHAR}
+      and airport_code = #{airportCode,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TPlacecode">
+    update T_PLACECODE
+    set place_code_type = #{placeCodeType,jdbcType=VARCHAR},
+      flrc_hydrt_pit_no = #{flrcHydrtPitNo,jdbcType=VARCHAR}
+    where place_code = #{placeCode,jdbcType=VARCHAR}
+      and airport_code = #{airportCode,jdbcType=VARCHAR}
+  </update>
+</mapper>

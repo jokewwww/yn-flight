@@ -1,0 +1,49 @@
+From d9e59b067ed3915d1afc0a7875989f64e462b5d3 Mon Sep 17 00:00:00 2001
+From: zhaojiacan <898435128@qq.com>
+Date: Tue, 22 Oct 2024 21:40:41 +0800
+Subject: [PATCH] =?UTF-8?q?1.=E8=88=AA=E7=8F=AD=E9=87=8D=E5=A4=8D=E9=97=AE?=
+ =?UTF-8?q?=E9=A2=98=E4=BC=98=E5=8C=96=202.=E6=B2=B9=E5=8D=95=E5=8F=B7?=
+ =?UTF-8?q?=E5=A4=9A=E6=AC=A1=E7=94=9F=E6=88=90=E5=8D=A1=E9=A1=BF=E9=97=AE?=
+ =?UTF-8?q?=E9=A2=98=E4=BC=98=E5=8C=96=203.=E8=B0=83=E5=BA=A6=E8=88=AA?=
+ =?UTF-8?q?=E6=98=BE=E5=8F=AA=E6=98=BE=E7=A4=BA=E4=B8=89=E5=AD=97=E7=A0=81?=
+ =?UTF-8?q?=E9=97=AE=E9=A2=98=E4=BF=AE=E5=BE=A9=204.=E6=B7=BB=E5=8A=A0?=
+ =?UTF-8?q?=E6=97=B6=E9=97=B4=E5=90=8C=E6=AD=A5=E6=9C=8D=E5=8A=A1=205.?=
+ =?UTF-8?q?=E5=8A=A0=E6=B2=B9=E9=87=8F=E6=A0=A1=E9=AA=8C=206.=E6=B2=B9?=
+ =?UTF-8?q?=E5=8D=95=E5=8F=B7=E6=A0=BC=E5=BC=8F=E6=A0=A1=E9=AA=8C=207.?=
+ =?UTF-8?q?=E7=A6=BB=E5=A2=83=E6=B2=B9=E5=8D=95=E7=BB=9F=E8=AE=A1=E4=BC=9A?=
+ =?UTF-8?q?=E7=AD=9B=E9=80=89=E5=87=BA=E5=9B=BD=E5=86=85=E5=8A=A0=E6=B2=B9?=
+ =?UTF-8?q?=E6=B2=B9=E5=8D=95=E9=97=AE=E9=A2=98=E4=BF=AE=E5=A4=8D=208.?=
+ =?UTF-8?q?=E4=BA=BA=E5=91=98=E7=A6=81=E6=AD=A2=E8=BD=A6=E8=BE=86=E8=AE=BE?=
+ =?UTF-8?q?=E7=BD=AE=E5=BC=82=E5=B8=B8=E9=97=AE=E9=A2=98=E4=BF=AE=E5=A4=8D?=
+ =?UTF-8?q?=209.=E8=88=AA=E7=A9=BA=E5=85=AC=E5=8F=B8=E7=BB=9F=E8=AE=A1?=
+ =?UTF-8?q?=E5=AF=BC=E5=87=BA=E6=B1=87=E6=80=BB=E6=95=B0=E6=8D=AE=E5=8C=85?=
+ =?UTF-8?q?=E5=90=AB=E6=8A=BD=E6=B2=B9=E9=87=8F=E9=97=AE=E9=A2=98=E4=BF=AE?=
+ =?UTF-8?q?=E5=A4=8D=2010.=E8=B0=83=E5=BA=A6=E7=AB=AF=E4=B8=8B=E5=8F=91?=
+ =?UTF-8?q?=E4=BB=BB=E5=8A=A1=E6=97=B6=E6=96=B0=E5=A2=9E=E5=8A=A0=E6=B2=B9?=
+ =?UTF-8?q?=E5=AE=A2=E6=88=B7=E7=BC=96=E5=8F=B7=E6=A0=A1=E9=AA=8C=2011.?=
+ =?UTF-8?q?=E7=AE=A1=E7=90=86=E7=AB=AF=E6=96=B0=E5=A2=9E=E6=B2=B9=E5=8D=95?=
+ =?UTF-8?q?=E6=89=93=E5=8D=B0=E5=8A=9F=E8=83=BD?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/main/resources/application-pre.properties | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/resources/application-pre.properties b/src/main/resources/application-pre.properties
+index 40ba671..32be4c3 100644
+--- a/src/main/resources/application-pre.properties
++++ b/src/main/resources/application-pre.properties
+@@ -2,7 +2,7 @@
+ server.port=${SERVER_PORT:8078}
+ server.tomcat.uri-encoding=utf-8
+ # mysql
+-spring.datasource.url=jdbc:mysql://${MYSQL_ROOT_IP:172.17.1.10}:${MYSQL_ROOT_PORT:3306}/flight_login?useUnicode=true&characterEncoding=UTF-8&useSSL=false&autoReconnect=true&failOverReadOnly=false
++spring.datasource.url=jdbc:mysql://${MYSQL_ROOT_IP:172.17.1.10}:${MYSQL_ROOT_PORT:3306}/flight_login?useUnicode=true&characterEncoding=UTF-8&useSSL=false&autoReconnect=true&failOverReadOnly=false&serverTimezone=GMT%2B8
+ spring.datasource.username=${MYSQL_USERNAME:root}
+ spring.datasource.password=${MYSQL_ROOT_PASSWORD:Abcd-1234}
+ spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+-- 
+2.43.0.windows.1
+

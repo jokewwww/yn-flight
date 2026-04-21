@@ -1,0 +1,2006 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.MyFuelRecptMapper">
+
+    <select id="gettaskById" resultType="com.zh.bean.flight.MyTask">
+        SELECT
+            task_id AS taskId,
+            task_flight_no AS taskFlightNo,
+            task_airport_code AS taskAirportCode,
+            task_aptarea_code AS taskAptareaCode,
+            task_ope_staff_id AS taskOpeStaffId,
+            task_content AS taskContent,
+            task_status AS taskStatus,
+            task_fuel_recpt_no AS taskFuelRecptNo,
+            task_vehi_no AS taskVehiNo,
+            task_cre_staff_id AS taskCreStaffId
+        FROM T_TASK
+        WHERE task_ope_staff_id=#{sfvhStaffId}
+          AND task_acc_time =(SELECT MAX(task_acc_time) FROM T_TASK WHERE task_ope_staff_id =#{sfvhStaffId} and task_status IN(3,4,5))
+          AND  DATE_FORMAT(task_acc_time,"%Y-%m-%d") = CURDATE()
+          AND task_status IN(3,4,5)
+            limit 0,1
+
+    </select>
+    <select id="gettaskListById" resultType="com.zh.bean.flight.MyTask">
+        SELECT
+        ta.task_flight_no AS taskFlightNo,
+        ta.task_airport_code AS taskAirportCode,
+        ta.task_aptarea_code AS taskAptareaCode,
+        ta.task_ope_staff_id AS taskOpeStaffId,
+        ta.task_content AS taskContent,
+        ta.task_status AS taskStatus,
+        ta.task_fuel_recpt_no AS taskFuelRecptNo,
+        ta.task_vehi_no AS taskVehiNo,
+        ta.task_cre_staff_id AS taskCreStaffId
+        FROM T_TASK ta , T_FLIGHT tf
+        WHERE ta.task_ope_staff_id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item.sfvhStaffId}
+        </foreach>
+        AND ta.task_flight_id = tf.flgt_id
+        AND ta.task_acc_time in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            (SELECT MAX(task_acc_time) FROM T_TASK WHERE task_ope_staff_id = #{item.sfvhStaffId})
+        </foreach>
+        AND ta.task_status IN (3,4,5)
+        and task_acc_time is not null
+        and task_acc_time &gt;= DATE_ADD(#{date},INTERVAL 4 HOUR)
+        AND task_acc_time &lt; DATE_ADD(#{date},INTERVAL 28 HOUR)
+
+
+    </select>
+
+    <select id="findRecptCont" resultType="com.zh.bean.flight.TfuelTotal">
+        SELECT
+        COUNT(flrc_type) AS SumTotal,
+        COUNT(flrc_type = 3 OR NULL OR flrc_type = 6 OR flrc_type = 7 ) AS Inland,
+        COUNT(flrc_type = 1 OR NULL OR flrc_type = 4 OR flrc_type = 9) AS InterNational,
+        COUNT(flrc_type = 2 OR NULL OR flrc_type = 5 OR flrc_type = 8) AS Lcountry
+        FROM T_FUEL_RECPT WHERE DATE_FORMAT(flrc_rec_cre_time,'%Y-%m-%d')=CURDATE()
+        <if test="staffAptareaCode!=null and staffAptareaCode!='' ">
+
+            and flrc_aptarea_code=#{staffAptareaCode}
+        </if>
+        and flrc_airport_code=#{staffAirportCode}
+    </select>
+
+    <select id="findfightoil" resultType="com.zh.bean.flight.TfuelFight">
+        SELECT
+        SUM(flrc_fuel_vol) AS flrcFuelVol,
+        SUM(flrc_quantity/1000) AS flrcQuantity
+        FROM T_FUEL_RECPT
+        WHERE DATE_FORMAT(flrc_rec_cre_time,'%Y-%m-%d')=CURDATE()
+        <if test="staffAptareaCode!=null and staffAptareaCode!='' ">
+
+            and flrc_aptarea_code=#{staffAptareaCode}
+        </if>
+        and flrc_airport_code=#{staffAirportCode}
+    </select>
+
+    <select id="findflight" resultType="com.zh.bean.flight.TFlightPlace">
+        SELECT
+            flgt_acname AS flgtAcname,
+            flgt_al2c AS flgtAl2c,
+            flgt_alcname AS flgtAlcname,
+            flgt_a_stot AS flgtAStot,
+            flgt_a_etot AS flgtAEtot,
+            flgt_a_atot AS flgtAAtot,
+            flgt_d_stot AS flgtDStot,
+            flgt_d_etot AS flgtDEtot,
+            flgt_d_atot AS flgtDAtot,
+            flgt_flno AS flgtFlno,
+            flgt_adid AS flgtAdid,
+            CASE flgt_flti
+                WHEN 'D'
+                    THEN '国内'
+                WHEN 'I'
+                    THEN '国际'
+                WHEN 'R'
+                    THEN '地区'
+                WHEN 'M'
+                    THEN '混合'
+                WHEN 'U'
+                    THEN '未知'
+                ELSE '' END
+                AS flgtFlti
+        FROM T_FLIGHT
+        WHERE flgt_airport_code=#{flgtAirportCode}
+          AND flgt_placecode=#{flgtPlacecode}
+          AND flgt_flop=CURDATE()
+    </select>
+
+    <select id="flightdeta" resultType="com.zh.bean.flight.TFlightInfo">
+        SELECT flgt_regn AS aircraftID, flgt_vialc AS airRoute,flgt_flno AS flightNA,
+               flgt_flti AS rangeA  ,flgt_a_atot AS timeA,flgt_adid AS statusA,
+               flgt_flno AS flightND ,flgt_flti AS rangeD,flgt_gate AS gateD
+        FROM T_FLIGHT
+        WHERE flgt_airport_code=#{flgtAirportCode}
+          AND flgt_adid='A' AND flgt_flno=#{flightNA}
+          AND flgt_id=#{aircraftID}
+          AND flgt_flop=CURDATE()
+            limit 1
+    </select>
+
+    <select id="flightask" resultType="com.zh.bean.flight.MyFlightTask">
+        SELECT tf2.flgt_a_atot AS flgtAAtot,tf2.flgt_chocks_in AS flgtChocksIn,flight.flgt_chocks_out AS flgtChocksOut,
+               flight.flgt_gate AS flgtGate ,flight.flgt_d_etot AS flgtDEtot,flight.flgt_d_atot AS flgtDAtot,flight.flgt_flno AS flgtFlno,
+               ts.task_asg_time AS taskAsgTime,ts.task_acc_time AS taskAccTime,
+               ts.task_chag_sta_time AS taskChagStaTime,ts.task_arrive_time AS taskArriveTime,
+               ts.task_rc_print_time AS taskRcPrintTime,ts.task_chag_end_time AS taskChagEndTime,
+               ts.task_done_time AS taskDoneTime,flight.flgt_gate AS flgtGate
+        FROM T_FLIGHT tf2
+                 LEFT JOIN T_FLIGHT flight
+                           ON flight.flgt_adid = 'D'
+                               AND flight.flgt_airport_code = tf2.flgt_airport_code
+                               AND ((flight.flgt_link_flno IS NOT NULL AND flight.flgt_link_flno &lt;&gt; '' AND tf2.flgt_flno LIKE CONCAT('%',flight.flgt_link_flno,'%')))
+                               AND ((tf2.flgt_link_flno IS NOT NULL AND tf2.flgt_link_flno &lt;&gt; '' AND flight.flgt_flno LIKE CONCAT('%',tf2.flgt_link_flno,'%')))
+                               AND flight.flgt_regn = tf2.flgt_regn
+                               AND flight.flgt_link_flop = tf2.flgt_flop
+                               AND flight.flgt_flop = tf2.flgt_link_flop
+                               AND flight.flgt_repeat = tf2.flgt_link_repeat
+                               AND flight.flgt_link_repeat = tf2.flgt_repeat
+                 LEFT JOIN T_TASK ts ON ts.task_flight_id = flight.flgt_id
+        WHERE tf2.flgt_airport_code=#{flgtAirportCode}
+          AND tf2.flgt_flno=#{flightNA}
+          AND tf2.flgt_id=#{aircraftID}
+          AND tf2.flgt_flop=CURDATE()
+    </select>
+
+
+    <select id="flightaskl" resultType="com.zh.bean.flight.MyFlightTask">
+        SELECT
+            tf2.flgt_a_atot AS flgtAAtot,
+            flight.flgt_d_etot AS flgtDEtot,tf2.flgt_chocks_in AS flgtChocksIn ,flight.flgt_chocks_out AS flgtChocksOut,
+            ts.task_chag_sta_time AS taskChagStaTime,flight.flgt_d_stot AS flgtDStot,
+            ts.task_chag_end_time AS taskChagEndTime,tf2.flgt_flno AS flgtFlno,
+            ts.task_asg_time AS taskAsgTime,ts.task_acc_time AS taskAccTime,ts.task_arrive_time AS taskArriveTime,
+            ts.task_rc_print_time AS taskRcPrintTime,ts.task_done_time AS taskDoneTime
+        FROM T_FLIGHT flight
+                 LEFT JOIN T_TASK ts ON ts.task_flight_id = flight.flgt_id
+                 LEFT JOIN T_FLIGHT tf2
+                           ON tf2.flgt_adid = 'A'
+                               AND flight.flgt_link_ffid = tf2.flgt_ffid
+        WHERE flight.flgt_airport_code=#{flgtAirportCode}
+          AND flight.flgt_flno=#{flightND}
+          AND flight.flgt_id=#{aircraftID}
+          AND flight.flgt_flop=CURDATE()
+    </select>
+
+
+    <select id="flightdetails" resultType="com.zh.bean.flight.TFlightInfo">
+        SELECT flgt_regn AS aircraftID, flgt_vialc AS airRoute,flgt_flno AS flightNA,
+               flgt_flti AS rangeA  ,flgt_a_atot AS timeA, flgt_adid AS statusA,
+               flgt_flno AS flightND ,flgt_flti AS rangeD,flgt_gate AS gateD
+        FROM T_FLIGHT
+        WHERE flgt_airport_code=#{flgtAirportCode}
+          AND flgt_adid='D' AND flgt_flno=#{flightND}
+          AND flgt_id=#{aircraftID}
+          AND flgt_flop=CURDATE()
+            limit 1
+    </select>
+    <!--  根据人员ID 查询任务状态为出未下发 ，已完成，拒绝之外的 航班任务信息 下发给加油员的
+
+     `flgt_takeoff_fuel` int(7) DEFAULT '0' COMMENT '起飞油量',
+  `flgt_chock_fuel` int(7) DEFAULT '0' COMMENT '轮挡油量',
+  `flgt_otat_fuel`
+
+    -->
+    <select id="findStaffTask" resultType="com.zh.bean.flight.MyFlightTask">
+        SELECT tf.flgt_id AS flgtId,tf.flgt_ffid AS flgtFfid,tf.flgt_airport_code AS flgtAirportCode,
+               tf.flgt_aptarea_code AS flgtAptareaCode, tf.flgt_flno AS flgtFlno,tf.flgt_flop AS flgtFlop,
+               tf.flgt_acname AS flgtAcname,tf.flgt_regn AS flgtRegn,tf.flgt_placecode AS flgtPlacecode,
+               tf.flgt_al2c AS flgtAl2c, tf.flgt_alcname AS flgtAlcname,tf.flgt_vialc AS flgtVialc,
+               tf.flgt_a_stot AS flgtAStot,tf.flgt_a_etot AS flgtAEtot,tf.flgt_a_atot AS flgtAAtot,
+               tf.flgt_d_stot AS flgtDStot,tf.flgt_d_etot AS flgtDEtot,tf.flgt_d_atot AS flgtDAtot,
+               tf.flgt_org3c AS flgtOrg3c,tf.flgt_orgnm AS flgtOrgnm,tf.flgt_trs3c1 AS flgtTrs3c1,
+               tf.flgt_trs3c2 AS flgtTrs3c2,tf.flgt_trs3c3 AS flgtTrs3c3,tf.flgt_trs3c4 AS flgtTrs3c4,tf.flgt_trs3c5 AS flgtTrs3c5,
+               tf.flgt_trsnm1 AS flgtTrsnm1,tf.flgt_trsnm2 AS flgtTrsnm2,tf.flgt_trsnm3 AS flgtTrsnm3,tf.flgt_trsnm4 AS flgtTrsnm4,
+               tf.flgt_trsnm5 AS flgtTrsnm5, tf.flgt_des3c AS flgtDes3c,tf.flgt_desnm AS flgtDesnm,
+               tf.flgt_adid AS flgtAdid,tf.flgt_flti AS flgtFlti,tf.flgt_ftyp AS flgtFtyp,tf.flgt_chock_fuel as flgtChockFuel,
+               tf.flgt_proxy AS flgtProxy,tf.flgt_fnflag AS flgtFnflag,tf.flgt_otat_fuel as flgtOtatFuel,tf.order_no as orderNo,
+               tf.flgt_game AS flgtGame,tf.flgt_chocks_in AS flgtChocksIn,tf.flgt_chocks_out AS flgtChocksOut,
+               tf.flgt_takeoff_fuel as flgtTakeoffFuel,
+               tf.flgt_otat as flgtOtat,tf.flgt_olvr as flgtOlvr,
+
+               tf.flgt_vip AS flgtVip,ts.task_id AS taskId,ts.task_ope_staff_id AS taskOpeStaffId,
+               ts.task_content AS taskContent ,ts.task_status AS taskStatus,ts.task_asg_time AS taskAsgTime,
+               ts.task_acc_time AS taskAccTime,ts.task_chag_sta_time AS taskChagStaTime,ts.task_chag_end_time AS taskChagEndTime,
+               ts.task_done_time AS taskDoneTime,ts.task_fuel_recpt_no AS taskFuelRecptNo,
+               ts.task_vehi_no AS taskVehiNo,ts.task_cre_staff_id AS taskCreStaffId,ts.task_starmark AS taskStarmark,
+               ts.task_rec_cre_time AS taskRecCreTime,ts.fuel_pub_type AS fuelPubType,ts.flrc_bwtar AS flrcBwtar, flrc_type AS flrcType,
+               tf2.flgt_flti AS flgtFltiIn , tf2.flgt_flno AS flgtLinkFlno,
+               ts.custom_num AS arcrCustomNum,tf.flgt_status as flgtStatus , tf.flgt_oil as flgtOil
+        FROM T_TASK ts
+                 LEFT JOIN T_FLIGHT tf
+                           ON tf.flgt_id =ts.task_flight_id
+                 LEFT JOIN T_FLIGHT tf2
+                           ON tf2.flgt_adid = 'A'
+                               AND tf.flgt_link_ffid = tf2.flgt_ffid
+        WHERE ts.task_ope_staff_id=#{staffId}
+          AND
+                DATE_FORMAT(ts.task_asg_time,'%Y-%m-%d') >= date_sub(curdate(), INTERVAL 1 DAY)
+          AND ts.task_status in (1,2,3,4,5,6) order by ts.task_status desc,ts.task_asg_time asc
+    </select>
+    <!-- 根据机场代码 ，区域代码 查询近七天的油单信息 -->
+    <select id="findfuelrecpt" resultType="com.zh.bean.flight.MyFuelRecpt">
+        select
+            a.flrc_sign AS flrcSign,
+        a.flrc_id AS flrcId,
+        a.flrc_type AS flrcType,
+        a.flrc_no AS flrcNo,
+        a.flrc_date AS flrcDate,
+        a.flrc_airport_code AS flrcAirportCode,
+        a.flrc_aptarea_code AS flrcAptareaCode,
+        a.flrc_airport AS flrcAirport,
+        a.flrc_airl_code AS flrcAirlCode,
+        a.flrc_airl_name AS flrcAirlName,
+        a.flrc_flight_no AS flrcFlightNo,
+        a.flrc_aircrft_no AS flrcAircrftNo,
+        a.flrc_aircrft_type AS flrcAircrftType,
+        a.flrc_departure AS flrcDeparture,
+        a.flrc_transit AS flrcTransit,
+        a.flrc_dest AS flrcDest,
+        a.flrc_test_bill_no AS flrcTestBillNo,
+        a.flrc_fuel_name AS flrcFuelName,
+        a.flrc_fuel_temp AS flrcFuelTemp,
+        a.flrc_fuel_dnst AS flrcFuelDnst,
+        a.flrc_fuel_vol AS flrcFuelVol,
+        a.flrc_meter_stat AS flrcMeterStat,
+        a.flrc_meter_fnsh AS flrcMeterFnsh,
+        a.flrc_figuars AS flrcFiguars,
+        a.flrc_figuars_word AS flrcFiguarsWord,
+        a.flrc_quantity AS flrcQuantity,
+        a.flrc_vehi_num flrcVehiNum,
+        a.flrc_vehi_no AS flrcVehiNo,
+        a.flrc_hydrt_pit_no AS flrcHydrtPitNo,
+        a.flrc_stat_time AS flrcStatTime,
+        a.flrc_fnsh_time AS flrcFnshTime,
+        a.flrc_deliver_name AS flrcDeliverName,
+        a.flrc_deliver_id AS flrcDeliverId,
+        a.flrc_manual_tag AS flrcManualTag,
+        a.flrc_manual_staff AS flrcManualStaff,
+        a.flrc_manual_time AS flrcManualTime,
+        a.flrc_revw_status AS flrcRevwStatus,
+        a.flrc_takeback_flg AS flrcTakebackFlg,
+        a.flrc_rec_cre_time AS flrcRecCreTime,
+        a.flrc_generate_time AS flrcGenerateTime,
+        a.flrc_is_export flrcIsExport,
+        a.flrc_status AS flrcStatus,
+        a.flrc_update_err_msg flrcUpdateErrMsg,
+        a.flrc_confirm_status flrcConfirmStatus,
+        a. flrc_confirm_err_msg flrcConfirmErrMsg,
+        a.flrc_pay_status flrcPayStatus,
+        a.flrc_pay_err_msg flrcPayErrMsg,
+        a.flrc_bwtar flrcBwtar,
+        a.arcr_custom_num arcrCustomNum,
+        a.flgt_adid flgtAdid,
+        a. flgt_placecode flgtPlacecode,
+        a.flrc_version flrcVersion,
+        a.flrc_print_count flrcPrintCount,
+        a.order_id orderId,
+        a.flrc_defuel_reason flrcDefuelReason,
+        a.flrc_defuel_reason_code flrcDefuelReasonCode,
+        a.flrc_defuel_test flrcDefuelTest,
+        a.flrc_defuel_refruel flrcDefuelRefruel,
+        a.flrc_defuel_storage flrcDefuelStorage,
+        a.flrc_supply_fuel_type AS flrcSupplyFuelType,
+        a.flrc_remark AS flrcRemark,
+        a.flrc_rapc3 AS flrcRapc3,
+        a.flrc_rapcn AS flrcRapcn,
+        a.flrc_tanker_no AS flrcTankerNo,
+        a.flrc_transport_mileage AS flrcTransportMileage,
+        a.flrc_bus_type AS flrcBusType,
+        a.settlement_rapc3 AS settlementRapc3,
+        a.settlement_rapcn AS settlementRapcn,
+        a.flrc_wkop_date AS flrcWkopDate,
+        a.manual,
+        a.flgt_id as flgtId,
+        a.staff_scheduling_id AS staffSchedulingId,
+        b.flgt_flop AS flgtFlop
+        from T_FUEL_RECPT a left join T_FLIGHT b on a.flgt_id = b.flgt_id
+        <!-- WHERE flrc_date >= date_sub(curdate(), INTERVAL 30 DAY) -->
+        <where>
+            <if test="flrcDate!=null and flrcDate!=''">
+                AND flrc_date = #{flrcDate}
+            </if>
+            <if test="flrcDate==null or flrcDate==''">
+                AND flrc_date >= date_sub(curdate(), INTERVAL 30 DAY)
+            </if>
+            <if test="staffAirportCode!=null and staffAirportCode!=''">
+                AND flrc_airport_code = #{ staffAirportCode }
+            </if>
+            <if test="staffAptareaCode!=null and staffAptareaCode!=''">
+                AND flrc_aptarea_code=#{staffAptareaCode}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据机场代码 ，区域代码 查询当天的油单信息 -->
+    <select id="findtodayfuelrecpt" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        <include refid="fuelFlrcSign"/>
+        <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT
+        WHERE DATE_FORMAT(flrc_date,'%Y-%m-%d') = curdate()
+
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND flrc_airport_code = #{ staffAirportCode }
+        </if>
+        <if test="staffAptareaCode!=null and staffAptareaCode!=''">
+            AND flrc_aptarea_code=#{staffAptareaCode}
+        </if>
+    </select>
+
+    <!-- 根据油单ID 修改油单信息 -->
+    <update id="updatefuel">
+        UPDATE T_FUEL_RECPT SET flrc_type=#{flrcType},flrc_no=#{flrcNo},flrc_date=#{flrcDate},
+                                flrc_airport_code=#{flrcAirportCode},flrc_aptarea_code=#{flrcAptareaCode},flrc_airport=#{flrcAirport},
+                                flrc_airl_name=#{flrcAirlName},flrc_flight_no=#{flrcFlightNo},flrc_aircrft_no=#{flrcAircrftNo},
+                                flrc_aircrft_type=#{flrcAircrftType},flrc_departure=#{flrcDeparture},flrc_transit=#{flrcTransit},
+                                flrc_dest=#{flrcDest},flrc_test_bill_no=#{flrcTestBillNo},flrc_fuel_name=#{flrcFuelName},flrc_fuel_temp=#{flrcFuelTemp},
+                                flrc_fuel_dnst=#{flrcFuelDnst},flrc_fuel_vol=#{flrcFuelVol},flrc_meter_stat=#{flrcMeterStat},flrc_meter_fnsh=#{flrcMeterFnsh},
+                                flrc_figuars=#{flrcFiguars},flrc_figuars_word=#{flrcFiguarsWord},flrc_quantity=#{flrcQuantity},
+                                flrc_vehi_no=#{flrcVehiNo},flrc_hydrt_pit_no=#{flrcHydrtPitNo},flrc_stat_time=#{flrcStatTime},
+                                flrc_fnsh_time=#{flrcFnshTime},flrc_deliver_name=#{flrcDeliverName},flrc_sign=#{flrcSign},
+                                flrc_manual_tag=1,
+                                flrc_manual_staff=(
+                                    CASE WHEN flrc_manual_staff  IS NULL THEN #{flrcManualStaff}
+                                         WHEN flrc_manual_staff= '' THEN
+                                             #{flrcManualStaff}
+                                         ELSE
+                                             CONCAT(flrc_manual_staff,',',#{flrcManualStaff})
+                                        END),
+                                flrc_manual_time=(
+                                    CASE WHEN flrc_manual_time  IS NULL THEN #{flrcManualTime}
+                                         WHEN flrc_manual_time= '' THEN
+                                             #{flrcManualTime}
+                                         ELSE
+                                             CONCAT(flrc_manual_time,',',#{flrcManualTime})
+                                        END),
+                                flrc_revw_status=#{flrcRevwStatus},flrc_takeback_flg=#{flrcTakebackFlg},flrc_rec_cre_time=#{flrcRecCreTime}
+        WHERE flrc_id=#{flrcId}
+    </update>
+    <!-- 根据加油单ID修改油单是否回收 -->
+    <update id="uprecyclefuel">
+        UPDATE T_FUEL_RECPT SET flrc_takeback_flg =1  WHERE flrc_id=#{flrcId}
+    </update>
+    <!-- 根据加油单ID修改油单是否审批 -->
+    <update id="auditfuel">
+        UPDATE T_FUEL_RECPT SET flrc_revw_status =#{flrcRevwStatus}  WHERE flrc_id=#{flrcId}
+    </update>
+
+    <!-- 根据加油单ID回收油单 -->
+    <update id="recoveryFuel">
+        UPDATE T_FUEL_RECPT SET flrc_takeback_flg =#{flrcTakebackFlg}  WHERE flrc_id=#{flrcId}
+    </update>
+    <!-- 根据加油单ID 查询加油单详情 -->
+    <select id="findFuellist" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        <include refid="fuelAllSign"/>
+        <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT
+        WHERE flrc_id=#{flrcId}
+    </select>
+    <!-- 根据任务ID查询任务航班信息 -->
+    <select id="findtasklist" resultType="com.zh.bean.flight.MyFlightTask">
+        SELECT tf.flgt_id AS flgtId,tf.flgt_ffid AS flgtFfid,tf.flgt_airport_code AS flgtAirportCode,
+               tf.flgt_aptarea_code AS flgtAptareaCode, tf.flgt_flno AS flgtFlno,tf.flgt_flop AS flgtFlop,
+               tf.flgt_acname AS flgtAcname,tf.flgt_regn AS flgtRegn,tf.flgt_placecode AS flgtPlacecode,
+               tf.flgt_al2c AS flgtAl2c, tf.flgt_alcname AS flgtAlcname,tf.flgt_vialc AS flgtVialc,
+               tf.flgt_a_stot AS flgtAStot,tf.flgt_a_etot AS flgtAEtot,tf.flgt_a_atot AS flgtAAtot,
+               tf.flgt_d_stot AS flgtDStot,tf.flgt_d_etot AS flgtDEtot,tf.flgt_d_atot AS flgtDAtot,
+               tf.flgt_org3c AS flgtOrg3c,tf.flgt_orgnm AS flgtOrgnm,tf.flgt_trs3c3 AS flgtTrs3c3,
+               tf.flgt_trsnm3 AS flgtTrsnm3, tf.flgt_des3c AS flgtDes3c,tf.flgt_desnm AS flgtDesnm,
+               tf.flgt_adid AS flgtAdid,tf.flgt_flti AS flgtFlti,tf.flgt_ftyp AS flgtFtyp,
+               tf.flgt_proxy AS flgtProxy,tf.flgt_link_flno AS flgtLinkFlno,tf.flgt_fnflag AS flgtFnflag,
+               tf.flgt_game AS flgtGame,tf.flgt_chocks_in AS flgtChocksIn,tf.flgt_chocks_out AS flgtChocksOut,
+               tf.flgt_vip AS flgtVip,ts.task_id AS taskId,ts.task_ope_staff_id AS taskOpeStaffId,
+               ts.task_content AS taskContent ,ts.task_status AS taskStatus,ts.task_asg_time AS taskAsgTime,
+               ts.task_acc_time AS taskAccTime,ts.task_chag_sta_time AS taskChagStaTime,ts.task_chag_end_time AS taskChagEndTime,
+               ts.task_done_time AS taskDoneTime,ts.task_fuel_recpt_no AS taskFuelRecptNo,
+               ts.task_vehi_no AS taskVehiNo,ts.task_cre_staff_id AS taskCreStaffId,ts.task_starmark AS taskStarmark,
+               ts.task_rec_cre_time AS taskRecCreTime
+        FROM T_TASK ts
+                 LEFT JOIN T_FLIGHT tf
+                           ON tf.flgt_id =ts.task_flight_id
+        WHERE ts.task_id=#{taskId}
+    </select>
+    <!-- 查询任务表里最大的油单编号 -->
+    <select id="getMaxflrcNo" resultType="java.lang.String">
+        SELECT max(flrc_no+1) FROM T_FUEL_RECPT
+    </select>
+    <!-- 油单上传 -->
+    <insert id="upFuelrecpt">
+        INSERT into T_FUEL_RECPT(
+        flrc_id,flrc_type,flrc_no,flrc_date,flrc_airport_code,flrc_aptarea_code,flrc_airport,
+        flrc_airl_code,flrc_airl_name,flrc_flight_no,flrc_aircrft_no,flrc_aircrft_type,flrc_departure,
+        flrc_transit,flrc_dest,flrc_test_bill_no,flrc_fuel_name,flrc_fuel_temp,flrc_fuel_dnst,
+        flrc_fuel_vol,flrc_meter_stat,flrc_meter_fnsh,flrc_figuars,flrc_figuars_word,flrc_quantity,
+        flrc_vehi_no,flrc_hydrt_pit_no,flrc_stat_time,flrc_fnsh_time,flrc_deliver_name,flrc_deliver_id,
+        <if test="flrcManualTag != null and flrcManualTag != ''">
+            flrc_manual_tag,
+        </if>
+        flrc_manual_staff,flrc_manual_time,
+        <if test="flrcRevwStatus != null and flrcRevwStatus != ''">
+            flrc_revw_status,
+        </if>
+        <if test="flrcTakebackFlg != null and flrcTakebackFlg != ''">
+            flrc_takeback_flg,
+        </if>
+        <if test="flrcVehiNum != null and flrcVehiNum != ''">
+            flrc_vehi_num,
+        </if>
+        <if test="flrcIsExport != null">
+            flrc_is_export,
+        </if>
+        <if test="flrcStatus != null">
+            flrc_status,
+        </if>
+        <if test="flrcUpdateErrMsg != null">
+            flrc_update_err_msg,
+        </if>
+        <if test="flrcConfirmStatus != null">
+            flrc_confirm_status,
+        </if>
+        <if test="flrcConfirmErrMsg != null">
+            flrc_confirm_err_msg,
+        </if>
+        <if test="flrcPayStatus != null">
+            flrc_pay_status,
+        </if>
+        <if test="flrcPayErrMsg != null">
+            flrc_pay_err_msg,
+        </if>
+        <if test="flrcBwtar != null">
+            flrc_bwtar,
+        </if>
+        <if test="arcrCustomNum != null">
+            arcr_custom_num,
+        </if>
+        <if test="flgtAdid != null">
+            flgt_adid,
+        </if>
+        <if test="flgtPlacecode != null">
+            flgt_placecode,
+        </if>
+        <if test="flrcVersion != null">
+            flrc_version,
+        </if>
+        <if test="flrcPrintCount != null">
+            flrc_print_count,
+        </if>
+        <if test="flrcSign != null">
+            flrc_sign,
+        </if>
+        <if test="flrcSingle != null">
+            flrc_single,
+        </if>
+
+
+        <if test="flrcDefuelReason != null">
+            flrc_defuel_reason,
+        </if>
+        <if test="flrcDefuelReasonCode != null">
+            flrc_defuel_reason_code,
+        </if>
+        <if test="flrcDefuelTest != null">
+            flrc_defuel_test,
+        </if>
+        <if test="flrcDefuelRefruel != null">
+            flrc_defuel_refruel,
+        </if>
+        <if test="flrcDefuelStorage != null">
+            flrc_defuel_storage,
+        </if>
+        <if test="flrcSupplyFuelType != null">
+            flrc_supply_fuel_type,
+        </if>
+        <if test="flrcRemark != null">
+            flrc_remark,
+        </if>
+        <if test="flrcRapc3 != null">
+            flrc_rapc3,
+        </if>
+        <if test="flrcRapcn != null">
+            flrc_rapcn,
+        </if>
+        <if test="flrcTankerNo != null">
+            flrc_tanker_no,
+        </if>
+        <if test="flrcTransportMileage != null">
+            flrc_transport_mileage,
+        </if>
+        <if test="flrcBusType != null">
+            flrc_bus_type,
+        </if>
+        <if test="settlementRapc3 != null">
+            settlement_rapc3,
+        </if>
+        <if test="settlementRapcn != null">
+            settlement_rapcn,
+        </if>
+        <if test="manual != null">
+            manual,
+        </if>
+        <if test="flrcWkopDate != null">
+            flrc_wkop_date,
+        </if>
+        <if test="flgtId != null">
+            flgt_id,
+        </if>
+        <if test="staffSchedulingId != null">
+            staff_scheduling_id,
+        </if>
+        <if test="flrcGenerateTime != null">
+            flrc_generate_time,
+        </if>
+        flrc_rec_cre_time
+        )values(
+        #{flrcId},#{flrcType},#{flrcNo},#{flrcDate},#{flrcAirportCode},#{flrcAptareaCode},
+        #{flrcAirport},#{flrcAirlCode},#{flrcAirlName},#{flrcFlightNo},#{flrcAircrftNo},
+        #{flrcAircrftType},#{flrcDeparture},#{flrcTransit},#{flrcDest},#{flrcTestBillNo},
+        #{flrcFuelName},#{flrcFuelTemp},#{flrcFuelDnst},#{flrcFuelVol},#{flrcMeterStat},
+        #{flrcMeterFnsh},#{flrcFiguars},#{flrcFiguarsWord},#{flrcQuantity},#{flrcVehiNo},
+        #{flrcHydrtPitNo},#{flrcStatTime},#{flrcFnshTime},#{flrcDeliverName},#{flrcDeliverId},
+
+        <if test="flrcManualTag != null and flrcManualTag != ''">
+            #{flrcManualTag},
+        </if>
+        #{flrcManualStaff},#{flrcManualTime},
+        <if test="flrcRevwStatus != null and flrcRevwStatus != ''">
+            #{flrcRevwStatus},
+        </if>
+        <if test="flrcTakebackFlg != null and flrcTakebackFlg != ''">
+            #{flrcTakebackFlg},
+        </if>
+        <if test="flrcVehiNum != null and flrcVehiNum != ''">
+            #{flrcVehiNum},
+        </if>
+        <if test="flrcIsExport != null">
+            #{flrcIsExport,jdbcType=TINYINT},
+        </if>
+        <if test="flrcStatus != null">
+            #{flrcStatus,jdbcType=INTEGER},
+        </if>
+        <if test="flrcUpdateErrMsg != null">
+            #{flrcUpdateErrMsg,jdbcType=VARCHAR},
+        </if>
+        <if test="flrcConfirmStatus != null">
+            #{flrcConfirmStatus,jdbcType=INTEGER},
+        </if>
+        <if test="flrcConfirmErrMsg != null">
+            #{flrcConfirmErrMsg,jdbcType=VARCHAR},
+        </if>
+        <if test="flrcPayStatus != null">
+            #{flrcPayStatus,jdbcType=INTEGER},
+        </if>
+        <if test="flrcPayErrMsg != null">
+            #{flrcPayErrMsg,jdbcType=VARCHAR},
+        </if>
+        <if test="flrcBwtar != null">
+            #{flrcBwtar,jdbcType=VARCHAR},
+        </if>
+        <if test="arcrCustomNum != null">
+            #{arcrCustomNum,jdbcType=VARCHAR},
+        </if>
+        <if test="flgtAdid != null">
+            #{flgtAdid,jdbcType=VARCHAR},
+        </if>
+        <if test="flgtPlacecode != null">
+            #{flgtPlacecode,jdbcType=VARCHAR},
+        </if>
+        <if test="flrcVersion != null">
+            #{flrcVersion,jdbcType=INTEGER},
+        </if>
+        <if test="flrcPrintCount != null">
+            #{flrcPrintCount,jdbcType=INTEGER},
+        </if>
+
+        <if test="flrcSign != null">
+            #{flrcSign,jdbcType=LONGVARCHAR},
+        </if>
+        <if test="flrcSingle != null">
+            #{flrcSingle},
+        </if>
+
+        <if test="flrcDefuelReason != null">
+            #{flrcDefuelReason},
+        </if>
+        <if test="flrcDefuelReasonCode != null">
+            #{flrcDefuelReasonCode},
+        </if>
+        <if test="flrcDefuelTest != null">
+            #{flrcDefuelTest},
+        </if>
+        <if test="flrcDefuelRefruel != null">
+            #{flrcDefuelRefruel},
+        </if>
+        <if test="flrcDefuelStorage != null">
+            #{flrcDefuelStorage},
+        </if>
+        <if test="flrcSupplyFuelType != null">
+            #{flrcSupplyFuelType},
+        </if>
+        <if test="flrcRemark != null">
+            #{flrcRemark},
+        </if>
+        <if test="flrcRapc3 != null">
+            #{flrcRapc3},
+        </if>
+        <if test="flrcRapcn != null">
+            #{flrcRapcn},
+        </if>
+        <if test="flrcTankerNo != null">
+            #{flrcTankerNo},
+        </if>
+        <if test="flrcTransportMileage != null">
+            #{flrcTransportMileage},
+        </if>
+        <if test="flrcBusType != null">
+            #{flrcBusType},
+        </if>
+        <if test="settlementRapc3 != null">
+            #{settlementRapc3},
+        </if>
+        <if test="settlementRapcn != null">
+            #{settlementRapcn},
+        </if>
+        <if test="manual != null">
+            #{manual},
+        </if>
+        <if test="flrcWkopDate != null">
+            #{flrcWkopDate},
+        </if>
+        <if test="flgtId != null">
+            #{flgtId},
+        </if>
+        <if test="staffSchedulingId != null">
+            #{staffSchedulingId},
+        </if>
+        <if test="flrcGenerateTime != null">
+            #{flrcGenerateTime},
+        </if>
+        sysdate()
+        )
+    </insert>
+    <!-- 油单上传 -->
+    <insert id="upfuelIn">
+        INSERT into T_FUEL_RECPT(flrc_id,flrc_type,flrc_no,flrc_date,flrc_airport_code,flrc_aptarea_code
+        ,flrc_airport,flrc_airl_name,flrc_flight_no,flrc_aircrft_no,flrc_aircrft_type,flrc_departure,flrc_transit,
+        flrc_dest,flrc_test_bill_no,flrc_fuel_name,flrc_fuel_temp,flrc_fuel_dnst,flrc_fuel_vol,
+        flrc_meter_stat,flrc_meter_fnsh,flrc_figuars,flrc_figuars_word,flrc_quantity,
+        flrc_vehi_no,flrc_hydrt_pit_no,flrc_stat_time,flrc_fnsh_time,flrc_deliver_name,flrc_deliver_id,
+        flrc_sign,
+        <if test="flrcManualTag!=null and flrcManualTag!=''">
+            flrc_manual_tag,
+        </if>
+        flrc_manual_staff,flrc_manual_time,
+        <if test="flrcRevwStatus!=null and flrcRevwStatus!='' ">
+            flrc_revw_status,
+        </if>
+        <if test="flrcTakebackFlg!=null and flrcTakebackFlg!='' ">
+            flrc_takeback_flg,
+        </if>
+        <if test="flrcVehiNum != null and flrcVehiNum != ''">
+            flrc_vehi_num,
+        </if>
+        flrc_rec_cre_time)
+        values(#{flrcId},#{flrcType},#{flrcNo},#{flrcDate},#{flrcAirportCode},
+        #{flrcAptareaCode},#{flrcAirport},#{flrcAirlName},#{flrcFlightNo},#{flrcAircrftNo},
+        #{flrcAircrftType},#{flrcDeparture},#{flrcTransit},#{flrcDest},#{flrcTestBillNo},#{flrcFuelName},
+        #{flrcFuelTemp},#{flrcFuelDnst},#{flrcFuelVol},#{flrcMeterStat},#{flrcMeterFnsh},#{flrcFiguars},
+        #{flrcFiguarsWord},#{flrcQuantity},#{flrcVehiNo},#{flrcHydrtPitNo},#{flrcStatTime},
+        #{flrcFnshTime},#{flrcDeliverName},#{flrcDeliverId},
+        <if test="flrcManualTag!=null and flrcManualTag!=''">
+            #{flrcManualTag},
+        </if>
+        #{flrcManualStaff},#{flrcManualTime},
+        <if test="flrcRevwStatus!=null and flrcRevwStatus!=''">
+            #{flrcRevwStatus},
+        </if>
+        <if test="flrcTakebackFlg!=null and flrcTakebackFlg!=''">
+            #{flrcTakebackFlg},
+        </if>
+        <if test="flrcVehiNum != null and flrcVehiNum != ''">
+            #{flrcVehiNum},
+        </if>
+        sysdate())
+    </insert>
+
+    <!--  加油单索引可以根据所有字段进行查询 -->
+    <select id="findfuelretirevelist" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT WHERE 1 = 1
+        <if test="flrcId!=null and  flrcId!='' ">
+            AND flrc_id=#{flrcId}
+        </if>
+        <if test="flrcType!=null and flrcType!='' ">
+            AND flrc_type =#{flrcType}
+        </if>
+        <if test="flrcNo!=null and flrcNo!='' ">
+            AND flrc_no =#{flrcNo}
+        </if>
+        <if test="flrcDate!=null and flrcDate!='' ">
+            AND flrc_date = #{flrcDate}
+        </if>
+        <if test="flrcAirportCode!=null and flrcAirportCode!='' ">
+            AND flrc_airport_code =#{flrcAirportCode}
+        </if>
+        <if test="flrcAptareaCode!=null and flrcAptareaCode!='' ">
+            AND flrc_aptarea_code =#{flrcAptareaCode}
+        </if>
+        <if test="flrcAirport!=null and flrcAirport!='' ">
+            AND flrc_airport =#{flrcAirport}
+        </if>
+        <if test="flrcAirlName!=null and flrcAirlName!='' ">
+            AND flrc_airl_name =#{flrcAirlName}
+        </if>
+        <if test="flrcFlightNo!=null and flrcFlightNo!='' ">
+            AND flrc_flight_no=#{flrcFlightNo}
+        </if>
+        <if test="flrcAircrftNo!=null and flrcAircrftNo!='' ">
+            AND flrc_aircrft_no =#{flrcAircrftNo}
+        </if>
+        <if test="flrcAircrftType!=null and flrcAircrftType!='' ">
+            AND flrc_aircrft_type =#{flrcAircrftType}
+        </if>
+        <if test="flrcDeparture!=null and flrcDeparture!='' ">
+            AND flrc_departure =#{flrcDeparture}
+        </if>
+        <if test="flrcTransit!=null and flrcTransit!='' ">
+            AND flrc_transit=#{flrcTransit}
+        </if>
+        <if test="flrcDest!=null and flrcDest!='' ">
+            AND flrc_dest =#{flrcDest}
+        </if>
+        <if test="flrcTestBillNo!=null and flrcTestBillNo!='' ">
+            AND flrc_test_bill_no =#{flrcTestBillNo}
+        </if>
+        <if test="flrcFuelName!=null and flrcFuelName!='' ">
+            AND flrc_fuel_name =#{flrcFuelName}
+        </if>
+        <if test="flrcFuelTemp!=null and flrcFuelTemp!=''">
+            AND flrc_fuel_temp =#{flrcFuelTemp}
+        </if>
+        <if test="flrcFuelDnst!=null and flrcFuelDnst!='' ">
+            AND flrc_fuel_dnst=#{flrcFuelDnst}
+        </if>
+        <if test="flrcFuelVol!=null and flrcFuelVol!='' ">
+            AND flrc_fuel_vol =#{flrcFuelVol}
+        </if>
+        <if test="flrcMeterStat!=null and flrcMeterStat!='' ">
+            AND flrc_meter_stat=#{flrcMeterStat}
+        </if>
+        <if test="flrcMeterFnsh!=null and flrcMeterFnsh!='' ">
+            AND flrc_meter_fnsh=#{flrcMeterFnsh}
+        </if>
+        <if test="flrcFiguars!=null and flrcFiguars!='' ">
+            AND flrc_figuars=#{flrcFiguars}
+        </if>
+        <if test="flrcFiguarsWord!=null and flrcFiguarsWord!='' ">
+            AND flrc_figuars_word=#{flrcFiguarsWord}
+        </if>
+        <if test="flrcQuantity!=null and flrcQuantity!='' ">
+            AND flrc_quantity =#{flrcQuantity}
+        </if>
+        <if test="flrcVehiNo!=null and flrcVehiNo!='' ">
+            AND flrc_vehi_no =#{flrcVehiNo}
+        </if>
+        <if test="flrcHydrtPitNo!=null and flrcHydrtPitNo!='' ">
+            AND flrc_hydrt_pit_no=#{flrcHydrtPitNo}
+        </if>
+        <if test="flrcStatTime!=null and flrcStatTime!='' ">
+            AND flrc_stat_time=#{flrcStatTime}
+        </if>
+        <if test="flrcFnshTime!=null and flrcFnshTime!='' ">
+            AND flrc_fnsh_time =#{flrcFnshTime}
+        </if>
+        <if test="flrcDeliverName!=null and flrcDeliverName!='' ">
+            AND flrc_deliver_name=#{flrcDeliverName}
+        </if>
+        <if test="flrcSign!=null and flrcSign!='' ">
+            AND flrc_sign=#{flrcSign}
+        </if>
+        <if test="flrcManualTag!=null and flrcManualTag!='' ">
+            AND flrc_manual_tag=#{flrcManualTag}
+        </if>
+        <if test="flrcManualStaff!=null and flrcManualStaff!='' ">
+            AND flrc_manual_staff=#{flrcManualStaff}
+        </if>
+        <if test="flrcManualTime!=null and flrcManualTime!='' ">
+            AND flrc_manual_time =#{flrcManualTime}
+        </if>
+        <if test="flrcRevwStatus!=null and flrcRevwStatus!='' ">
+            AND flrc_revw_status=#{flrcRevwStatus}
+        </if>
+        <if test="flrcTakebackFlg!=null and flrcTakebackFlg!='' ">
+            AND flrc_takeback_flg=#{flrcTakebackFlg}
+        </if>
+        <if test="flrcVehiNum!=null and flrcVehiNum!='' ">
+            AND flrc_vehi_num=#{flrcVehiNum}
+        </if>
+        <if test="flrcRecCreTime!=null and flrcRecCreTime!='' ">
+            AND flrc_rec_cre_time=#{flrcRecCreTime}
+        </if>
+        <if test="flrcSupplyFuelType != null and flrcSupplyFuelType != '' ">
+            AND flrc_supply_fuel_type=#{flrcSupplyFuelType},
+        </if>
+        <if test="flrcRemark != null and flrcRemark != '' ">
+            AND flrc_remark=#{flrcRemark},
+        </if>
+        <if test="flrcRapc3 != null and flrcRapc3 != '' ">
+            AND flrc_rapc3=#{flrcRapc3},
+        </if>
+        <if test="flrcRapcn != null and flrcRapcn != '' ">
+            AND flrc_rapcn=#{flrcRapcn},
+        </if>
+        <if test="flrcTankerNo != null and flrcTankerNo != '' ">
+            AND flrc_tanker_no=#{flrcTankerNo},
+        </if>
+        <if test="flrcTransportMileage != null and flrcTransportMileage != '' ">
+            AND flrc_transport_mileage=#{flrcTransportMileage},
+        </if>
+        <if test="flrcBusType != null and flrcBusType != '' ">
+            AND flrc_bus_type=#{flrcBusType},
+        </if>
+        <if test="settlementRapc3 != null and settlementRapc3 != '' ">
+            AND settlement_rapc3=#{settlementRapc3},
+        </if>
+        <if test="settlementRapcn != null and settlementRapcn != '' ">
+            AND settlement_rapcn=#{settlementRapcn},
+        </if>
+        <if test="manual != null ">
+            AND manual=#{manual},
+        </if>
+    </select>
+    <!-- 根据任务id 修改任务状态 -->
+    <update id="updateFuelstatus">
+        UPDATE T_TASK set task_status=7 where task_id=#{taskId}
+    </update>
+    <!-- 根据任务id 修改任务状态  加油单编号 -->
+    <update id="updateFueltask">
+        UPDATE T_TASK set task_status=#{taskStatus},
+                          task_chag_end_time=#{taskChagEndTime}
+
+        where task_id=#{taskId}
+    </update>
+    <!-- 根据任务id 修改 任务完成时间 加油车编号 -->
+    <update id="updatefueltaskvehi">
+        UPDATE T_TASK set
+            task_done_time=#{taskDoneTime}
+        where task_id=#{taskId}
+    </update>
+    <!-- 根据员工id 任务状态为已接受 查询航班号 -->
+    <select id="findflightno" resultType="java.lang.String">
+        SELECT task_flight_no AS taskFlightNo FROM T_TASK WHERE task_ope_staff_id=#{staffId} AND
+            task_status = 3
+    </select>
+    <!-- 查询任务总和  -->
+    <select id="findstaffcount" resultType="java.lang.Integer">
+        SELECT count(*) FROM T_TASK WHERE task_ope_staff_id=#{staffId}
+    </select>
+    <!--  查询已完成任务数 -->
+    <select id="findstafffinsh" resultType="java.lang.Integer">
+        SELECT count(*) FROM T_TASK WHERE task_ope_staff_id=#{staffId} AND task_status=7
+    </select>
+    <!-- 根据加油单编号获取单条任务信息 -->
+    <select id="getTaskInfo" resultType="com.zh.bean.flight.MyTask">
+        select
+            task_id AS taskId,
+            task_flight_id AS taskFlightId,
+            task_flight_no AS taskFlightNo,
+            task_airport_code AS taskAirportCode,
+            task_aptarea_code AS taskAptareaCode,
+            task_ope_staff_id AS taskOpeStaffId,
+            task_content AS taskContent,
+            task_status AS taskStatus,
+            task_asg_time AS taskAsgTime,
+            task_acc_time AS taskAccTime,
+            task_chag_sta_time AS taskChagStaTime,
+            task_chag_end_time AS taskChagEndTime,
+            task_done_time AS taskDoneTime,
+            task_fuel_recpt_no AS taskFuelRecptNo,
+            task_vehi_no AS taskVehiNo,
+            task_cre_staff_id AS taskCreStaffId,
+            task_starmark AS taskStarmark,
+            task_rec_cre_time AS taskRecCreTime
+        from T_TASK where
+            task_fuel_recpt_no = #{flrcNo}
+    </select>
+
+    <!-- ,IF(ISNULL(tf.flno),0,1) DESC -->
+    <select id="getCstmNameAndArcrAcnameByArcrRegn" resultType="com.zh.bean.flight.MyFlightCode">
+        SELECT
+            tf.arcr_acname AS arcrName,
+            tc.cstm_name AS cstmRegion,
+            tc.cstm_region AS newCstmRegion,
+            tc.cstm_num arcrCustomNum,
+            tf.cnaf_update_time cnafUpdateTime
+        FROM T_CUSTOM tc ,  T_FLIGHT_CODE tf
+        WHERE
+        TRIM(LEADING '0' FROM tf.arcr_custom_num) =  TRIM(LEADING '0' FROM tc.cstm_num)
+          and  tf.arcr_regn=#{flgtRegn}
+          <if test="flgtFlno != null and flgtFlno !=  '' ">
+              and tf.flno = #{flgtFlno}
+          </if>
+          <if test="flgtFlno == null or flgtFlno =='' ">
+              and (tf.flno is null or tf.flno='')
+          </if>
+          and  CURDATE() BETWEEN tf.arcr_start_date  and tf.arcr_end_date
+          and tf.del_flag=0
+        ORDER BY arcr_end_date DESC
+            LIMIT 0,1
+    </select>
+
+    <!-- 获取临时航班信息 -->
+    <select id="getCstmNameAndArcrAcnameByArcrRegnTemporary" resultType="com.zh.bean.flight.MyFlightCode">
+        SELECT
+        tf.arcr_acname AS arcrName,
+        tc.cstm_name AS cstmRegion,
+        tc.cstm_region AS newCstmRegion ,
+        tc.cstm_num arcrCustomNum
+        FROM T_CUSTOM tc ,  T_FLIGHT_CODE_TEMPORARY tf
+        WHERE
+        TRIM(LEADING '0' FROM tf.arcr_custom_num) =  TRIM(LEADING '0' FROM tc.cstm_num)
+        and  tf.arcr_regn=#{flgtRegn}
+        <if test="flgtFlno != null and flgtFlno !=  '' ">
+            and tf.flno = #{flgtFlno}
+        </if>
+        and  CURDATE() BETWEEN tf.arcr_start_date  and tf.arcr_end_date
+        ORDER BY arcr_end_date DESC
+        LIMIT 0,1
+    </select>
+
+    <!-- 根据任务ID 修改任务状态 同时添加加油开始时间 -->
+    <update id="updateTaskStatus">
+        UPDATE T_TASK SET task_chag_sta_time=NOW(),task_status=4 WHERE task_id=#{taskId}
+    </update>
+    <!-- 根据任务ID强制修改任务状态为已接受 -->
+    <update id="ForiceUpdateTaskStatus">
+        UPDATE T_TASK SET task_status=3 WHERE task_id=#{taskId}
+    </update>
+    <!-- 修改任务状态 -->
+    <update id="upstatus">
+        UPDATE T_TASK SET task_status=#{taskStatus} WHERE task_id=#{flgtId}
+    </update>
+
+    <!-- 查询油单表 -->
+    <select id="findlistfuel" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        <include refid="fuelFlrcSign"/>
+        <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT
+    </select>
+
+    <select id="selectflrcno" resultType="java.lang.Integer">
+        SELECT COUNT(flrc_no) FROM T_FUEL_RECPT WHERE flrc_no=#{flrcNo}
+    </select>
+    <select id="selectflrcregn" resultType="java.lang.Integer">
+        SELECT COUNT(flgt_regn) FROM T_FLIGHT WHERE flgt_regn=#{flrcAircrftNo}
+    </select>
+
+    <select id="selectflrcflno" resultType="java.lang.Integer">
+        SELECT COUNT(flgt_flno) FROM T_FLIGHT WHERE flgt_flno=#{flrcFlightNo}
+    </select>
+
+    <insert id="readflight">
+        INSERT INTO T_FLIGHT_SUBSCRIPTION(flgt_rflno,flgt_rflop,staff_rid,flgt_airport_rcode,flgt_aptarea_rcode) VALUES(
+                                                                                                                           #{flgtRflno},#{flgtRflop},#{staffId},#{staffAirportCode},#{staffAptareaCode}
+                                                                                                                       )
+    </insert>
+
+    <delete id="DissFlight">
+        DELETE FROM T_FLIGHT_SUBSCRIPTION
+        WHERE
+        flgt_rflno=#{flgtRflno}
+        AND flgt_rflop=#{flgtRflop}
+        AND staff_rid=#{staffId}
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND flgt_airport_rcode=#{staffAirportCode}
+        </if>
+        <if test="staffAptareaCode!=null and staffAptareaCode!=''">
+            AND flgt_aptarea_rcode=#{staffAptareaCode}
+        </if>
+
+    </delete>
+
+    <select id="flightcode" resultType="com.zh.bean.flight.MyAirportCode">
+        SELECT
+            apcd_iata_code AS apcdIataCode,
+            apcd_airport_name AS apcdAirportName
+        FROM
+            T_AIRPORT_CODE
+    </select>
+
+    <select id="selectcustom" resultType="com.zh.bean.flight.MyFlightCode">
+        SELECT
+            tfc.arcr_regn AS arcrRegn,
+            tfc.arcr_acname AS arcrAcname,
+            tfc.arcr_custom_num AS arcrCustomNum,
+            tfc.arcr_start_date AS arcrStartDate,
+            tfc.arcr_end_date AS arcrEndDate,
+        FROM T_FLIGHT_CODE tfc
+        WHERE arcr_regn=#{flrcAircrftNo}
+    </select>
+
+    <insert id="insertFlightTemp">
+        INSERT INTO
+            T_FLIGHT_TEMP(flgt_flno,flgt_acname,flgt_regn,flgt_placecode,flgt_al2c,flgt_alcname
+            ,flgt_vialc,flgt_a_stot,flgt_d_stot,flgt_org3c,flgt_orgnm,flgt_des3c,flgt_desnm,
+                          flgt_adid,flgt_start_date,flgt_end_date,flgt_airport_code,flgt_trs3c,flgt_trsnm
+        )
+        values(#{flgtFlno},#{flgtAcname},#{flgtRegn},#{flgtPlacecode},#{flgtAl2c},#{flgtAlcname},
+               #{flgtVialc},#{flgtAStot},#{flgtDStot},#{flgtOrg3c},#{flgtOrgnm},#{flgtDes3c},#{flgtDesnm},
+               #{flgtAdid},#{flgtStartDate},#{flgtEndDate},#{flgtAirportCode},#{flgtTrs3c},#{flgtTrsnm})
+    </insert>
+
+    <update id="updateFlightTemp">
+        UPDATE T_FLIGHT_TEMP
+        SET flgt_acname=#{flgtAcname},
+            flgt_regn=#{flgtRegn},flgt_placecode=#{flgtPlacecode},
+            flgt_al2c=#{flgtAl2c},flgt_alcname=#{flgtAlcname},flgt_vialc=#{flgtVialc},
+            flgt_a_stot=#{flgtAStot},flgt_d_stot=#{flgtDStot},flgt_org3c=#{flgtOrg3c},
+            flgt_orgnm=#{flgtOrgnm},flgt_des3c=#{flgtDes3c},flgt_desnm=#{flgtDesnm},
+            flgt_adid=#{flgtAdid},flgt_start_date=#{flgtStartDate},flgt_end_date=#{flgtEndDate},
+            flgt_airport_code=#{flgtAirportCode},flgt_trs3c=#{flgtTrs3c},flgt_trsnm=#{flgtTrsnm}
+        WHERE
+            flgt_flno=#{flgtFlno}
+    </update>
+
+    <delete id="deleteFlightTemp">
+        DELETE FROM T_FLIGHT_TEMP
+        WHERE
+            flgt_flno=#{flgtFlno}
+    </delete>
+
+    <select id="selectFlightTemp" resultType="com.zh.bean.flight.MyFlightTemp">
+        SELECT flgt_flno AS flgtFlno,
+               flgt_acname AS flgtAcname,flgt_regn AS flgtRegn,flgt_placecode AS flgtPlacecode,flgt_al2c AS flgtAl2c,
+               flgt_alcname AS flgtAlcname ,flgt_vialc AS flgtVialc, flgt_a_stot AS flgtAStot ,flgt_d_stot AS flgtDStot,
+               flgt_org3c AS flgtOrg3c,flgt_orgnm AS flgtOrgnm,flgt_des3c AS flgtDes3c,flgt_desnm AS flgtDesnm,
+               flgt_adid AS flgtAdid ,flgt_start_date AS flgtStartDate,flgt_end_date AS flgtEndDate,
+               flgt_airport_code AS flgtAirportCode,flgt_trs3c AS flgtTrs3c,flgt_trsnm AS flgtTrsnm
+        FROM T_FLIGHT_TEMP
+    </select>
+
+    <select id="selectFlightTempFind" resultType="com.zh.bean.flight.MyFlightTemp">
+        SELECT flgt_flno AS flgtFlno,
+               flgt_acname AS flgtAcname,flgt_regn AS flgtRegn,flgt_placecode AS flgtPlacecode,flgt_al2c AS flgtAl2c,
+               flgt_alcname AS flgtAlcname ,flgt_vialc AS flgtVialc, flgt_a_stot AS flgtAStot ,flgt_d_stot AS flgtDStot,
+               flgt_org3c AS flgtOrg3c,flgt_orgnm AS flgtOrgnm,flgt_des3c AS flgtDes3c,flgt_desnm AS flgtDesnm,
+               flgt_adid AS flgtAdid ,flgt_start_date AS flgtStartDate,flgt_end_date AS flgtEndDate,
+               flgt_airport_code AS flgtAirportCode,flgt_trs3c AS flgtTrs3c,flgt_trsnm AS flgtTrsnm
+        FROM T_FLIGHT_TEMP
+        WHERE
+            flgt_flno=#{flgtFlno}
+    </select>
+    <update id="updateTask">
+        update T_TASK set task_rc_print_time = #{format2} where task_id = #{taskId}
+    </update>
+    <update id="updateTaskNo">
+        update T_TASK set task_rc_print_time = #{format2} , task_fuel_recpt_no = #{fuelNo} where task_id = #{taskId}
+    </update>
+
+
+    <update id="updateByPrimaryKeySelective">
+        update T_FUEL_RECPT
+        <set>
+            <if test="flrcType != null">
+                flrc_type = #{flrcType,jdbcType=INTEGER},
+            </if>
+            <if test="flrcNo != null">
+                flrc_no = #{flrcNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDate != null">
+                flrc_date = #{flrcDate,jdbcType=DATE},
+            </if>
+            <if test="flrcAirportCode != null">
+                flrc_airport_code = #{flrcAirportCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAptareaCode != null">
+                flrc_aptarea_code = #{flrcAptareaCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirport != null">
+                flrc_airport = #{flrcAirport,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirlCode != null">
+                flrc_airl_code = #{flrcAirlCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirlName != null">
+                flrc_airl_name = #{flrcAirlName,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFlightNo != null">
+                flrc_flight_no = #{flrcFlightNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAircrftNo != null">
+                flrc_aircrft_no = #{flrcAircrftNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAircrftType != null">
+                flrc_aircrft_type = #{flrcAircrftType,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDeparture != null">
+                flrc_departure = #{flrcDeparture,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcTransit != null">
+                flrc_transit = #{flrcTransit,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDest != null">
+                flrc_dest = #{flrcDest,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcTestBillNo != null">
+                flrc_test_bill_no = #{flrcTestBillNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFuelName != null">
+                flrc_fuel_name = #{flrcFuelName,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFuelTemp != null">
+                flrc_fuel_temp = #{flrcFuelTemp,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcFuelDnst != null">
+                flrc_fuel_dnst = #{flrcFuelDnst,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcFuelVol != null">
+                flrc_fuel_vol = #{flrcFuelVol,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcMeterStat != null">
+                flrc_meter_stat = #{flrcMeterStat,jdbcType=INTEGER},
+            </if>
+            <if test="flrcMeterFnsh != null">
+                flrc_meter_fnsh = #{flrcMeterFnsh,jdbcType=INTEGER},
+            </if>
+            <if test="flrcFiguars != null">
+                flrc_figuars = #{flrcFiguars,jdbcType=INTEGER},
+            </if>
+            <if test="flrcFiguarsWord != null">
+                flrc_figuars_word = #{flrcFiguarsWord,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcQuantity != null">
+                flrc_quantity = #{flrcQuantity,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcVehiNo != null">
+                flrc_vehi_no = #{flrcVehiNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcHydrtPitNo != null">
+                flrc_hydrt_pit_no = #{flrcHydrtPitNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcStatTime != null">
+                flrc_stat_time = #{flrcStatTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcFnshTime != null">
+                flrc_fnsh_time = #{flrcFnshTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcDeliverName != null">
+                flrc_deliver_name = #{flrcDeliverName,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDeliverId != null">
+                flrc_deliver_id = #{flrcDeliverId,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcSign != null">
+                flrc_sign = #{flrcSign,jdbcType=VARCHAR},
+            </if>
+<!--            <if test="flrcManualTag != null">-->
+<!--                flrc_manual_tag = #{flrcManualTag,jdbcType=INTEGER},-->
+<!--            </if>-->
+            flrc_manual_tag = 1,
+            <if test="flrcManualStaff != null">
+                flrc_manual_staff = #{flrcManualStaff,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcManualTime != null">
+                flrc_manual_time = #{flrcManualTime,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcRevwStatus != null">
+                flrc_revw_status = #{flrcRevwStatus,jdbcType=INTEGER},
+            </if>
+            <if test="flrcTakebackFlg != null">
+                flrc_takeback_flg = #{flrcTakebackFlg,jdbcType=INTEGER},
+            </if>
+            <if test="flrcRecCreTime != null">
+                flrc_rec_cre_time = #{flrcRecCreTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcVehiNum != null">
+                flrc_vehi_num = #{flrcVehiNum,jdbcType=VARCHAR},
+            </if>
+
+
+            <if test="flrcSupplyFuelType != null">
+                flrc_supply_fuel_type = #{flrcSupplyFuelType},
+            </if>
+            <if test="flrcRemark != null">
+                flrc_remark = #{flrcRemark},
+            </if>
+            <if test="flrcRapc3 != null">
+                flrc_rapc3 = #{flrcRapc3},
+            </if>
+            <if test="flrcRapcn != null">
+                flrc_rapcn = #{flrcRapcn},
+            </if>
+            <if test="flrcTankerNo != null">
+                flrc_tanker_no = #{flrcTankerNo},
+            </if>
+            <if test="flrcTransportMileage != null">
+                flrc_transport_mileage = #{flrcTransportMileage},
+            </if>
+            <if test="flrcBusType != null">
+                flrc_bus_type = #{flrcBusType},
+            </if>
+            <if test="settlementRapc3 != null">
+                settlement_rapc3 = #{settlementRapc3},
+            </if>
+            <if test="settlementRapcn != null">
+                settlement_rapcn = #{settlementRapcn},
+            </if>
+            <if test="manual != null">
+                    manual = #{manual},
+            </if>
+        </set>
+        <where>
+            <if test="flrcId != null and flrcId != '' ">
+                AND flrc_id = #{flrcId,jdbcType=VARCHAR}
+            </if>
+            <if test="flrcNo != null and flrcNo != '' ">
+                AND flrc_no = #{flrcNo,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </update>
+
+    <select id="findFuelByNo" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        <include refid="fuelFlrcSign"/>
+        <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT
+        WHERE flrc_no=#{flrcNo}
+    </select>
+
+    <sql id="fuelFlrcSign">
+        flrc_sign AS flrcSign,
+    </sql>
+
+    <sql id="fuelAllSign">
+        flrc_sign AS flrcSign,
+        flrc_single flrcSingle,
+    </sql>
+
+    <sql id="fuelInfo">
+        flrc_id AS flrcId,
+        flrc_type AS flrcType,
+        flrc_no AS flrcNo,
+        flrc_date AS flrcDate,
+        flrc_airport_code AS flrcAirportCode,
+        flrc_aptarea_code AS flrcAptareaCode,
+        flrc_airport AS flrcAirport,
+		flrc_airl_code AS flrcAirlCode,
+        flrc_airl_name AS flrcAirlName,
+        flrc_flight_no AS flrcFlightNo,
+        flrc_aircrft_no AS flrcAircrftNo,
+        flrc_aircrft_type AS flrcAircrftType,
+        flrc_departure AS flrcDeparture,
+        flrc_transit AS flrcTransit,
+        flrc_dest AS flrcDest,
+        flrc_test_bill_no AS flrcTestBillNo,
+        flrc_fuel_name AS flrcFuelName,
+        flrc_fuel_temp AS flrcFuelTemp,
+        flrc_fuel_dnst AS flrcFuelDnst,
+        flrc_fuel_vol AS flrcFuelVol,
+        flrc_meter_stat AS flrcMeterStat,
+        flrc_meter_fnsh AS flrcMeterFnsh,
+        flrc_figuars AS flrcFiguars,
+        flrc_figuars_word AS flrcFiguarsWord,
+        flrc_quantity AS flrcQuantity,
+        flrc_vehi_num flrcVehiNum,
+        flrc_vehi_no AS flrcVehiNo,
+        flrc_hydrt_pit_no AS flrcHydrtPitNo,
+        flrc_stat_time AS flrcStatTime,
+        flrc_fnsh_time AS flrcFnshTime,
+        flrc_deliver_name AS flrcDeliverName,
+        flrc_deliver_id AS flrcDeliverId,
+        flrc_manual_tag AS flrcManualTag,
+        flrc_manual_staff AS flrcManualStaff,
+        flrc_manual_time AS flrcManualTime,
+        flrc_revw_status AS flrcRevwStatus,
+        flrc_takeback_flg AS flrcTakebackFlg,
+        flrc_rec_cre_time AS flrcRecCreTime,
+        flrc_generate_time AS flrcGenerateTime,
+		flrc_is_export flrcIsExport,
+		flrc_status AS flrcStatus,
+		flrc_update_err_msg flrcUpdateErrMsg,
+		flrc_confirm_status flrcConfirmStatus,
+		flrc_confirm_err_msg flrcConfirmErrMsg,
+		flrc_pay_status flrcPayStatus,
+		flrc_pay_err_msg flrcPayErrMsg,
+		flrc_bwtar flrcBwtar,
+		arcr_custom_num arcrCustomNum,
+		flgt_adid flgtAdid,
+		flgt_placecode flgtPlacecode,
+		flrc_version flrcVersion,
+		flrc_print_count flrcPrintCount,
+		order_id orderId,
+		flrc_defuel_reason flrcDefuelReason,
+		flrc_defuel_reason_code flrcDefuelReasonCode,
+		flrc_defuel_test flrcDefuelTest,
+		flrc_defuel_refruel flrcDefuelRefruel,
+		flrc_defuel_storage flrcDefuelStorage,
+        flrc_supply_fuel_type AS flrcSupplyFuelType,
+        flrc_remark AS flrcRemark,
+        flrc_rapc3 AS flrcRapc3,
+        flrc_rapcn AS flrcRapcn,
+        flrc_tanker_no AS flrcTankerNo,
+        flrc_transport_mileage AS flrcTransportMileage,
+        flrc_bus_type AS flrcBusType,
+        settlement_rapc3 AS settlementRapc3,
+        settlement_rapcn AS settlementRapcn,
+        flrc_wkop_date AS flrcWkopDate,
+        manual
+    </sql>
+
+    <select id="findFuelById" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        <include refid="fuelAllSign"/>
+        <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT
+        WHERE flrc_id=#{flrcId}
+    </select>
+
+
+    <select id="getTodayFligtTasklist" resultType="com.zh.bean.flight.MyFlightTask">
+        select tt.task_ope_staff_id taskOpeStaffId,tf.flgt_flno flgtFlno,tf.flgt_regn flgtRegn,
+               tf.flgt_placecode flgtPlacecode,tfr.flrc_figuars taskTotalFuel,counts.countTaskOpeStaffId taskCentTank
+        from T_TASK tt
+                 LEFT JOIN T_FUEL_RECPT tfr ON tfr.flrc_no=tt.task_fuel_recpt_no
+                 LEFT JOIN T_FLIGHT tf on tf.flgt_id=tt.task_flight_id
+                 LEFT JOIN (
+            SELECT a.taskOpeStaffId taskOpeStaffId,COUNT(a.taskOpeStaffId) countTaskOpeStaffId
+            FROM (
+                     SELECT tt.task_ope_staff_id taskOpeStaffId
+                     FROM T_TASK tt
+                     WHERE DATE_FORMAT(tt.task_done_time,'%Y-%m-%d') = curdate()
+                       AND tt.task_status = 7 and tt.task_airport_code=#{flgtAirportCode} ) a
+            GROUP BY
+                a.taskOpeStaffId HAVING
+                COUNT(a.taskOpeStaffId)) counts on counts.taskOpeStaffId = tt.task_ope_staff_id
+        where DATE_FORMAT(tt.task_done_time,'%Y-%m-%d')=curdate()
+          and tt.task_status=7 and tt.task_airport_code=#{flgtAirportCode}
+        ORDER BY  counts.countTaskOpeStaffId,tt.task_ope_staff_id  desc
+    </select>
+
+    <select id="findFuelByStaffId" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+            <include refid="fuelFlrcSign"/>
+            <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT
+        WHERE flrc_deliver_id = #{staffId}
+          and DATE_FORMAT(flrc_rec_cre_time,'%Y-%m-%d') > DATE_FORMAT(#{date},'%Y-%m-%d')
+    </select>
+    <select id="findFuelByStaffIdAndDate" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        <include refid="fuelFlrcSign"/>
+        <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT
+        WHERE flrc_deliver_id = #{staffId}
+        <if test="fuelRecpt.flrcDate!=null">
+            and flrc_date = #{fuelRecpt.flrcDate}
+        </if>
+        <if test="fuelRecpt.startDate!=null">
+            and flrc_date &gt;= #{fuelRecpt.startDate}
+        </if>
+        <if test="fuelRecpt.endDate!=null">
+            and flrc_date &lt;= #{fuelRecpt.endDate}
+        </if>
+        <if test="fuelRecpt.flrcFlightNo!=null and fuelRecpt.flrcFlightNo!=''">
+            and flrc_flight_no LIKE CONCAT('%',#{fuelRecpt.flrcFlightNo},'%')
+        </if>
+    </select>
+    <select id="findDoingTask" resultType="java.lang.Integer">
+        SELECT count(ts.task_id)
+        FROM T_TASK ts
+
+        WHERE ts.task_ope_staff_id=#{staffId}
+          AND
+                DATE_FORMAT(ts.task_asg_time,'%Y-%m-%d') >= date_sub(curdate(), INTERVAL 1 DAY)
+          AND ts.task_status in (2,3,4,5,6)
+    </select>
+
+    <select id="selectRecpt" resultType="com.zh.bean.flight.MyFuelRecpt">
+        select
+        <include refid="fuelFlrcSign"/>
+        <include refid="fuelInfo"/>
+        from T_FUEL_RECPT
+    </select>
+    <delete id="delete">
+        delete from T_FUEL_RECPT
+        where flrc_id = #{flrcId,jdbcType=VARCHAR}
+    </delete>
+    <insert id="insert">
+        insert into T_FUEL_RECPT
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="flrcId != null">
+                flrc_id,
+            </if>
+            <if test="flrcType != null">
+                flrc_type,
+            </if>
+            <if test="flrcNo != null">
+                flrc_no,
+            </if>
+            <if test="flrcDate != null">
+                flrc_date,
+            </if>
+            <if test="flrcAirportCode != null">
+                flrc_airport_code,
+            </if>
+            <if test="flrcAptareaCode != null">
+                flrc_aptarea_code,
+            </if>
+            <if test="flrcAirport != null">
+                flrc_airport,
+            </if>
+            <if test="flrcAirlCode != null">
+                flrc_airl_code,
+            </if>
+            <if test="flrcAirlName != null">
+                flrc_airl_name,
+            </if>
+            <if test="flrcFlightNo != null">
+                flrc_flight_no,
+            </if>
+            <if test="flrcAircrftNo != null">
+                flrc_aircrft_no,
+            </if>
+            <if test="flrcAircrftType != null">
+                flrc_aircrft_type,
+            </if>
+            <if test="flrcDeparture != null">
+                flrc_departure,
+            </if>
+            <if test="flrcDeparture3c != null">
+                flrc_departure_3c,
+            </if>
+            <if test="flrcTransit != null">
+                flrc_transit,
+            </if>
+            <if test="flrcTransit3c != null">
+                flrc_transit_3c,
+            </if>
+            <if test="flrcDest != null">
+                flrc_dest,
+            </if>
+            <if test="flrcTestBillNo != null">
+                flrc_test_bill_no,
+            </if>
+            <if test="flrcFuelName != null">
+                flrc_fuel_name,
+            </if>
+            <if test="flrcFuelTemp != null">
+                flrc_fuel_temp,
+            </if>
+            <if test="flrcFuelDnst != null">
+                flrc_fuel_dnst,
+            </if>
+            <if test="flrcFuelVol != null">
+                flrc_fuel_vol,
+            </if>
+            <if test="flrcMeterStat != null">
+                flrc_meter_stat,
+            </if>
+            <if test="flrcMeterFnsh != null">
+                flrc_meter_fnsh,
+            </if>
+            <if test="flrcFiguars != null">
+                flrc_figuars,
+            </if>
+            <if test="flrcFiguarsWord != null">
+                flrc_figuars_word,
+            </if>
+            <if test="flrcQuantity != null">
+                flrc_quantity,
+            </if>
+            <if test="flrcVehiNo != null">
+                flrc_vehi_no,
+            </if>
+            <if test="flrcVehiNum != null">
+                flrc_vehi_num,
+            </if>
+            <if test="flrcHydrtPitNo != null">
+                flrc_hydrt_pit_no,
+            </if>
+            <if test="flrcStatTime != null">
+                flrc_stat_time,
+            </if>
+            <if test="flrcFnshTime != null">
+                flrc_fnsh_time,
+            </if>
+            <if test="flrcDeliverId != null">
+                flrc_deliver_id,
+            </if>
+            <if test="flrcDeliverName != null">
+                flrc_deliver_name,
+            </if>
+            <if test="flrcManualTag != null">
+                flrc_manual_tag,
+            </if>
+            <if test="flrcManualStaff != null">
+                flrc_manual_staff,
+            </if>
+            <if test="flrcManualTime != null">
+                flrc_manual_time,
+            </if>
+            <if test="flrcRevwStatus != null">
+                flrc_revw_status,
+            </if>
+            <if test="flrcTakebackFlg != null">
+                flrc_takeback_flg,
+            </if>
+            <if test="flrcRecCreTime != null">
+                flrc_rec_cre_time,
+            </if>
+            <if test="flrcIsExport != null">
+                flrc_is_export,
+            </if>
+            <if test="flrcStatus != null">
+                flrc_status,
+            </if>
+            <if test="flrcUpdateErrMsg != null">
+                flrc_update_err_msg,
+            </if>
+            <if test="flrcConfirmStatus != null">
+                flrc_confirm_status,
+            </if>
+            <if test="flrcConfirmErrMsg != null">
+                flrc_confirm_err_msg,
+            </if>
+            <if test="flrcPayStatus != null">
+                flrc_pay_status,
+            </if>
+            <if test="flrcPayErrMsg != null">
+                flrc_pay_err_msg,
+            </if>
+            <if test="flrcBwtar != null">
+                flrc_bwtar,
+            </if>
+            <if test="arcrCustomNum != null">
+                arcr_custom_num,
+            </if>
+            <if test="flgtAdid != null">
+                flgt_adid,
+            </if>
+            <if test="flgtPlacecode != null">
+                flgt_placecode,
+            </if>
+            <if test="flrcVersion != null">
+                flrc_version,
+            </if>
+            <if test="flrcPrintCount != null">
+                flrc_print_count,
+            </if>
+
+            <if test="flrcSign != null">
+                flrc_sign,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="flrcId != null">
+                #{flrcId,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcType != null">
+                #{flrcType,jdbcType=INTEGER},
+            </if>
+            <if test="flrcNo != null">
+                #{flrcNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDate != null">
+                #{flrcDate,jdbcType=DATE},
+            </if>
+            <if test="flrcAirportCode != null">
+                #{flrcAirportCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAptareaCode != null">
+                #{flrcAptareaCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirport != null">
+                #{flrcAirport,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirlCode != null">
+                #{flrcAirlCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirlName != null">
+                #{flrcAirlName,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFlightNo != null">
+                #{flrcFlightNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAircrftNo != null">
+                #{flrcAircrftNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAircrftType != null">
+                #{flrcAircrftType,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDeparture != null">
+                #{flrcDeparture,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDeparture3c != null">
+                #{flrcDeparture3c,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcTransit != null">
+                #{flrcTransit,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcTransit3c != null">
+                #{flrcTransit3c,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDest != null">
+                #{flrcDest,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcTestBillNo != null">
+                #{flrcTestBillNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFuelName != null">
+                #{flrcFuelName,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFuelTemp != null">
+                #{flrcFuelTemp,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcFuelDnst != null">
+                #{flrcFuelDnst,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcFuelVol != null">
+                #{flrcFuelVol,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcMeterStat != null">
+                #{flrcMeterStat,jdbcType=INTEGER},
+            </if>
+            <if test="flrcMeterFnsh != null">
+                #{flrcMeterFnsh,jdbcType=INTEGER},
+            </if>
+            <if test="flrcFiguars != null">
+                #{flrcFiguars,jdbcType=INTEGER},
+            </if>
+            <if test="flrcFiguarsWord != null">
+                #{flrcFiguarsWord,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcQuantity != null">
+                #{flrcQuantity,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcVehiNo != null">
+                #{flrcVehiNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcVehiNum != null">
+                #{flrcVehiNum,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcHydrtPitNo != null">
+                #{flrcHydrtPitNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcStatTime != null">
+                #{flrcStatTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcFnshTime != null">
+                #{flrcFnshTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcDeliverId != null">
+                #{flrcDeliverId,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDeliverName != null">
+                #{flrcDeliverName,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcManualTag != null">
+                #{flrcManualTag,jdbcType=INTEGER},
+            </if>
+            <if test="flrcManualStaff != null">
+                #{flrcManualStaff,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcManualTime != null">
+                #{flrcManualTime,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcRevwStatus != null">
+                #{flrcRevwStatus,jdbcType=INTEGER},
+            </if>
+            <if test="flrcTakebackFlg != null">
+                #{flrcTakebackFlg,jdbcType=INTEGER},
+            </if>
+            <if test="flrcRecCreTime != null">
+                #{flrcRecCreTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcIsExport != null">
+                #{flrcIsExport,jdbcType=TINYINT},
+            </if>
+            <if test="flrcStatus != null">
+                #{flrcStatus,jdbcType=INTEGER},
+            </if>
+            <if test="flrcUpdateErrMsg != null">
+                #{flrcUpdateErrMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcConfirmStatus != null">
+                #{flrcConfirmStatus,jdbcType=INTEGER},
+            </if>
+            <if test="flrcConfirmErrMsg != null">
+                #{flrcConfirmErrMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcPayStatus != null">
+                #{flrcPayStatus,jdbcType=INTEGER},
+            </if>
+            <if test="flrcPayErrMsg != null">
+                #{flrcPayErrMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcBwtar != null">
+                #{flrcBwtar,jdbcType=VARCHAR},
+            </if>
+            <if test="arcrCustomNum != null">
+                #{arcrCustomNum,jdbcType=VARCHAR},
+            </if>
+            <if test="flgtAdid != null">
+                #{flgtAdid,jdbcType=VARCHAR},
+            </if>
+            <if test="flgtPlacecode != null">
+                #{flgtPlacecode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcVersion != null">
+                #{flrcVersion,jdbcType=INTEGER},
+            </if>
+            <if test="flrcPrintCount != null">
+                #{flrcPrintCount,jdbcType=INTEGER},
+            </if>
+
+            <if test="flrcSign != null">
+                #{flrcSign,jdbcType=LONGVARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="update">
+        update T_FUEL_RECPT
+        <set>
+            flrc_update_err_msg = #{flrcUpdateErrMsg,jdbcType=VARCHAR},
+            <if test="flrcType != null">
+                flrc_type = #{flrcType,jdbcType=INTEGER},
+            </if>
+            <if test="flrcNo != null">
+                flrc_no = #{flrcNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDate != null">
+                flrc_date = #{flrcDate,jdbcType=DATE},
+            </if>
+            <if test="flrcAirportCode != null">
+                flrc_airport_code = #{flrcAirportCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAptareaCode != null">
+                flrc_aptarea_code = #{flrcAptareaCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirport != null">
+                flrc_airport = #{flrcAirport,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirlCode != null">
+                flrc_airl_code = #{flrcAirlCode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAirlName != null">
+                flrc_airl_name = #{flrcAirlName,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFlightNo != null">
+                flrc_flight_no = #{flrcFlightNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAircrftNo != null">
+                flrc_aircrft_no = #{flrcAircrftNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcAircrftType != null">
+                flrc_aircrft_type = #{flrcAircrftType,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDeparture != null">
+                flrc_departure = #{flrcDeparture,jdbcType=VARCHAR},
+            </if>
+<!--            <if test="flrcDeparture3c != null">-->
+<!--                flrc_departure_3c = #{flrcDeparture3c,jdbcType=VARCHAR},-->
+<!--            </if>-->
+            <if test="flrcTransit != null">
+                flrc_transit = #{flrcTransit,jdbcType=VARCHAR},
+            </if>
+<!--            <if test="flrcTransit3c != null">-->
+<!--                flrc_transit_3c = #{flrcTransit3c,jdbcType=VARCHAR},-->
+<!--            </if>-->
+            <if test="flrcDest != null">
+                flrc_dest = #{flrcDest,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcTestBillNo != null">
+                flrc_test_bill_no = #{flrcTestBillNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFuelName != null">
+                flrc_fuel_name = #{flrcFuelName,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcFuelTemp != null">
+                flrc_fuel_temp = #{flrcFuelTemp,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcFuelDnst != null">
+                flrc_fuel_dnst = #{flrcFuelDnst,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcFuelVol != null">
+                flrc_fuel_vol = #{flrcFuelVol,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcMeterStat != null">
+                flrc_meter_stat = #{flrcMeterStat,jdbcType=INTEGER},
+            </if>
+            <if test="flrcMeterFnsh != null">
+                flrc_meter_fnsh = #{flrcMeterFnsh,jdbcType=INTEGER},
+            </if>
+            <if test="flrcFiguars != null">
+                flrc_figuars = #{flrcFiguars,jdbcType=INTEGER},
+            </if>
+            <if test="flrcFiguarsWord != null">
+                flrc_figuars_word = #{flrcFiguarsWord,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcQuantity != null">
+                flrc_quantity = #{flrcQuantity,jdbcType=DOUBLE},
+            </if>
+            <if test="flrcVehiNo != null">
+                flrc_vehi_no = #{flrcVehiNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcVehiNum != null">
+                flrc_vehi_num = #{flrcVehiNum,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcHydrtPitNo != null">
+                flrc_hydrt_pit_no = #{flrcHydrtPitNo,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcStatTime != null">
+                flrc_stat_time = #{flrcStatTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcFnshTime != null">
+                flrc_fnsh_time = #{flrcFnshTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcDeliverId != null">
+                flrc_deliver_id = #{flrcDeliverId,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcDeliverName != null">
+                flrc_deliver_name = #{flrcDeliverName,jdbcType=VARCHAR},
+            </if>
+<!--            <if test="flrcManualTag != null">-->
+<!--                flrc_manual_tag = #{flrcManualTag,jdbcType=INTEGER},-->
+<!--            </if>-->
+            flrc_manual_tag = 1,
+            <if test="flrcManualStaff != null">
+                flrc_manual_staff = #{flrcManualStaff,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcManualTime != null">
+                flrc_manual_time = #{flrcManualTime,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcRevwStatus != null">
+                flrc_revw_status = #{flrcRevwStatus,jdbcType=INTEGER},
+            </if>
+            <if test="flrcTakebackFlg != null">
+                flrc_takeback_flg = #{flrcTakebackFlg,jdbcType=INTEGER},
+            </if>
+            <if test="flrcRecCreTime != null">
+                flrc_rec_cre_time = #{flrcRecCreTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="flrcIsExport != null">
+                flrc_is_export = #{flrcIsExport,jdbcType=TINYINT},
+            </if>
+            <if test="flrcStatus != null">
+                flrc_status = #{flrcStatus,jdbcType=INTEGER},
+            </if>
+<!--            <if test="flrcUpdateErrMsg != null">-->
+<!--                flrc_update_err_msg = #{flrcUpdateErrMsg,jdbcType=VARCHAR},-->
+<!--            </if>-->
+            <if test="flrcConfirmStatus != null">
+                flrc_confirm_status = #{flrcConfirmStatus,jdbcType=INTEGER},
+            </if>
+            <if test="flrcConfirmErrMsg != null">
+                flrc_confirm_err_msg = #{flrcConfirmErrMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcPayStatus != null">
+                flrc_pay_status = #{flrcPayStatus,jdbcType=INTEGER},
+            </if>
+            <if test="flrcPayErrMsg != null">
+                flrc_pay_err_msg = #{flrcPayErrMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcBwtar != null">
+                flrc_bwtar = #{flrcBwtar,jdbcType=VARCHAR},
+            </if>
+            <if test="arcrCustomNum != null">
+                arcr_custom_num = #{arcrCustomNum,jdbcType=VARCHAR},
+            </if>
+            <if test="flgtAdid != null">
+                flgt_adid = #{flgtAdid,jdbcType=VARCHAR},
+            </if>
+            <if test="flgtPlacecode != null">
+                flgt_placecode = #{flgtPlacecode,jdbcType=VARCHAR},
+            </if>
+            <if test="flrcVersion != null">
+                flrc_version = #{flrcVersion,jdbcType=INTEGER},
+            </if>
+            <if test="flrcPrintCount != null">
+                flrc_print_count = #{flrcPrintCount,jdbcType=INTEGER},
+            </if>
+
+            <if test="flrcSign != null">
+                flrc_sign = #{flrcSign,jdbcType=LONGVARCHAR},
+            </if>
+
+            <if test="flrcSingle != null">
+                flrc_single = #{flrcSingle,jdbcType=LONGVARCHAR},
+            </if>
+
+            <if test="flrcStatus != null">
+                flrc_status = #{flrcStatus},
+            </if>
+
+            <if test="flrcDefuelReason != null">
+                flrc_defuel_reason = #{flrcDefuelReason},
+            </if>
+            <if test="flrcDefuelReasonCode != null">
+                flrc_defuel_reason_code = #{flrcDefuelReasonCode},
+            </if>
+            <if test="flrcDefuelTest != null">
+                flrc_defuel_test = #{flrcDefuelTest},
+            </if>
+            <if test="flrcDefuelRefruel != null">
+                flrc_defuel_refruel = #{flrcDefuelRefruel},
+            </if>
+            <if test="flrcDefuelStorage != null">
+                flrc_defuel_storage = #{flrcDefuelStorage},
+            </if>
+            <if test="flrcSupplyFuelType != null">
+                flrc_supply_fuel_type = #{flrcSupplyFuelType},
+            </if>
+            <if test="flrcRemark != null">
+                flrc_remark = #{flrcRemark},
+            </if>
+            <if test="flrcRapc3 != null">
+                flrc_rapc3 = #{flrcRapc3},
+            </if>
+            <if test="flrcRapcn != null">
+                flrc_rapcn = #{flrcRapcn},
+            </if>
+            <if test="flrcTankerNo != null">
+                flrc_tanker_no = #{flrcTankerNo},
+            </if>
+            <if test="flrcTransportMileage != null">
+                flrc_transport_mileage = #{flrcTransportMileage},
+            </if>
+            <if test="flrcBusType != null">
+                flrc_bus_type = #{flrcBusType},
+            </if>
+            <if test="settlementRapc3 != null">
+                settlement_rapc3 = #{settlementRapc3},
+            </if>
+            <if test="settlementRapcn != null">
+                settlement_rapcn = #{settlementRapcn},
+            </if>
+            <if test="manual != null">
+                manual = #{manual},
+            </if>
+            <if test="flrcWkopDate != null">
+                flrc_wkop_date = #{flrcWkopDate},
+            </if>
+        </set>
+        <where>
+            <if test="flrcId != null and flrcId != '' ">
+                AND flrc_id = #{flrcId,jdbcType=VARCHAR}
+            </if>
+            <if test="flrcNo != null and flrcNo != '' ">
+                AND flrc_no = #{flrcNo,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </update>
+    <select id="findRecptBase" resultType="java.lang.String">
+        SELECT flrc_single FROM T_FUEL_RECPT WHERE flrc_id = #{flrcId,jdbcType=VARCHAR}
+    </select>
+
+    <delete id="deleteFuelById">
+        DELETE FROM T_FUEL_RECPT
+        WHERE
+            flrc_id =#{flrcId}
+    </delete>
+
+    <!-- 通过航班日期、航班号、飞机号查询油单 -->
+    <select id="selectByDateAndFlgtNoAndRegn" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        flrc_id,flrc_no
+        FROM
+        T_FUEL_RECPT
+        WHERE
+        flrc_date = ${flrcDate}
+        AND flrc_airport_code=#{flrcAirportCode}
+        <if test="flgtNo!=null and flgtNo!=''">
+            AND flrc_flight_no = ${flgtNo}
+        </if>
+        AND flrc_aircrft_no = ${flgtRegn}
+        AND flrc_type=${flrcType}
+    </select>
+
+
+</mapper>

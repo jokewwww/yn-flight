@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.MyStaffVehiTaskMapper">
+
+<select id="findStafflist" resultType="com.zh.bean.login.MyStaffVehiTask">
+	SELECT 
+	ts.staff_id AS sfvhStaffId,
+	ts.staff_phone AS staffPhone,
+	ts.staff_name AS staffName,
+	ts.staff_group_id AS staffGroupId,
+	tv.vehi_id AS vehiId,
+	tv.vehi_no AS vehiNo,
+	tv.vehi_nickname AS vehiNickname ,
+	tv.vehi_plate_no AS vehiPlateNo
+	FROM T_STAFF ts 
+	LEFT JOIN T_STAFF_VEHI tsv
+	ON ts.staff_id =tsv.sfvh_staff_id
+	LEFT JOIN T_VEHI tv
+	ON tsv.sfvh_vehi_no = tv.vehi_no
+	AND ts.`staff_airport_code`=tv.`vehi_airport_code`
+	WHERE
+	ts.staff_airport_code = #{staffAirportCode}
+	<if test="staffAptareaCode != null and staffAptareaCode != ''">
+    	AND ts.staff_aptarea_code=#{staffAptareaCode}
+    </if>
+
+	AND ts.staff_type &gt;=3
+	ORDER BY ts.staff_level
+</select>
+
+<select id="findStaffvehi" resultType="com.zh.bean.login.MyStaffVehiTask">
+	SELECT ts.staff_phone AS staffPhone ,tsv.sfvh_staff_id AS sfvhStaffId,
+	tsv.sfvh_staff_status AS sfvhStaffStatus,tv.vehi_id AS vehiId,
+	tv.vehi_no AS vehiNo ,tv.vehi_nickname AS vehiNickname ,
+	tv.vehi_plate_no AS vehiPlateNo
+	FROM T_STAFF ts
+	LEFT JOIN T_STAFF_VEHI tsv
+	ON ts.staff_id =tsv.sfvh_staff_id
+	LEFT JOIN T_VEHI tv
+	ON tsv.sfvh_vehi_no = tv.vehi_no
+	WHERE ts.staff_id=#{taskOpeStaffId}
+	AND staff_airport_code=#{taskAirportCode}
+	<if test="taskAptareaCode != null and taskAptareaCode != ''">
+		AND staff_aptarea_code=#{taskAptareaCode}
+	</if>
+
+</select>
+
+<select id="findListVehi" resultType="com.zh.bean.login.MyVehi">
+	SELECT 
+	vehi_id AS vehiId,
+	vehi_no AS vehiNo,
+	vehi_nickname AS vehiNickname,
+	vehi_type AS vehiType,
+	vehi_brand AS vehiBrand,
+	vehi_availability AS vehiAvailability,
+	vehi_fuel_figu AS vehiFuelFigu,
+	vehi_company AS vehiCompany,
+	vehi_serv_station AS vehiServStation,
+	vehi_airport_code AS vehiAirportCode,
+	vehi_aptarea_code AS vehiAptareaCode,
+	vehi_plate_no AS vehiPlateNo,
+	vehi_fuel_code AS vehiFuelCode,
+	vehi_fuel_sno AS vehiFuelSno
+	FROM T_VEHI
+	WHERE 1 = 1 
+	<if test="staffAirportCode != null and staffAirportCode != ''">
+		AND vehi_airport_code =#{staffAirportCode}
+    </if>
+	<if test="staffAptareaCode != null and staffAptareaCode != ''">
+		AND vehi_aptarea_code=#{staffAptareaCode}
+    </if>
+
+</select>
+
+<select id="findStafflists" resultType="com.zh.bean.login.MyStaff">
+	SELECT 
+	staff_id AS staffId,
+	staff_pwd AS staffPwd,
+	staff_name AS staffName,
+	staff_age AS staffAge,
+	staff_gender AS staffGender,
+	staff_type AS staffType,
+	staff_phone AS staffPhone,
+	staff_company AS  staffCompany,
+	staff_serv_station AS  staffServStation,
+	staff_airport_code AS staffAirportCode,
+	staff_aptarea_code AS staffAptareaCode,
+	staff_group_id AS staffGroupId
+	FROM T_STAFF WHERE 1 = 1 
+	<if test="staffAirportCode != null and staffAirportCode != ''">
+		AND staff_airport_code=#{staffAirportCode}
+	</if>
+	<if test="staffAptareaCode != null and staffAptareaCode != ''">
+		AND staff_aptarea_code=#{staffAptareaCode}
+	</if>
+	ORDER BY staff_name DESC 
+ 
+</select>
+<select id="getVehiInfo" resultType="com.zh.bean.login.MyVehi">
+	SELECT 
+	vehi_id AS vehiId,
+	vehi_no AS vehiNo,
+	vehi_nickname AS vehiNickname,
+	vehi_type AS vehiType,
+	vehi_brand AS vehiBrand,
+	vehi_availability AS vehiAvailability,
+	vehi_fuel_figu AS vehiFuelFigu,
+	vehi_company AS vehiCompany,
+	vehi_serv_station AS vehiServStation,
+	vehi_airport_code AS vehiAirportCode,
+	vehi_aptarea_code AS vehiAptareaCode,
+	vehi_plate_no AS vehiPlateNo
+	FROM T_VEHI
+	WHERE vehi_no = #{taskVehiNo} and vehi_airport_code = #{staffAirportCode}
+</select>
+
+	<insert id="insertstaff">
+    INSERT into T_STAFF(staff_id,staff_pwd,staff_name,staff_age,staff_gender,staff_type
+    ,staff_phone,staff_company,staff_serv_station,staff_airport_code,staff_aptarea_code
+    ) values(#{staffId},#{staffPwd},#{staffName},#{staffAge},#{staffGender},#{staffType},
+    #{staffPhone},#{staffCompany},#{staffServStation},#{staffAirportCode},#{staffAptareaCode}
+    )
+	</insert>
+	
+	<update id="updatestaff">
+	UPDATE T_STAFF set staff_id=#{staffId},staff_pwd=#{staffPwd},staff_name=#{staffName},
+	staff_age=#{staffAge},staff_gender=#{staffGender},staff_type=#{staffType},
+	staff_phone=#{staffPhone},staff_company=#{staffCompany},staff_serv_station=#{staffServStation},
+	staff_airport_code=#{staffAirportCode},staff_aptarea_code=#{staffAptareaCode},staff_level=#{staffLevel}
+	WHERE staff_id=#{staffId}
+	</update>
+	
+	<delete id="deletestaff">
+	DELETE FROM T_STAFF WHERE staff_id=#{staffId}
+	</delete>
+	
+	<update id="updatevehi">
+	UPDATE T_VEHI set
+	vehi_id=#{vehiId},vehi_no=#{vehiNo},vehi_nickname=#{vehiNickname},
+	vehi_type=#{vehiType},vehi_brand=#{vehiBrand},vehi_availability=#{vehiAvailability},
+	vehi_fuel_figu=#{vehiFuelFigu},vehi_company=#{vehiCompany},vehi_serv_station=#{vehiServStation},
+	vehi_airport_code=#{vehiAirportCode},vehi_aptarea_code=#{vehiAptareaCode},vehi_plate_no=#{vehiPlateNo},
+	vehi_height=#{vehiHeight},vehi_fuel_code=#{vehiFuelCode},
+	vehi_fuel_sno =#{vehiFuelSno}
+	WHERE vehi_id=#{vehiId}
+	</update>
+	
+	<delete id="deletevehi">
+	DELETE FROM T_VEHI WHERE vehi_id=#{vehiId}
+	</delete>
+	
+	<select id="staffonefind" resultType="com.zh.bean.login.MyStaff">
+	SELECT 
+	staff_id AS staffId,
+	staff_pwd AS staffPwd,
+	staff_name AS staffName,
+	staff_age AS staffAge,
+	staff_gender AS staffGender,
+	staff_type AS staffType,
+	staff_phone AS staffPhone,
+	staff_company AS  staffCompany,
+	staff_serv_station AS  staffServStation,
+	staff_airport_code AS staffAirportCode,
+	staff_aptarea_code AS staffAptareaCode,
+	staff_group_id AS staffGroupId
+	FROM T_STAFF WHERE
+	staff_id=#{staffId}
+	</select>
+	
+	<select id="vehionefind" resultType="com.zh.bean.login.MyVehi">
+	SELECT 
+	vehi_id AS vehiId,
+	vehi_no AS vehiNo,
+	vehi_nickname AS vehiNickname,
+	vehi_type AS vehiType,
+	vehi_brand AS vehiBrand,
+	vehi_availability AS vehiAvailability,
+	vehi_fuel_figu AS vehiFuelFigu,
+	vehi_company AS vehiCompany,
+	vehi_serv_station AS vehiServStation,
+	vehi_airport_code AS vehiAirportCode,
+	vehi_aptarea_code AS vehiAptareaCode,
+	vehi_plate_no AS vehiPlateNo,
+	vehi_height AS vehiHeight,
+	vehi_fuel_code AS vehiFuelCode,
+	vehi_fuel_sno AS vehiFuelSno
+	FROM T_VEHI
+	WHERE vehi_id=#{vehiId}
+	</select>
+	
+	<select id="selectstaffname" resultType="java.lang.Integer">
+	SELECT COUNT(staff_name) FROM T_STAFF WHERE staff_name=#{staffName}
+	</select>
+	
+	<!-- 根据车牌号查询车辆信息 -->
+	<select id="getVehiInfos" resultType="com.zh.bean.login.MyVehi">
+	SELECT 
+	vehi_id AS vehiId,
+	vehi_no AS vehiNo,
+	vehi_nickname AS vehiNickname,
+	vehi_type AS vehiType,
+	vehi_brand AS vehiBrand,
+	vehi_availability AS vehiAvailability,
+	vehi_fuel_figu AS vehiFuelFigu,
+	vehi_company AS vehiCompany,
+	vehi_serv_station AS vehiServStation,
+	vehi_airport_code AS vehiAirportCode,
+	vehi_aptarea_code AS vehiAptareaCode,
+	vehi_plate_no AS vehiPlateNo
+	FROM T_VEHI
+	WHERE vehi_plate_no = #{vehiPlateNo}
+</select>
+	<insert id="addSettingType1">
+		INSERT INTO T_SETTING (
+			sett_option_id,sett_staff_id,sett_airport_code,
+			sett_info,sett_type,sett_status,sett_roworcol,sett_priority
+		) 
+		VALUES (
+			#{type1uuid}, #{staffId}, #{staffAirportCode}, #{type1},'1',0,1,0
+		)
+	</insert>
+	<insert id="addSettingType2">
+		INSERT INTO T_SETTING (
+			sett_option_id,sett_staff_id,sett_airport_code,
+			sett_info,sett_type,sett_status,sett_roworcol,sett_priority
+		) 
+		VALUES (
+			#{type2uuid}, #{staffId}, #{staffAirportCode}, #{type2},'2',0,2,0
+		)
+	</insert>
+
+
+
+	<select id="getVehiInfoAndVehiAirportCode" resultType="com.zh.bean.login.MyVehi">
+	SELECT
+	vehi_id AS vehiId,
+	vehi_no AS vehiNo,
+	vehi_nickname AS vehiNickname,
+	vehi_type AS vehiType,
+	vehi_brand AS vehiBrand,
+	vehi_availability AS vehiAvailability,
+	vehi_fuel_figu AS vehiFuelFigu,
+	vehi_company AS vehiCompany,
+	vehi_serv_station AS vehiServStation,
+	vehi_airport_code AS vehiAirportCode,
+	vehi_aptarea_code AS vehiAptareaCode,
+	vehi_plate_no AS vehiPlateNo
+	FROM T_VEHI
+	WHERE vehi_no = #{taskVehiNo} and vehi_airport_code = #{vehiAirportCode}
+</select>
+
+
+</mapper>

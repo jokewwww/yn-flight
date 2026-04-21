@@ -1,0 +1,140 @@
+From 1829dfa238ab13b490608b1556b1ae8005a435d7 Mon Sep 17 00:00:00 2001
+From: zhaojiacan <898435128@qq.com>
+Date: Tue, 16 Apr 2024 21:36:21 +0800
+Subject: [PATCH] =?UTF-8?q?websocket=E5=A2=9E=E5=8A=A0=E5=AE=A2=E6=88=B7?=
+ =?UTF-8?q?=E7=AB=AF=E5=BF=83=E8=B7=B3=E5=9B=9E=E5=A4=8D?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../com/flight/service/WebSocketService.java     |  6 +++++-
+ src/main/resources/rebel.xml                     | 16 ++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+ create mode 100644 src/main/resources/rebel.xml
+
+diff --git a/src/main/java/com/flight/service/WebSocketService.java b/src/main/java/com/flight/service/WebSocketService.java
+index 4bcecea..7b3ec46 100644
+--- a/src/main/java/com/flight/service/WebSocketService.java
++++ b/src/main/java/com/flight/service/WebSocketService.java
+@@ -583,7 +583,11 @@ public class WebSocketService {
+                 if (fromUser == null) {
+                     return;
+                 }
+-
++                if("ping".equals(message)){
++                    OutMessage<User>outMsg = new OutMessage<User>(fromUser.getFromUserId(), Common.STAFF, Common.PAD_HEART_BEAT, null);
++                    Common.sendText(session, JsonHelper.object2str(outMsg));
++                    return;
++                }
+                 // 给自己。
+                 outMe = JsonHelper.str2Object(message, OutMessage.class);
+                 outMe.setType(Common.CHAT_TYPE);
+diff --git a/src/main/resources/rebel.xml b/src/main/resources/rebel.xml
+new file mode 100644
+index 0000000..16369a5
+--- /dev/null
++++ b/src/main/resources/rebel.xml
+@@ -0,0 +1,16 @@
++<?xml version="1.0" encoding="UTF-8"?>
++
++<!--
++  This is the JRebel configuration file. It maps the running application to your IDE workspace, enabling JRebel reloading for this project.
++  Refer to https://manuals.jrebel.com/jrebel/standalone/config.html for more information.
++-->
++<application generated-by="intellij" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.zeroturnaround.com" xsi:schemaLocation="http://www.zeroturnaround.com http://update.zeroturnaround.com/jrebel/rebel-2_3.xsd">
++
++	<id>com-zhoil_ws</id>
++
++	<classpath>
++		<dir name="E:/develope/works_wgh/zhoil/zhoil_ws/target/classes">
++		</dir>
++	</classpath>
++
++</application>
+-- 
+2.43.0.windows.1
+
+From 2cbe208c9c92d6589c74fca6118e2ab187ebe5fa Mon Sep 17 00:00:00 2001
+From: zhaojiacan <898435128@qq.com>
+Date: Tue, 16 Apr 2024 21:39:02 +0800
+Subject: [PATCH] =?UTF-8?q?=E5=85=B3=E9=97=AD=E6=9C=8D=E5=8A=A1=E7=AB=AF?=
+ =?UTF-8?q?=E5=BF=83=E8=B7=B3=E6=A3=80=E6=B5=8B?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/main/java/com/flight/service/HeartBeat.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main/java/com/flight/service/HeartBeat.java b/src/main/java/com/flight/service/HeartBeat.java
+index 7a4f078..7e50100 100644
+--- a/src/main/java/com/flight/service/HeartBeat.java
++++ b/src/main/java/com/flight/service/HeartBeat.java
+@@ -24,7 +24,7 @@ public class HeartBeat {
+ 
+ 	private final static Logger log = LoggerFactory.getLogger(HeartBeat.class);
+ 
+-	@Scheduled(fixedRate = 10000)
++	//@Scheduled(fixedRate = 10000)
+ 	public static void heartBeat() {
+ 		log.debug("pad 和 pc数：========== " + Common.getMapSessionUser().size());
+ 		log.debug("pad数：========== " + Common.getMapLogin().size());
+-- 
+2.43.0.windows.1
+
+From 3b4cb4be52e181b02444bd702367f6a0242ff5c6 Mon Sep 17 00:00:00 2001
+From: zhaojiacan <898435128@qq.com>
+Date: Wed, 24 Apr 2024 19:05:04 +0800
+Subject: [PATCH] =?UTF-8?q?=E7=94=A8=E6=88=B7=E5=AE=9E=E4=BD=93=E6=96=B0?=
+ =?UTF-8?q?=E5=A2=9EpadInfo?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/main/java/com/flight/bean/login/MyStaff.java | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/src/main/java/com/flight/bean/login/MyStaff.java b/src/main/java/com/flight/bean/login/MyStaff.java
+index 283965f..04e16ca 100644
+--- a/src/main/java/com/flight/bean/login/MyStaff.java
++++ b/src/main/java/com/flight/bean/login/MyStaff.java
+@@ -1,5 +1,7 @@
+ package com.flight.bean.login;
+ 
++import com.zh.bean.login.PadInfo;
++
+ /**
+  * 员工表
+  * T_STAFF
+@@ -75,6 +77,11 @@ public class MyStaff extends BaseBean{
+      */
+     private String staffGroupId;
+ 
++    /**
++     * pad信息
++     */
++    private PadInfo padInfo;
++
+ 	/**
+      * 分组ID
+      */
+@@ -296,4 +303,12 @@ public class MyStaff extends BaseBean{
+     public void setStaffAptareaCode(String staffAptareaCode) {
+         this.staffAptareaCode = staffAptareaCode == null ? null : staffAptareaCode.trim();
+     }
++
++    public PadInfo getPadInfo() {
++        return padInfo;
++    }
++
++    public void setPadInfo(PadInfo padInfo) {
++        this.padInfo = padInfo;
++    }
+ }
+\ No newline at end of file
+-- 
+2.43.0.windows.1
+

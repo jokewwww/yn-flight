@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.BusTaskMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.auto.BusTask">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="Tenm" jdbcType="VARCHAR" property="tenm" />
+    <result column="FLIGHT_ID" jdbcType="VARCHAR" property="flightId" />
+    <result column="flseq" jdbcType="VARCHAR" property="flseq" />
+    <result column="cenm" jdbcType="VARCHAR" property="cenm" />
+    <result column="TASK_CONTENT" jdbcType="DECIMAL" property="taskContent" />
+    <result column="STATUS" jdbcType="VARCHAR" property="status" />
+    <result column="CREATE_TIME" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, Tenm, FLIGHT_ID, flseq, cenm, TASK_CONTENT, STATUS, CREATE_TIME
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from BUS_TASK
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from BUS_TASK
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.auto.BusTask">
+    insert into BUS_TASK (id, Tenm, FLIGHT_ID, 
+      flseq, cenm, TASK_CONTENT, 
+      STATUS, CREATE_TIME)
+    values (#{id,jdbcType=INTEGER}, #{tenm,jdbcType=VARCHAR}, #{flightId,jdbcType=VARCHAR}, 
+      #{flseq,jdbcType=VARCHAR}, #{cenm,jdbcType=VARCHAR}, #{taskContent,jdbcType=DECIMAL}, 
+      #{status,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.zh.bean.auto.BusTask">
+    insert into BUS_TASK
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="tenm != null">
+        Tenm,
+      </if>
+      <if test="flightId != null">
+        FLIGHT_ID,
+      </if>
+      <if test="flseq != null">
+        flseq,
+      </if>
+      <if test="cenm != null">
+        cenm,
+      </if>
+      <if test="taskContent != null">
+        TASK_CONTENT,
+      </if>
+      <if test="status != null">
+        STATUS,
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="tenm != null">
+        #{tenm,jdbcType=VARCHAR},
+      </if>
+      <if test="flightId != null">
+        #{flightId,jdbcType=VARCHAR},
+      </if>
+      <if test="flseq != null">
+        #{flseq,jdbcType=VARCHAR},
+      </if>
+      <if test="cenm != null">
+        #{cenm,jdbcType=VARCHAR},
+      </if>
+      <if test="taskContent != null">
+        #{taskContent,jdbcType=DECIMAL},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.auto.BusTask">
+    update BUS_TASK
+    <set>
+      <if test="tenm != null">
+        Tenm = #{tenm,jdbcType=VARCHAR},
+      </if>
+      <if test="flightId != null">
+        FLIGHT_ID = #{flightId,jdbcType=VARCHAR},
+      </if>
+      <if test="flseq != null">
+        flseq = #{flseq,jdbcType=VARCHAR},
+      </if>
+      <if test="cenm != null">
+        cenm = #{cenm,jdbcType=VARCHAR},
+      </if>
+      <if test="taskContent != null">
+        TASK_CONTENT = #{taskContent,jdbcType=DECIMAL},
+      </if>
+      <if test="status != null">
+        STATUS = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.auto.BusTask">
+    update BUS_TASK
+    set Tenm = #{tenm,jdbcType=VARCHAR},
+      FLIGHT_ID = #{flightId,jdbcType=VARCHAR},
+      flseq = #{flseq,jdbcType=VARCHAR},
+      cenm = #{cenm,jdbcType=VARCHAR},
+      TASK_CONTENT = #{taskContent,jdbcType=DECIMAL},
+      STATUS = #{status,jdbcType=VARCHAR},
+      CREATE_TIME = #{createTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

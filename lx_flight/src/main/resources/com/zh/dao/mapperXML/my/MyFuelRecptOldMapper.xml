@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.MyFuelRecptOldMapper">
+    <!-- 油单上传 -->
+    <insert id="upFuelrecpt">
+        INSERT into T_FUEL_RECPT_OLD(
+        flrc_id,flrc_type,flrc_no,flrc_date,flrc_airport_code,flrc_aptarea_code,flrc_airport,
+        flrc_airl_code,flrc_airl_name,flrc_flight_no,flrc_aircrft_no,flrc_aircrft_type,flrc_departure,
+        flrc_transit,flrc_dest,flrc_test_bill_no,flrc_fuel_name,flrc_fuel_temp,flrc_fuel_dnst,
+        flrc_fuel_vol,flrc_meter_stat,flrc_meter_fnsh,flrc_figuars,flrc_figuars_word,flrc_quantity,
+        flrc_vehi_no,flrc_hydrt_pit_no,flrc_stat_time,flrc_fnsh_time,flrc_deliver_name,flrc_deliver_id,
+        <if test="flrcManualTag != null and flrcManualTag != ''">
+            flrc_manual_tag,
+        </if>
+        flrc_manual_staff,flrc_manual_time,
+        <if test="flrcRevwStatus != null and flrcRevwStatus != ''">
+            flrc_revw_status,
+        </if>
+        <if test="flrcTakebackFlg != null and flrcTakebackFlg != ''">
+            flrc_takeback_flg,
+        </if>
+        <if test="flrcVehiNum != null and flrcVehiNum != ''">
+            flrc_vehi_num,
+        </if>
+        <if test="flrcIsExport != null">
+            flrc_is_export,
+        </if>
+        <if test="flrcStatus != null">
+            flrc_status,
+        </if>
+        <if test="flrcUpdateErrMsg != null">
+            flrc_update_err_msg,
+        </if>
+        <if test="flrcConfirmStatus != null">
+            flrc_confirm_status,
+        </if>
+        <if test="flrcConfirmErrMsg != null">
+            flrc_confirm_err_msg,
+        </if>
+        <if test="flrcPayStatus != null">
+            flrc_pay_status,
+        </if>
+        <if test="flrcPayErrMsg != null">
+            flrc_pay_err_msg,
+        </if>
+        <if test="flrcBwtar != null">
+            flrc_bwtar,
+        </if>
+        <if test="arcrCustomNum != null">
+            arcr_custom_num,
+        </if>
+        <if test="flgtAdid != null">
+            flgt_adid,
+        </if>
+        <if test="flgtPlacecode != null">
+            flgt_placecode,
+        </if>
+        <if test="flrcVersion != null">
+            flrc_version,
+        </if>
+        <if test="flrcPrintCount != null">
+            flrc_print_count,
+        </if>
+        <if test="flrcSign != null">
+            flrc_sign,
+        </if>
+        <if test="flrcSingle != null">
+            flrc_single,
+        </if>
+
+
+        <if test="flrcDefuelReason != null">
+            flrc_defuel_reason,
+        </if>
+        <if test="flrcDefuelReasonCode != null">
+            flrc_defuel_reason_code,
+        </if>
+        <if test="flrcDefuelTest != null">
+            flrc_defuel_test,
+        </if>
+        <if test="flrcDefuelRefruel != null">
+            flrc_defuel_refruel,
+        </if>
+        <if test="flrcDefuelStorage != null">
+            flrc_defuel_storage,
+        </if>
+        <if test="flrcOperatingType != null">
+            flrc_operating_type,
+        </if>
+        <if test="flrcSupplyFuelType != null">
+            flrc_supply_fuel_type,
+        </if>
+        <if test="flrcRemark != null">
+            flrc_remark,
+        </if>
+        <if test="flrcRapc3 != null">
+            flrc_rapc3,
+        </if>
+        <if test="flrcRapcn != null">
+            flrc_rapcn,
+        </if>
+        <if test="flrcTankerNo != null">
+            flrc_tanker_no,
+        </if>
+        <if test="flrcTransportMileage != null">
+            flrc_transport_mileage,
+        </if>
+        <if test="flrcBusType != null">
+            flrc_bus_type,
+        </if>
+        <if test="settlementRapc3 != null">
+            settlement_rapc3,
+        </if>
+        <if test="settlementRapcn != null">
+            settlement_rapcn,
+        </if>
+        <if test="manual != null">
+            manual,
+        </if>
+        <if test="flrcWkopDate != null">
+            flrc_wkop_date,
+        </if>
+        <if test="flrcGenerateTime != null">
+            flrc_generate_time,
+        </if>
+        flrc_rec_cre_time
+        )values(
+        #{flrcId},#{flrcType},#{flrcNo},#{flrcDate},#{flrcAirportCode},#{flrcAptareaCode},
+        #{flrcAirport},#{flrcAirlCode},#{flrcAirlName},#{flrcFlightNo},#{flrcAircrftNo},
+        #{flrcAircrftType},#{flrcDeparture},#{flrcTransit},#{flrcDest},#{flrcTestBillNo},
+        #{flrcFuelName},#{flrcFuelTemp},#{flrcFuelDnst},#{flrcFuelVol},#{flrcMeterStat},
+        #{flrcMeterFnsh},#{flrcFiguars},#{flrcFiguarsWord},#{flrcQuantity},#{flrcVehiNo},
+        #{flrcHydrtPitNo},#{flrcStatTime},#{flrcFnshTime},#{flrcDeliverName},#{flrcDeliverId},
+
+        <if test="flrcManualTag != null and flrcManualTag != ''">
+            #{flrcManualTag},
+        </if>
+        #{flrcManualStaff},#{flrcManualTime},
+        <if test="flrcRevwStatus != null and flrcRevwStatus != ''">
+            #{flrcRevwStatus},
+        </if>
+        <if test="flrcTakebackFlg != null and flrcTakebackFlg != ''">
+            #{flrcTakebackFlg},
+        </if>
+        <if test="flrcVehiNum != null and flrcVehiNum != ''">
+            #{flrcVehiNum},
+        </if>
+        <if test="flrcIsExport != null">
+            #{flrcIsExport,jdbcType=TINYINT},
+        </if>
+        <if test="flrcStatus != null">
+            #{flrcStatus,jdbcType=INTEGER},
+        </if>
+        <if test="flrcUpdateErrMsg != null">
+            #{flrcUpdateErrMsg,jdbcType=VARCHAR},
+        </if>
+        <if test="flrcConfirmStatus != null">
+            #{flrcConfirmStatus,jdbcType=INTEGER},
+        </if>
+        <if test="flrcConfirmErrMsg != null">
+            #{flrcConfirmErrMsg,jdbcType=VARCHAR},
+        </if>
+        <if test="flrcPayStatus != null">
+            #{flrcPayStatus,jdbcType=INTEGER},
+        </if>
+        <if test="flrcPayErrMsg != null">
+            #{flrcPayErrMsg,jdbcType=VARCHAR},
+        </if>
+        <if test="flrcBwtar != null">
+            #{flrcBwtar,jdbcType=VARCHAR},
+        </if>
+        <if test="arcrCustomNum != null">
+            #{arcrCustomNum,jdbcType=VARCHAR},
+        </if>
+        <if test="flgtAdid != null">
+            #{flgtAdid,jdbcType=VARCHAR},
+        </if>
+        <if test="flgtPlacecode != null">
+            #{flgtPlacecode,jdbcType=VARCHAR},
+        </if>
+        <if test="flrcVersion != null">
+            #{flrcVersion,jdbcType=INTEGER},
+        </if>
+        <if test="flrcPrintCount != null">
+            #{flrcPrintCount,jdbcType=INTEGER},
+        </if>
+
+        <if test="flrcSign != null">
+            #{flrcSign,jdbcType=LONGVARCHAR},
+        </if>
+        <if test="flrcSingle != null">
+            #{flrcSingle},
+        </if>
+
+        <if test="flrcDefuelReason != null">
+            #{flrcDefuelReason},
+        </if>
+        <if test="flrcDefuelReasonCode != null">
+            #{flrcDefuelReasonCode},
+        </if>
+        <if test="flrcDefuelTest != null">
+            #{flrcDefuelTest},
+        </if>
+        <if test="flrcDefuelRefruel != null">
+            #{flrcDefuelRefruel},
+        </if>
+        <if test="flrcDefuelStorage != null">
+            #{flrcDefuelStorage},
+        </if>
+        <if test="flrcOperatingType != null">
+            #{flrcOperatingType},
+        </if>
+        <if test="flrcSupplyFuelType != null">
+            #{flrcSupplyFuelType},
+        </if>
+        <if test="flrcRemark != null">
+            #{flrcRemark},
+        </if>
+        <if test="flrcRapc3 != null">
+            #{flrcRapc3},
+        </if>
+        <if test="flrcRapcn != null">
+            #{flrcRapcn},
+        </if>
+        <if test="flrcTankerNo != null">
+            #{flrcTankerNo},
+        </if>
+        <if test="flrcTransportMileage != null">
+            #{flrcTransportMileage},
+        </if>
+        <if test="flrcBusType != null">
+            #{flrcBusType},
+        </if>
+        <if test="settlementRapc3 != null">
+            #{settlementRapc3},
+        </if>
+        <if test="settlementRapcn != null">
+            #{settlementRapcn},
+        </if>
+        <if test="manual != null">
+            #{manual},
+        </if>
+        <if test="flrcWkopDate != null">
+            #{flrcWkopDate},
+        </if>
+        <if test="flrcGenerateTime != null">
+            #{flrcGenerateTime},
+        </if>
+        sysdate()
+        )
+    </insert>
+
+    <sql id="fuelFlrcSign">
+        flrc_sign AS flrcSign,
+    </sql>
+
+    <sql id="fuelAllSign">
+        flrc_sign AS flrcSign,
+        flrc_single flrcSingle,
+    </sql>
+
+    <sql id="fuelInfo">
+        flrc_id AS flrcId,
+        flrc_type AS flrcType,
+        flrc_no AS flrcNo,
+        flrc_date AS flrcDate,
+        flrc_airport_code AS flrcAirportCode,
+        flrc_aptarea_code AS flrcAptareaCode,
+        flrc_airport AS flrcAirport,
+		flrc_airl_code AS flrcAirlCode,
+        flrc_airl_name AS flrcAirlName,
+        flrc_flight_no AS flrcFlightNo,
+        flrc_aircrft_no AS flrcAircrftNo,
+        flrc_aircrft_type AS flrcAircrftType,
+        flrc_departure AS flrcDeparture,
+        flrc_transit AS flrcTransit,
+        flrc_dest AS flrcDest,
+        flrc_test_bill_no AS flrcTestBillNo,
+        flrc_fuel_name AS flrcFuelName,
+        flrc_fuel_temp AS flrcFuelTemp,
+        flrc_fuel_dnst AS flrcFuelDnst,
+        flrc_fuel_vol AS flrcFuelVol,
+        flrc_meter_stat AS flrcMeterStat,
+        flrc_meter_fnsh AS flrcMeterFnsh,
+        flrc_figuars AS flrcFiguars,
+        flrc_figuars_word AS flrcFiguarsWord,
+        flrc_quantity AS flrcQuantity,
+        flrc_vehi_num flrcVehiNum,
+        flrc_vehi_no AS flrcVehiNo,
+        flrc_hydrt_pit_no AS flrcHydrtPitNo,
+        flrc_stat_time AS flrcStatTime,
+        flrc_fnsh_time AS flrcFnshTime,
+        flrc_deliver_name AS flrcDeliverName,
+        flrc_deliver_id AS flrcDeliverId,
+        flrc_manual_tag AS flrcManualTag,
+        flrc_manual_staff AS flrcManualStaff,
+        flrc_manual_time AS flrcManualTime,
+        flrc_revw_status AS flrcRevwStatus,
+        flrc_takeback_flg AS flrcTakebackFlg,
+        flrc_rec_cre_time AS flrcRecCreTime,
+        flrc_generate_time AS flrcGenerateTime,
+		flrc_is_export flrcIsExport,
+		flrc_status AS flrcStatus,
+		flrc_update_err_msg flrcUpdateErrMsg,
+		flrc_confirm_status flrcConfirmStatus,
+		flrc_confirm_err_msg flrcConfirmErrMsg,
+		flrc_pay_status flrcPayStatus,
+		flrc_pay_err_msg flrcPayErrMsg,
+		flrc_bwtar flrcBwtar,
+		arcr_custom_num arcrCustomNum,
+		flgt_adid flgtAdid,
+		flgt_placecode flgtPlacecode,
+		flrc_version flrcVersion,
+		flrc_print_count flrcPrintCount,
+		order_id orderId,
+		flrc_defuel_reason flrcDefuelReason,
+		flrc_defuel_reason_code flrcDefuelReasonCode,
+		flrc_defuel_test flrcDefuelTest,
+		flrc_defuel_refruel flrcDefuelRefruel,
+		flrc_defuel_storage flrcDefuelStorage,
+        flrc_supply_fuel_type AS flrcSupplyFuelType,
+        flrc_remark AS flrcRemark,
+        flrc_rapc3 AS flrcRapc3,
+        flrc_rapcn AS flrcRapcn,
+        flrc_tanker_no AS flrcTankerNo,
+        flrc_transport_mileage AS flrcTransportMileage,
+        flrc_bus_type AS flrcBusType,
+        settlement_rapc3 AS settlementRapc3,
+        settlement_rapcn AS settlementRapcn,
+        flrc_wkop_date AS flrcWkopDate,
+        manual
+    </sql>
+
+    <select id="getFuelHistory" resultType="com.zh.bean.flight.MyFuelRecptOld">
+        SELECT
+            <include refid="fuelInfo"/>
+        FROM T_FUEL_RECPT_OLD
+        <where>
+            <if test="flrcNo != null and flrcNo != ''">
+                AND flrc_no = #{flrcNo}
+            </if>
+            <if test="flrcFlightNo != null and flrcFlightNo != ''">
+                AND flrc_flight_no LIKE CONCAT('%',#{flrcFlightNo},'%')
+            </if>
+            <if test="flrcAircrftNo != null and flrcAircrftNo != ''">
+                AND flrc_aircrft_no LIKE CONCAT('%',#{flrcAircrftNo},'%')
+            </if>
+            <if test="flrcDate != null">
+                AND flrc_date = #{flrcDate}
+            </if>
+        </where>
+    </select>
+</mapper>

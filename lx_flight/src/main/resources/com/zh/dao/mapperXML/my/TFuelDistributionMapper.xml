@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TFuelDistributionMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.TFuelDistribution">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="staff_id" jdbcType="VARCHAR" property="staffId" />
+    <result column="pad_id" jdbcType="VARCHAR" property="padId" />
+    <result column="flrc_no" jdbcType="VARCHAR" property="flrcNo" />
+    <result column="fuel_type" jdbcType="INTEGER" property="fuelType" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="flgt_airport_code" jdbcType="VARCHAR" property="flgtAirportCode" />
+      <result column="create_date" jdbcType="DATE" property="createDate" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, staff_id,pad_id,flrc_no, fuel_type, status, remark,flgt_airport_code,create_date
+  </sql>
+  <select id="selectList"  resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_fuel_distribution
+    <where>
+        <if test="staffId != null and staffId != '' ">
+            and staff_id = #{staffId}
+        </if>
+        <if test="flrcNo != null and flrcNo != '' ">
+            and flrc_no = #{flrcNo}
+        </if>
+        <if test="flgtAirportCode != null and flgtAirportCode != '' ">
+            and flgt_airport_code = #{flgtAirportCode}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        <if test="fuelType != null">
+            and fuel_type = #{fuelType}
+        </if>
+        <if test="padId != null and padId != '' ">
+            and pad_id = #{padId}
+        </if>
+    </where>
+  </select>
+
+    <insert id="insertList">
+        insert into t_fuel_distribution (staff_id,pad_id,flrc_no, fuel_type,
+        status, remark,flgt_airport_code,create_date)
+        values
+        <foreach collection="list" item="emp" separator=",">
+            (#{emp.staffId},#{emp.padId},#{emp.flrcNo},#{emp.fuelType},#{emp.status},#{emp.remark},#{emp.flgtAirportCode},#{emp.createDate})
+        </foreach>
+    </insert>
+
+    <update id="updateList">
+        delete from t_fuel_distribution where
+        flrc_no in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item.flrcNo}
+        </foreach>
+    </update>
+
+    <select id="selectByFuelNoList" resultMap="BaseResultMap">
+        select
+        id, staff_id,pad_id,flrc_no, fuel_type, `status`, remark,flgt_airport_code,create_date
+        from t_fuel_distribution
+        where flrc_no in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

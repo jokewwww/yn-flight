@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.OilcheckMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.auto.Oilcheck">
+    <id column="Id" jdbcType="VARCHAR" property="id" />
+    <result column="hbid" jdbcType="VARCHAR" property="hbid" />
+    <result column="filghtNo" jdbcType="VARCHAR" property="filghtno" />
+    <result column="testBillNo" jdbcType="VARCHAR" property="testbillno" />
+    <result column="descriptionAndGrade" jdbcType="VARCHAR" property="descriptionandgrade" />
+    <result column="temperature" jdbcType="VARCHAR" property="temperature" />
+    <result column="actualDensity" jdbcType="VARCHAR" property="actualdensity" />
+    <result column="meterStart" jdbcType="VARCHAR" property="meterstart" />
+    <result column="meterFinish" jdbcType="VARCHAR" property="meterfinish" />
+    <result column="quantity" jdbcType="VARCHAR" property="quantity" />
+    <result column="spstatus" jdbcType="VARCHAR" property="spstatus" />
+    <result column="date" jdbcType="VARCHAR" property="date" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.zh.bean.auto.Oilcheck">
+    <result column="signPhoto" jdbcType="LONGVARCHAR" property="signphoto" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    Id, hbid, filghtNo, testBillNo, descriptionAndGrade, temperature, actualDensity, 
+    meterStart, meterFinish, quantity, spstatus, date
+  </sql>
+  <sql id="Blob_Column_List">
+    signPhoto
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from oilcheck
+    where Id = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from oilcheck
+    where Id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.auto.Oilcheck">
+    insert into oilcheck (Id, hbid, filghtNo, 
+      testBillNo, descriptionAndGrade, temperature, 
+      actualDensity, meterStart, meterFinish, 
+      quantity, spstatus, date, 
+      signPhoto)
+    values (#{id,jdbcType=VARCHAR}, #{hbid,jdbcType=VARCHAR}, #{filghtno,jdbcType=VARCHAR}, 
+      #{testbillno,jdbcType=VARCHAR}, #{descriptionandgrade,jdbcType=VARCHAR}, #{temperature,jdbcType=VARCHAR}, 
+      #{actualdensity,jdbcType=VARCHAR}, #{meterstart,jdbcType=VARCHAR}, #{meterfinish,jdbcType=VARCHAR}, 
+      #{quantity,jdbcType=VARCHAR}, #{spstatus,jdbcType=VARCHAR}, #{date,jdbcType=VARCHAR}, 
+      #{signphoto,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.zh.bean.auto.Oilcheck">
+    insert into oilcheck
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        Id,
+      </if>
+      <if test="hbid != null">
+        hbid,
+      </if>
+      <if test="filghtno != null">
+        filghtNo,
+      </if>
+      <if test="testbillno != null">
+        testBillNo,
+      </if>
+      <if test="descriptionandgrade != null">
+        descriptionAndGrade,
+      </if>
+      <if test="temperature != null">
+        temperature,
+      </if>
+      <if test="actualdensity != null">
+        actualDensity,
+      </if>
+      <if test="meterstart != null">
+        meterStart,
+      </if>
+      <if test="meterfinish != null">
+        meterFinish,
+      </if>
+      <if test="quantity != null">
+        quantity,
+      </if>
+      <if test="spstatus != null">
+        spstatus,
+      </if>
+      <if test="date != null">
+        date,
+      </if>
+      <if test="signphoto != null">
+        signPhoto,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="hbid != null">
+        #{hbid,jdbcType=VARCHAR},
+      </if>
+      <if test="filghtno != null">
+        #{filghtno,jdbcType=VARCHAR},
+      </if>
+      <if test="testbillno != null">
+        #{testbillno,jdbcType=VARCHAR},
+      </if>
+      <if test="descriptionandgrade != null">
+        #{descriptionandgrade,jdbcType=VARCHAR},
+      </if>
+      <if test="temperature != null">
+        #{temperature,jdbcType=VARCHAR},
+      </if>
+      <if test="actualdensity != null">
+        #{actualdensity,jdbcType=VARCHAR},
+      </if>
+      <if test="meterstart != null">
+        #{meterstart,jdbcType=VARCHAR},
+      </if>
+      <if test="meterfinish != null">
+        #{meterfinish,jdbcType=VARCHAR},
+      </if>
+      <if test="quantity != null">
+        #{quantity,jdbcType=VARCHAR},
+      </if>
+      <if test="spstatus != null">
+        #{spstatus,jdbcType=VARCHAR},
+      </if>
+      <if test="date != null">
+        #{date,jdbcType=VARCHAR},
+      </if>
+      <if test="signphoto != null">
+        #{signphoto,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.auto.Oilcheck">
+    update oilcheck
+    <set>
+      <if test="hbid != null">
+        hbid = #{hbid,jdbcType=VARCHAR},
+      </if>
+      <if test="filghtno != null">
+        filghtNo = #{filghtno,jdbcType=VARCHAR},
+      </if>
+      <if test="testbillno != null">
+        testBillNo = #{testbillno,jdbcType=VARCHAR},
+      </if>
+      <if test="descriptionandgrade != null">
+        descriptionAndGrade = #{descriptionandgrade,jdbcType=VARCHAR},
+      </if>
+      <if test="temperature != null">
+        temperature = #{temperature,jdbcType=VARCHAR},
+      </if>
+      <if test="actualdensity != null">
+        actualDensity = #{actualdensity,jdbcType=VARCHAR},
+      </if>
+      <if test="meterstart != null">
+        meterStart = #{meterstart,jdbcType=VARCHAR},
+      </if>
+      <if test="meterfinish != null">
+        meterFinish = #{meterfinish,jdbcType=VARCHAR},
+      </if>
+      <if test="quantity != null">
+        quantity = #{quantity,jdbcType=VARCHAR},
+      </if>
+      <if test="spstatus != null">
+        spstatus = #{spstatus,jdbcType=VARCHAR},
+      </if>
+      <if test="date != null">
+        date = #{date,jdbcType=VARCHAR},
+      </if>
+      <if test="signphoto != null">
+        signPhoto = #{signphoto,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where Id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.zh.bean.auto.Oilcheck">
+    update oilcheck
+    set hbid = #{hbid,jdbcType=VARCHAR},
+      filghtNo = #{filghtno,jdbcType=VARCHAR},
+      testBillNo = #{testbillno,jdbcType=VARCHAR},
+      descriptionAndGrade = #{descriptionandgrade,jdbcType=VARCHAR},
+      temperature = #{temperature,jdbcType=VARCHAR},
+      actualDensity = #{actualdensity,jdbcType=VARCHAR},
+      meterStart = #{meterstart,jdbcType=VARCHAR},
+      meterFinish = #{meterfinish,jdbcType=VARCHAR},
+      quantity = #{quantity,jdbcType=VARCHAR},
+      spstatus = #{spstatus,jdbcType=VARCHAR},
+      date = #{date,jdbcType=VARCHAR},
+      signPhoto = #{signphoto,jdbcType=LONGVARCHAR}
+    where Id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.auto.Oilcheck">
+    update oilcheck
+    set hbid = #{hbid,jdbcType=VARCHAR},
+      filghtNo = #{filghtno,jdbcType=VARCHAR},
+      testBillNo = #{testbillno,jdbcType=VARCHAR},
+      descriptionAndGrade = #{descriptionandgrade,jdbcType=VARCHAR},
+      temperature = #{temperature,jdbcType=VARCHAR},
+      actualDensity = #{actualdensity,jdbcType=VARCHAR},
+      meterStart = #{meterstart,jdbcType=VARCHAR},
+      meterFinish = #{meterfinish,jdbcType=VARCHAR},
+      quantity = #{quantity,jdbcType=VARCHAR},
+      spstatus = #{spstatus,jdbcType=VARCHAR},
+      date = #{date,jdbcType=VARCHAR}
+    where Id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

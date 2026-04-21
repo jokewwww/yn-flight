@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.MySettingMapper">
+    <select id="findsettinglist" resultType="java.lang.String">
+        SELECT
+        sett_info AS settInfo
+        FROM T_SETTING
+        WHERE sett_staff_id=#{staffId}
+        <if test="staffId != 'default'">
+            AND sett_airport_code =#{staffAirportCode}
+        </if>
+        AND sett_type=#{settType}
+        <if test="settType == 2">
+            and sett_roworcol = 2
+        </if>
+        limit 0,1
+    </select>
+    <select id="findsettingLists" resultType="com.zh.bean.login.MySetting">
+        SELECT sett_option_id    as settOptionId,
+               sett_info         as settInfo,
+               sett_staff_id     as settStaffId,
+               sett_airport_code as settAirportCode,
+               sett_type         as settType,
+               sett_status       as settStatus,
+               sett_roworcol     as settRowOrCol,
+               sett_priority     as settPriority
+        FROM T_SETTING
+        WHERE sett_staff_id = #{staffId}
+          AND sett_airport_code = #{staffAirportCode}
+    </select>
+
+    <insert id="insertsetting">
+        INSERT into T_SETTING(sett_option_id, sett_staff_id, sett_airport_code, sett_info, sett_type)
+        values (#{settOptionId}, #{settStaffId}, #{settAirportCode}, #{settInfo}, #{settType})
+    </insert>
+
+    <select id="selectstaff" resultType="com.zh.bean.login.MyStaff">
+        SELECT staff_id           AS staffId,
+               staff_pwd          AS staffPwd,
+               staff_name         AS staffName,
+               staff_age          AS staffAge,
+               staff_gender       AS staffGender,
+               staff_type         AS staffType,
+               staff_phone        AS staffPhone,
+               staff_company      AS staffCompany,
+               staff_serv_station AS staffServStation,
+               staff_airport_code AS staffAirportCode,
+               staff_aptarea_code AS staffAptareaCode,
+               staff_group_id     AS staffGroupId
+        FROM T_STAFF
+        WHERE staff_id = #{settStaffId}
+    </select>
+
+    <update id="updatesetting">
+        UPDATE T_SETTING
+        SET sett_info=#{settInfo}
+        WHERE sett_staff_id = #{setting.settStaffId}
+          AND sett_type = #{setting.settType}
+          AND sett_airport_code = #{setting.settAirportCode}
+    </update>
+
+    <!-- 新增配置信息 -->
+    <insert id="addSettingInfo">
+        INSERT into T_SETTING(sett_option_id, sett_staff_id, sett_airport_code, sett_info, sett_type, sett_roworcol,
+                              sett_priority)
+        values (#{setting.settOptionId}, #{setting.settStaffId},
+                #{setting.settAirportCode}, #{setting.settInfo},
+                #{setting.settType}, #{setting.settRowOrCol}, #{setting.settPriority})
+    </insert>
+
+    <!-- 查询配置列表 -->
+    <select id="getSettingList" resultType="com.zh.bean.login.Row">
+        SELECT sett_option_id as settOptionId,
+               sett_info      as settRow,
+               sett_status    as settStatus,
+               sett_priority  as settPriority
+        from T_SETTING
+        where sett_staff_id = #{staffId}
+          and sett_type = #{settType}
+          and sett_roworcol = 1
+    </select>
+
+    <!-- 查询配置列表 -->
+    <select id="getColList" resultType="java.lang.String">
+        SELECT sett_info
+        from T_SETTING
+        where sett_staff_id = #{staffId}
+          and sett_type = #{settType}
+          and sett_roworcol = 2 limit 0,1
+    </select>
+
+    <!-- 删除配置信息 -->
+    <delete id="deleteSettingInfo">
+        DELETE from T_SETTING
+        where
+        sett_staff_id = #{staffId}
+        <if test="settOptionId != null and settOptionId != ''">
+            and sett_option_id = #{settOptionId}
+        </if>
+        <if test="settOptionId == null and settOptionId == ''">
+            and sett_roworcol = 2
+        </if>
+    </delete>
+
+    <delete id="deleteSetting">
+        DELETE
+        from T_SETTING
+        where sett_staff_id = #{staffId}
+    </delete>
+
+
+    <!-- 查询配置详情 -->
+    <select id="getSettingInfo" resultType="com.zh.bean.login.MySetting">
+        SELECT sett_option_id    as settOptionId,
+               sett_info         as settInfo,
+               sett_staff_id     as settStaffId,
+               sett_airport_code as settAirportCode,
+               sett_type         as settType,
+               sett_status       as settStatus,
+               sett_roworcol     as settRowOrCol,
+               sett_priority     as settPriority
+        from T_SETTING
+        where sett_option_id = #{settOptionId}
+    </select>
+
+    <!-- 修改配置信息 -->
+    <update id="updateSettingInfo">
+        update T_SETTING set
+        sett_info = #{setting.settInfo}
+        where
+        sett_staff_id = #{staffId}
+        <if test="setting.settOptionId != null and setting.settOptionId != ''">
+            and sett_option_id = #{setting.settOptionId}
+        </if>
+        <if test="setting.settOptionId == null and setting.settOptionId == ''">
+            and sett_roworcol = 2
+        </if>
+    </update>
+
+    <!-- 是否执行配置信息 -->
+    <update id="updateSettingStutas">
+        update T_SETTING
+        set sett_status = #{settStatus}
+        where sett_option_id = #{settOptionId}
+    </update>
+
+    <!-- 配置执行标识改为0 -->
+    <update id="updateSettingStutass">
+        update T_SETTING
+        set sett_status = 0
+        where sett_option_id &lt;&gt; #{settOptionId}
+          and sett_staff_id = #{staffId}
+    </update>
+
+    <!-- 根据当前人员的ID去查询行的最大优先级 -->
+    <select id="getRowPriority" resultType="java.lang.Integer">
+        SELECT MAX(sett_priority)
+        from T_SETTING
+        where sett_staff_id = #{staffId}
+          and sett_roworcol = 1
+          and sett_type = '2' limit 0,1
+    </select>
+
+    <!-- 把大的优先级改小一级 -->
+    <update id="updateMaxSettPriority">
+        UPDATE T_SETTING
+        set sett_priority = #{minSettPriority}
+        where sett_option_id = #{maxSettId}
+          and sett_staff_id = #{staffId}
+    </update>
+
+    <!-- 把小的优先级改大一级 -->
+    <update id="updateMinSettPriority">
+        UPDATE T_SETTING
+        set sett_priority = #{maxSettPriority}
+        where sett_option_id = #{minSettId}
+          and sett_staff_id = #{staffId}
+    </update>
+
+    <update id="updateSettPriority">
+        UPDATE T_SETTING
+        set sett_priority = sett_priority - 1
+        where sett_priority &gt; #{settPriority}
+          and sett_staff_id = #{staffId}
+    </update>
+</mapper>

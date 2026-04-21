@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.StatisticalMapper">
+
+    <!-- 根据日期查询各航空公司加油详情 -->
+    <select id="getOilCustomByAir" resultType="com.zh.bean.flight.MyFuelRecptVo">
+        SELECT
+        flrc_date flrcDate,
+        IFNULL(w.cstm_name,q.flrc_airl_name) flrcAirlName,
+        e.apcd_iata_code apcdIataCode,
+        flrc_flight_no flrcFlightNo,
+        flrc_aircrft_no flrcAircrftNo,
+        flrc_aircrft_type flrcAircrftType,
+        flrc_stat_time flrcStatTime,
+        flrc_fuel_vol flrcFuelVol,
+        flrc_quantity flrcQuantity,
+        IFNULL(q.flrc_bwtar,'未知') flrcBwtar,
+        flrc_no flrcNo,
+        f.flgt_trsnm4 AS flightValic,
+        f.flgt_trsnm5 AS flgtVialc,
+        q.arcr_custom_num arcrCustomNum
+        FROM
+        T_FUEL_RECPT q
+        LEFT JOIN T_CUSTOM w ON w.cstm_num = q.arcr_custom_num
+        left join T_AIRPORT_CODE e on q.flrc_airport_code=e.apcd_cnaf_airport_code
+        LEFT JOIN T_FLIGHT f ON q.flgt_id = f.flgt_id
+        WHERE
+        1 = 1
+        <if test="startTime!=null and startTime!=''">
+            and   q.flrc_date >= #{ startTime }
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and   q.flrc_date &lt;=  #{ endTime }
+        </if>
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND q.flrc_airport_code = #{ staffAirportCode }
+        </if>
+        order by q.flrc_date desc,w.cstm_name
+    </select>
+
+    <!-- 区分统计报税油单 -->
+    <select id="distinguishStatisticalTax" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        tfr.flrc_date flrcDate,cast(tfr.arcr_custom_num as UNSIGNED INTEGER) arcrCustomNum,IFNULL( tac.cstm_name,tfr.arcr_custom_num ) AS flrcAirlName,
+        tfr.flrcNo,
+        tfr.flrcFuelVol,
+        tfr.flrcQuantity,
+        IFNULL(flrc_bwtar,'未知') flrcBwtar,
+        flrc_type flrcType
+        FROM
+        (
+        SELECT
+        flrc_date,
+        arcr_custom_num AS flrcAirlCode,
+        count( 1 ) AS flrcNo,
+        sum( flrc_fuel_vol ) AS flrcFuelVol,
+        sum( flrc_quantity ) AS flrcQuantity,
+        arcr_custom_num,flrc_bwtar,flrc_type
+        FROM
+        T_FUEL_RECPT
+        WHERE
+        1 = 1
+        AND flrc_bwtar = "B"
+        AND flrc_type = 2
+        <if test="startTime!=null and startTime!=''">
+            and   flrc_date >= #{ startTime }
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and   flrc_date &lt;=  #{ endTime }
+        </if>
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND flrc_airport_code = #{ staffAirportCode }
+        </if>
+        AND  arcr_custom_num!= "" and arcr_custom_num is not null
+        GROUP BY
+        arcr_custom_num,flrc_date,flrc_bwtar,flrc_type
+        ) tfr
+        LEFT JOIN T_CUSTOM tac ON LPAD(tac.cstm_num,10,"0") =  LPAD(tfr.flrcAirlCode,10,"0")
+        order by tfr.flrc_date desc,flrcAirlName,flrc_type
+
+    </select>
+
+
+    <!-- 根据日期查询各航空公司合计 -->
+    <select id="getCountByAirAndBaoShui" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        tfr.flrc_date flrcDate,cast(tfr.arcr_custom_num as UNSIGNED INTEGER) arcrCustomNum,IFNULL( tac.cstm_name,tfr.arcr_custom_num ) AS flrcAirlName,
+        tfr.flrcNo,
+        tfr.flrcFuelVol,
+        tfr.flrcQuantity,
+        IFNULL(flrc_bwtar,'未知') flrcBwtar
+        FROM
+        (
+        SELECT
+        flrc_date,
+        arcr_custom_num AS flrcAirlCode,
+        count( 1 ) AS flrcNo,
+        sum( flrc_fuel_vol ) AS flrcFuelVol,
+        sum( flrc_quantity ) AS flrcQuantity,
+        arcr_custom_num,flrc_bwtar
+        FROM
+        T_FUEL_RECPT
+        WHERE
+        1 = 1
+        <if test="startTime!=null and startTime!=''">
+            and   flrc_date >= #{ startTime }
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and   flrc_date &lt;=  #{ endTime }
+        </if>
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND flrc_airport_code = #{ staffAirportCode }
+        </if>
+        GROUP BY
+        arcr_custom_num,flrc_date,flrc_bwtar
+        ) tfr
+        LEFT JOIN T_CUSTOM tac ON tac.cstm_num =  tfr.flrcAirlCode
+        order by tfr.flrc_date desc,flrcAirlName
+
+    </select>
+
+
+    <!-- 根据日期查询各航空公司合计 -->
+    <select id="getCountByAir" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        tfr.flrc_date flrcDate,cast(tfr.arcr_custom_num as UNSIGNED INTEGER)  arcrCustomNum,IFNULL( tac.cstm_name,tfr.arcr_custom_num ) AS flrcAirlName,
+        tfr.flrcNo,
+        tfr.flrcFuelVol,
+        tfr.flrcQuantity
+        FROM
+        (
+        SELECT
+        flrc_date,
+        arcr_custom_num AS flrcAirlCode,
+        count( 1 ) AS flrcNo,
+        sum( flrc_fuel_vol ) AS flrcFuelVol,
+        sum( flrc_quantity ) AS flrcQuantity,
+        arcr_custom_num
+        FROM
+        T_FUEL_RECPT
+        WHERE
+        1 = 1
+        <if test="startTime!=null and startTime!=''">
+            and   flrc_date >= #{ startTime }
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and   flrc_date &lt;=  #{ endTime }
+        </if>
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND flrc_airport_code = #{ staffAirportCode }
+        </if>
+        GROUP BY
+        arcr_custom_num,flrc_date
+        ) tfr
+        LEFT JOIN T_CUSTOM tac ON tac.cstm_num =  tfr.flrcAirlCode
+        order by tfr.flrc_date desc,flrcAirlName
+    </select>
+    <!-- 根据日期查询加油车合计 -->
+    <select id="getCountByVehi" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        tfr3.flrcDate,
+        tfr3.flrcVehiNum,
+
+        tfr3.flrcNo,
+        tfr3.flrcFuelVol,
+        tfr3.flrcQuantity,
+        round(
+        tfr3.flrcQuantity / tfr3.flrcNo,
+        3
+        ) AS flrcVehiNum,
+        round(
+        tfr3.flrcQuantity / tfr3.flrcNo,
+        3
+        ) AS flrcFiguars,
+        round(tfr3.flrcMeterStat,3) as flrcMeterStat,
+        round(tfr3.flrcQuantity / tfr3.flrcMeterStat,3) as flrcMeterFnsh
+        FROM
+        (
+        SELECT
+        (sum(a.poor)/3600) AS flrcMeterStat,
+        a.flrc_date AS flrcDate,
+
+        a.flrc_vehi_num AS flrcVehiNum,
+        count(1) AS flrcNo,
+        round(sum(a.flrc_fuel_vol), 3) AS flrcFuelVol,
+        round(sum(a.flrc_quantity), 3) AS flrcQuantity
+        FROM
+        (select * ,TIMESTAMPDIFF(SECOND,flrc_stat_time,flrc_fnsh_time) AS poor from T_FUEL_RECPT) a
+        WHERE
+        1 = 1
+        <if test="startTime!=null and startTime!=''">
+            and   flrc_date >= #{ startTime }
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and   flrc_date &lt;=  #{ endTime }
+        </if>
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND flrc_airport_code = #{ staffAirportCode }
+        </if>
+        GROUP BY
+        a.flrc_date,
+        a.flrc_vehi_num
+        ) tfr3
+    </select>
+    <!-- 根据日期查询加油员合计 -->
+    <select id="getCountByStaff" resultType="com.zh.bean.flight.MyFuelRecpt">
+        SELECT
+        tfr.flrcDate,
+        tfr.flrcDeliverId AS flrcDeliverId,
+        ts.staff_name AS flrcDeliverName,
+        tfr.flrcNo,
+        tfr.flrcFuelVol,
+        tfr.flrcQuantity,
+        round(
+        tfr.flrcQuantity / tfr.flrcNo,
+        3
+        ) AS flrcFiguars,
+        round(tfr.flrcMeterStat,3) as flrcMeterStat,
+        round(tfr.flrcQuantity / tfr.flrcMeterStat,3) as flrcMeterFnsh
+        FROM
+        (
+        SELECT
+        a.flrc_date AS flrcDate,
+        a.flrc_deliver_id AS flrcDeliverId,
+        count(1) AS flrcNo,
+        round(sum(a.flrc_fuel_vol), 3) AS flrcFuelVol,
+        round(sum(a.flrc_quantity), 3) AS flrcQuantity,
+        (sum(a.poor)/3600) AS flrcMeterStat
+        FROM
+        (select  *,(TIMESTAMPDIFF(SECOND,flrc_stat_time,flrc_fnsh_time)) AS poor from T_FUEL_RECPT) a
+        WHERE
+        1 = 1
+        <if test="startTime!=null and startTime!=''">
+            and   flrc_date >= #{ startTime }
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and   flrc_date &lt;=  #{ endTime }
+        </if>
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND flrc_airport_code = #{ staffAirportCode }
+        </if>
+        GROUP BY
+        a.flrc_date,
+        a.flrc_deliver_id
+
+        ) tfr
+        LEFT JOIN T_STAFF ts ON ts.staff_id = tfr.flrcDeliverId
+    </select>
+
+    <!-- 查询 每小时 加油量 和 架次-->
+    <select id="getHours" resultType="java.util.HashMap">
+        SELECT
+            hours.time,
+            IFNULL( b.Count, 0 ) num
+        FROM
+            (
+                SELECT
+                        DATE_FORMAT( DATE_SUB( DATE_FORMAT( NOW(), '%Y-%m-%d' ), INTERVAL ( -( @i := @i + 1 ) ) HOUR ), '%H' ) + 0 AS 'time'
+                FROM
+                    (
+                        SELECT
+                            a
+                        FROM
+                                ( SELECT '1' AS a UNION SELECT '2' UNION SELECT '3' UNION SELECT '4' ) AS a
+                                    JOIN ( SELECT '1' UNION SELECT '2' UNION SELECT '3' UNION SELECT '4' UNION SELECT '5' UNION SELECT '6' ) AS b ON 1
+                    ) AS b,(
+                        SELECT
+                            @i :=- 1
+                    ) AS i
+            ) hours
+                LEFT JOIN (
+                SELECT HOUR
+                    ( e.flrc_fnsh_time ) AS HOUR,
+                    count(*) AS Count
+                FROM
+                    T_FUEL_RECPT e
+                WHERE
+                    e.flrc_date = #{date}
+                  AND e.flrc_airport_code = #{staffAirportCode}
+                group by HOUR ( e.flrc_fnsh_time )
+                ORDER BY
+                    HOUR ( e.flrc_fnsh_time )
+            ) b ON hours.time = b.HOUR
+    </select>
+    <select id="getExcelData" resultType="com.zh.vo.FuelTotalExcelVo">
+        SELECT
+        tfr.flrc_date flrcDate,
+        cast( tfr.arcr_custom_num AS UNSIGNED INTEGER ) arcrCustomNum,
+        IFNULL( tac.cstm_name, tfr.arcr_custom_num ) AS flrcAirlName,
+        tfr.flrcNo,
+        tfr.flrc_type flrcType,
+        tfr.dayFuelVol,
+        tfr.dayFuelQuantity,
+        IFNULL( flrc_bwtar, '未知' ) flrcBwtar
+        FROM
+        (
+        SELECT
+        flrc_date,
+        flrc_type,
+        count( 1 ) AS flrcNo,
+        sum( flrc_fuel_vol ) AS  dayFuelVol,
+        sum( flrc_quantity ) AS dayFuelQuantity,
+        arcr_custom_num,
+        flrc_bwtar
+        FROM
+        T_FUEL_RECPT
+        WHERE
+        1 = 1
+        <if test="startTime!=null and startTime!=''">
+            and   flrc_date >= #{ startTime }
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and   flrc_date &lt;=  #{ endTime }
+        </if>
+        <if test="staffAirportCode!=null and staffAirportCode!=''">
+            AND flrc_airport_code = #{ staffAirportCode }
+        </if>
+        GROUP BY
+        arcr_custom_num,
+        flrc_date,
+        flrc_type,
+        flrc_bwtar
+
+        ) tfr
+        LEFT JOIN T_CUSTOM tac ON tac.cstm_num = tfr.arcr_custom_num
+        order by tfr.flrc_date desc,flrcAirlName
+
+    </select>
+</mapper>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.TCreditInfoMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.TCreditInfo">
+    <id column="cstno" jdbcType="VARCHAR" property="cstno" />
+    <result column="cstnm" jdbcType="VARCHAR" property="cstnm" />
+    <result column="customer_type" jdbcType="VARCHAR" property="customerType" />
+    <result column="cilvl" jdbcType="VARCHAR" property="cilvl" />
+    <result column="citst" jdbcType="VARCHAR" property="citst" />
+    <result column="cirmk" jdbcType="VARCHAR" property="cirmk" />
+    <result column="create_date" jdbcType="TIMESTAMP" property="createDate" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    cstno, cstnm, customer_type, cilvl, citst, cirmk, create_date
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from T_CREDIT_INFO
+    where cstno = #{cstno,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from T_CREDIT_INFO
+    where cstno = #{cstno,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.flight.TCreditInfo">
+    insert into T_CREDIT_INFO (cstno, cstnm, customer_type, 
+      cilvl, citst, cirmk, 
+      create_date)
+    values (#{cstno,jdbcType=VARCHAR}, #{cstnm,jdbcType=VARCHAR}, #{customerType,jdbcType=VARCHAR}, 
+      #{cilvl,jdbcType=VARCHAR}, #{citst,jdbcType=VARCHAR}, #{cirmk,jdbcType=VARCHAR}, 
+      #{createDate,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.zh.bean.flight.TCreditInfo">
+    insert into T_CREDIT_INFO
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="cstno != null">
+        cstno,
+      </if>
+      <if test="cstnm != null">
+        cstnm,
+      </if>
+      <if test="customerType != null">
+        customer_type,
+      </if>
+      <if test="cilvl != null">
+        cilvl,
+      </if>
+      <if test="citst != null">
+        citst,
+      </if>
+      <if test="cirmk != null">
+        cirmk,
+      </if>
+      <if test="createDate != null">
+        create_date,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="cstno != null">
+        #{cstno,jdbcType=VARCHAR},
+      </if>
+      <if test="cstnm != null">
+        #{cstnm,jdbcType=VARCHAR},
+      </if>
+      <if test="customerType != null">
+        #{customerType,jdbcType=VARCHAR},
+      </if>
+      <if test="cilvl != null">
+        #{cilvl,jdbcType=VARCHAR},
+      </if>
+      <if test="citst != null">
+        #{citst,jdbcType=VARCHAR},
+      </if>
+      <if test="cirmk != null">
+        #{cirmk,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null">
+        #{createDate,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.zh.bean.flight.TCreditInfo">
+    update T_CREDIT_INFO
+    <set>
+      <if test="cstnm != null">
+        cstnm = #{cstnm,jdbcType=VARCHAR},
+      </if>
+      <if test="customerType != null">
+        customer_type = #{customerType,jdbcType=VARCHAR},
+      </if>
+      <if test="cilvl != null">
+        cilvl = #{cilvl,jdbcType=VARCHAR},
+      </if>
+      <if test="citst != null">
+        citst = #{citst,jdbcType=VARCHAR},
+      </if>
+      <if test="cirmk != null">
+        cirmk = #{cirmk,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null">
+        create_date = #{createDate,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where cstno = #{cstno,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TCreditInfo">
+    update T_CREDIT_INFO
+    set cstnm = #{cstnm,jdbcType=VARCHAR},
+      customer_type = #{customerType,jdbcType=VARCHAR},
+      cilvl = #{cilvl,jdbcType=VARCHAR},
+      citst = #{citst,jdbcType=VARCHAR},
+      cirmk = #{cirmk,jdbcType=VARCHAR},
+      create_date = #{createDate,jdbcType=TIMESTAMP}
+    where cstno = #{cstno,jdbcType=VARCHAR}
+  </update>
+  <select id="selectCreditInfo" parameterType="com.zh.bean.flight.TCreditInfo" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from T_CREDIT_INFO
+    where 1=1
+    <if test="cstno != null">
+      and cstno =  #{cstno,jdbcType=VARCHAR}
+    </if>
+    <if test="cstnm != null">
+      and cstnm = #{cstnm,jdbcType=VARCHAR}
+    </if>
+    <if test="customerType != null">
+      and customer_type = #{customerType,jdbcType=VARCHAR}
+    </if>
+    <if test="cilvl != null">
+      and cilvl = #{cilvl,jdbcType=VARCHAR}
+    </if>
+    <if test="citst != null">
+      and citst = #{citst,jdbcType=VARCHAR}
+    </if>
+    <if test="cirmk != null">
+      and cirmk = #{cirmk,jdbcType=VARCHAR}
+    </if>
+    <if test="createDate != null">
+      and create_date = #{createDate,jdbcType=TIMESTAMP}
+    </if>
+  </select>
+</mapper>

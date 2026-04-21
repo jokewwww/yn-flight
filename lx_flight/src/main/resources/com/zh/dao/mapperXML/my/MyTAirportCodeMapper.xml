@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.MyTAirportCodeMapper">
+  <resultMap id="BaseResultMap" type="com.zh.bean.flight.TAirportCode">
+    <id column="apcd_iata_code" jdbcType="VARCHAR" property="apcdIataCode" />
+    <result column="apcd_icao_code" jdbcType="VARCHAR" property="apcdIcaoCode" />
+    <result column="apcd_airport_prop" jdbcType="VARCHAR" property="apcdAirportProp" />
+    <result column="apcd_airport_name" jdbcType="VARCHAR" property="apcdAirportName" />
+    <result column="apcd_airport_name_s" jdbcType="VARCHAR" property="apcdAirportNameS" />
+    <result column="apcd_cnaf_airport_code" jdbcType="VARCHAR" property="apcdCnafAirportCode" />
+    <result column="apcd_protocol" jdbcType="VARCHAR" property="apcdProtocol" />
+    <result column="apcd_vkorg" jdbcType="VARCHAR" property="apcdVkorg" />
+    <result column="apcd_vtweg" jdbcType="VARCHAR" property="apcdVtweg" />
+    <result column="apcd_bwtar" jdbcType="VARCHAR" property="apcdBwtar" />
+    <result column="apcd_werks" jdbcType="VARCHAR" property="apcdWerks" />
+    <result column="apcd_vkbur" jdbcType="VARCHAR" property="apcdVkbur" />
+    <result column="apcd_vkgrp" jdbcType="VARCHAR" property="apcdVkgrp" />
+    <result column="apcd_orgeh" jdbcType="INTEGER" property="apcdOrgeh" />
+    <result column="apcd_persa" jdbcType="VARCHAR" property="apcdPersa" />
+    <result column="apcd_btrtl" jdbcType="VARCHAR" property="apcdBtrtl" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from T_AIRPORT_CODE
+    where apcd_iata_code = #{apcdIataCode,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.zh.bean.flight.TAirportCode">
+    insert into T_AIRPORT_CODE (apcd_iata_code, apcd_icao_code, apcd_airport_prop, 
+      apcd_airport_name, apcd_airport_name_s, apcd_cnaf_airport_code, 
+      apcd_protocol, apcd_vkorg, apcd_vtweg, 
+      apcd_bwtar, apcd_werks, apcd_vkbur, 
+      apcd_vkgrp, apcd_orgeh, apcd_persa, 
+      apcd_btrtl)
+    values (#{apcdIataCode,jdbcType=VARCHAR}, #{apcdIcaoCode,jdbcType=VARCHAR}, #{apcdAirportProp,jdbcType=VARCHAR}, 
+      #{apcdAirportName,jdbcType=VARCHAR}, #{apcdAirportNameS,jdbcType=VARCHAR}, #{apcdCnafAirportCode,jdbcType=VARCHAR}, 
+      #{apcdProtocol,jdbcType=VARCHAR}, #{apcdVkorg,jdbcType=VARCHAR}, #{apcdVtweg,jdbcType=VARCHAR}, 
+      #{apcdBwtar,jdbcType=VARCHAR}, #{apcdWerks,jdbcType=VARCHAR}, #{apcdVkbur,jdbcType=VARCHAR}, 
+      #{apcdVkgrp,jdbcType=VARCHAR}, #{apcdOrgeh,jdbcType=INTEGER}, #{apcdPersa,jdbcType=VARCHAR}, 
+      #{apcdBtrtl,jdbcType=VARCHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.zh.bean.flight.TAirportCode">
+    update T_AIRPORT_CODE
+    set apcd_icao_code = #{apcdIcaoCode,jdbcType=VARCHAR},
+      apcd_airport_prop = #{apcdAirportProp,jdbcType=VARCHAR},
+      apcd_airport_name = #{apcdAirportName,jdbcType=VARCHAR},
+      apcd_airport_name_s = #{apcdAirportNameS,jdbcType=VARCHAR},
+      apcd_cnaf_airport_code = #{apcdCnafAirportCode,jdbcType=VARCHAR},
+      apcd_protocol = #{apcdProtocol,jdbcType=VARCHAR},
+      apcd_vkorg = #{apcdVkorg,jdbcType=VARCHAR},
+      apcd_vtweg = #{apcdVtweg,jdbcType=VARCHAR},
+      apcd_bwtar = #{apcdBwtar,jdbcType=VARCHAR},
+      apcd_werks = #{apcdWerks,jdbcType=VARCHAR},
+      apcd_vkbur = #{apcdVkbur,jdbcType=VARCHAR},
+      apcd_vkgrp = #{apcdVkgrp,jdbcType=VARCHAR},
+      apcd_orgeh = #{apcdOrgeh,jdbcType=INTEGER},
+      apcd_persa = #{apcdPersa,jdbcType=VARCHAR},
+      apcd_btrtl = #{apcdBtrtl,jdbcType=VARCHAR}
+    where apcd_iata_code = #{apcdIataCode,jdbcType=VARCHAR}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select apcd_iata_code, apcd_icao_code, apcd_airport_prop, apcd_airport_name, apcd_airport_name_s, 
+    apcd_cnaf_airport_code, apcd_protocol, apcd_vkorg, apcd_vtweg, apcd_bwtar, apcd_werks, 
+    apcd_vkbur, apcd_vkgrp, apcd_orgeh, apcd_persa, apcd_btrtl
+    from T_AIRPORT_CODE
+    where apcd_iata_code = #{apcdIataCode,jdbcType=VARCHAR}
+  </select>
+  
+  
+  <select id="selectByCnafAirportCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select apcd_iata_code, apcd_icao_code, apcd_airport_prop, apcd_airport_name, apcd_airport_name_s, 
+    apcd_cnaf_airport_code, apcd_protocol, apcd_vkorg, apcd_vtweg, apcd_bwtar, apcd_werks, 
+    apcd_vkbur, apcd_vkgrp, apcd_orgeh, apcd_persa, apcd_btrtl
+    from T_AIRPORT_CODE
+    where apcd_cnaf_airport_code = #{apcdCnafAirportCode,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectGroupApcdCnafAirportCode" resultType="com.zh.bean.flight.TAirportCode">
+    select apcd_cnaf_airport_code apcdCnafAirportCode from T_AIRPORT_CODE GROUP BY apcd_cnaf_airport_code
+  </select>
+  
+  <select id="selectAll" resultMap="BaseResultMap">
+    select apcd_iata_code, apcd_icao_code, apcd_airport_prop, apcd_airport_name, apcd_airport_name_s, 
+    apcd_cnaf_airport_code, apcd_protocol, apcd_vkorg, apcd_vtweg, apcd_bwtar, apcd_werks, 
+    apcd_vkbur, apcd_vkgrp, apcd_orgeh, apcd_persa, apcd_btrtl
+    from T_AIRPORT_CODE
+  </select>
+</mapper>

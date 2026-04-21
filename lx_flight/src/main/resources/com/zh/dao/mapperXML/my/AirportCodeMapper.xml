@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.AirportCodeMapper">
+
+     <insert id="insertAirportCode">
+     INSERT INTO T_AIRPORT_CODE(apcd_iata_code,apcd_icao_code,apcd_airport_name,apcd_airport_name_s,apcd_cnaf_airport_code
+     ,apcd_protocol,apcd_airport_prop
+		,apcd_vkorg
+		,apcd_vtweg
+		,apcd_bwtar
+		,apcd_werks
+		,apcd_vkbur
+		,apcd_vkgrp
+		,apcd_orgeh
+		,apcd_persa
+		,apcd_btrtl
+     )
+     VALUES(#{apcdIataCode},#{apcdIcaoCode},#{apcdAirportName},#{apcdAirportNameS},
+     #{apcdCnafAirportCode},#{apcdProtocol},#{apcdAirportProp}
+		,#{apcdVkorg}
+		,#{apcdVtweg}
+		,#{apcdBwtar}
+		,#{apcdWerks}
+		,#{apcdVkbur}
+		,#{apcdVkgrp}
+		,#{apcdOrgeh}
+		,#{apcdPersa}
+		,#{apcdBtrtl}
+     )
+     </insert>
+    
+    
+    <select id="selectAirportCode" resultType="com.zh.bean.flight.MyAirportCode">
+    SELECT apcd_iata_code AS apcdIataCode,
+	apcd_icao_code AS apcdIcaoCode,
+	apcd_icao_code AS apcdIcaoCode,
+	apcd_airport_name AS apcdAirportName,
+	apcd_airport_name_s AS apcdAirportNameS,
+	apcd_cnaf_airport_code AS apcdCnafAirportCode,
+	apcd_protocol AS apcdProtocol,
+	apcd_airport_prop AS apcdAirportProp,
+	apcd_vkorg AS apcdVkorg,
+	apcd_vtweg AS apcdVtweg,
+	apcd_bwtar AS apcdBwtar,
+	apcd_werks AS apcdWerks,
+	apcd_vkbur AS apcdVkbur,
+	apcd_vkgrp AS apcdVkgrp,
+	apcd_orgeh AS apcdOrgeh,
+	apcd_persa AS apcdPersa,
+	apcd_btrtl AS apcdBtrtl
+	FROM T_AIRPORT_CODE
+    </select>
+    
+    <update id="updateAirportCode">
+    UPDATE T_AIRPORT_CODE SET 
+    apcd_icao_code=#{apcdIcaoCode},
+    apcd_airport_name=#{apcdAirportName},
+    apcd_airport_name_s=#{apcdAirportNameS},
+    apcd_cnaf_airport_code=#{apcdCnafAirportCode},
+    apcd_protocol=#{apcdProtocol},
+    apcd_airport_prop=#{apcdAirportProp}
+    
+	,apcd_vkorg=#{apcdVkorg}
+	,apcd_vtweg=#{apcdVtweg}
+	,apcd_bwtar=#{apcdBwtar}
+	,apcd_werks=#{apcdWerks}
+	,apcd_vkbur=#{apcdVkbur}
+	,apcd_vkgrp=#{apcdVkgrp}
+	,apcd_orgeh=#{apcdOrgeh}
+	,apcd_persa=#{apcdPersa}
+	,apcd_btrtl=#{apcdBtrtl}
+    
+    
+    WHERE apcd_iata_code=#{apcdIataCode}
+    </update>
+    
+    <delete id="deleteAirportCode">
+    DELETE
+    FROM T_AIRPORT_CODE
+    WHERE apcd_iata_code=#{apcdIataCode}
+    AND apcd_icao_code=#{apcdIcaoCode}
+    </delete>
+    
+    <select id="selectAirportCodeFind" resultType="com.zh.bean.flight.MyAirportCode">
+        SELECT apcd_iata_code AS apcdIataCode,
+    apcd_icao_code AS apcdIcaoCode,
+    apcd_airport_name AS apcdAirportName,
+    apcd_airport_name_s AS apcdAirportNameS,
+    apcd_cnaf_airport_code AS apcdCnafAirportCode,
+    apcd_protocol AS apcdProtocol,
+    apcd_airport_prop AS apcdAirportProp
+    
+    ,apcd_vkorg AS apcdVkorg,
+	apcd_vtweg AS apcdVtweg,
+	apcd_bwtar AS apcdBwtar,
+	apcd_werks AS apcdWerks,
+	apcd_vkbur AS apcdVkbur,
+	apcd_vkgrp AS apcdVkgrp,
+	apcd_orgeh AS apcdOrgeh,
+	apcd_persa AS apcdPersa,
+	apcd_btrtl AS apcdBtrtl
+
+    FROM T_AIRPORT_CODE
+      WHERE apcd_iata_code=#{apcdIataCode}
+    </select>
+	<select id="selectAirportCodes" resultType="com.zh.bean.flight.MyAirportCode">
+        SELECT apcd_iata_code AS apcdIataCode,
+    apcd_icao_code AS apcdIcaoCode,
+    apcd_airport_name AS apcdAirportName,
+    apcd_airport_name_s AS apcdAirportNameS,
+    apcd_cnaf_airport_code AS apcdCnafAirportCode,
+    apcd_protocol AS apcdProtocol,
+    apcd_airport_prop AS apcdAirportProp
+
+    ,apcd_vkorg AS apcdVkorg,
+	apcd_vtweg AS apcdVtweg,
+	apcd_bwtar AS apcdBwtar,
+	apcd_werks AS apcdWerks,
+	apcd_vkbur AS apcdVkbur,
+	apcd_vkgrp AS apcdVkgrp,
+	apcd_orgeh AS apcdOrgeh,
+	apcd_persa AS apcdPersa,
+	apcd_btrtl AS apcdBtrtl
+
+    FROM T_AIRPORT_CODE
+      WHERE apcd_cnaf_airport_code=#{apcdCnafAirportCode}
+    </select>
+
+	<select id="selectAirportCodePropD" resultType="com.zh.bean.flight.MyAirportCode">
+    SELECT apcd_iata_code AS apcdIataCode,
+	apcd_icao_code AS apcdIcaoCode,
+	apcd_icao_code AS apcdIcaoCode,
+	apcd_airport_name AS apcdAirportName,
+	apcd_airport_name_s AS apcdAirportNameS,
+	apcd_cnaf_airport_code AS apcdCnafAirportCode,
+	apcd_protocol AS apcdProtocol,
+	apcd_airport_prop AS apcdAirportProp,
+	apcd_vkorg AS apcdVkorg,
+	apcd_vtweg AS apcdVtweg,
+	apcd_bwtar AS apcdBwtar,
+	apcd_werks AS apcdWerks,
+	apcd_vkbur AS apcdVkbur,
+	apcd_vkgrp AS apcdVkgrp,
+	apcd_orgeh AS apcdOrgeh,
+	apcd_persa AS apcdPersa,
+	apcd_btrtl AS apcdBtrtl
+	FROM T_AIRPORT_CODE
+	where apcd_airport_prop ='D'
+    </select>
+
+	<select id="selectAirportByName" resultType="com.zh.bean.flight.MyAirportCode">
+        SELECT apcd_iata_code AS apcdIataCode,
+    apcd_icao_code AS apcdIcaoCode,
+    apcd_airport_name AS apcdAirportName,
+    apcd_airport_name_s AS apcdAirportNameS,
+    apcd_cnaf_airport_code AS apcdCnafAirportCode,
+    apcd_protocol AS apcdProtocol,
+    apcd_airport_prop AS apcdAirportProp
+
+    ,apcd_vkorg AS apcdVkorg,
+	apcd_vtweg AS apcdVtweg,
+	apcd_bwtar AS apcdBwtar,
+	apcd_werks AS apcdWerks,
+	apcd_vkbur AS apcdVkbur,
+	apcd_vkgrp AS apcdVkgrp,
+	apcd_orgeh AS apcdOrgeh,
+	apcd_persa AS apcdPersa,
+	apcd_btrtl AS apcdBtrtl
+
+    FROM T_AIRPORT_CODE
+      WHERE apcd_airport_name=#{apcdAirportName} limit 1
+    </select>
+
+	<select id="selectAirportLikeName" resultType="com.zh.bean.flight.MyAirportCode">
+		SELECT apcd_iata_code AS apcdIataCode,
+			   apcd_icao_code AS apcdIcaoCode,
+			   apcd_airport_name AS apcdAirportName,
+			   apcd_airport_name_s AS apcdAirportNameS,
+			   apcd_cnaf_airport_code AS apcdCnafAirportCode,
+			   apcd_protocol AS apcdProtocol,
+			   apcd_airport_prop AS apcdAirportProp
+
+				,apcd_vkorg AS apcdVkorg,
+			   apcd_vtweg AS apcdVtweg,
+			   apcd_bwtar AS apcdBwtar,
+			   apcd_werks AS apcdWerks,
+			   apcd_vkbur AS apcdVkbur,
+			   apcd_vkgrp AS apcdVkgrp,
+			   apcd_orgeh AS apcdOrgeh,
+			   apcd_persa AS apcdPersa,
+			   apcd_btrtl AS apcdBtrtl
+
+		FROM T_AIRPORT_CODE
+		WHERE apcd_airport_name like concat('%',#{apcdAirportName},'%') limit 1
+	</select>
+</mapper>

@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: higer-service
+  namespace: $NAMESPACE
+  labels:
+    app: $NAMESPACE
+    service: higer
+spec:
+  selector:
+    matchLabels:
+      service: higer
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        service: higer
+    spec:
+      containers:
+        - name: higer-service
+          image: $REGISTRY/$NAMESPACE/higer-service:SNAPSHOT-$BUILD_NUMBER
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 4096Mi
+            limits:
+              cpu: 1500m
+              memory: 6144Mi
+          livenessProbe:
+            tcpSocket:
+              port: 12306
+            initialDelaySeconds: 120
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 12306
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 10
+          ports:
+            - containerPort: 30105
+              name: http
+            - containerPort: 12306
+              name: tcp
+          envFrom:
+            - configMapRef:
+                name: zhoil-yn-baseinfo
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: higer-service
+  namespace: $NAMESPACE
+spec:
+  selector:
+    service: higer
+  type: NodePort
+  ports:
+    - name: http
+      protocol: TCP
+      port: 30105
+      targetPort: 30105
+      nodePort: 30105
+    - name: tcp
+      protocol: TCP
+      port: 12306
+      targetPort: 12306
+      nodePort: 30106

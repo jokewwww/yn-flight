@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.FlowInfoCertificateMapper">
+
+    <!-- 查询流量计基本信息 -->
+    <select id="getFlowInfoCertificate" resultType="com.zh.bean.flight.FlowInfoCertificate">
+        SELECT
+            id,
+            code,
+            manufactor,
+            start_date AS startDate,
+            end_date AS endDate
+        FROM flow_info_certificate
+        <where>
+            <if test="code != null and code !=  '' ">
+                and code LIKE CONCAT('%',#{code},'%')
+            </if>
+            <if test="manufactor != null and manufactor !=  '' ">
+                and manufactor LIKE CONCAT('%',#{manufactor},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getOne" resultType="com.zh.bean.flight.FlowInfoCertificate">
+        SELECT
+            id,
+            code,
+            manufactor,
+            start_date AS startDate,
+            end_date AS endDate
+        FROM flow_info_certificate
+        where code = #{code}
+    </select>
+
+    <!-- 新增流量计基本信息 -->
+    <update id="addFlowInfoCertificate">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into flow_info_certificate(code,manufactor,start_date,end_date) VALUES (#{code},#{manufactor},#{startDate},#{endDate})
+    </update>
+
+    <!-- 修改流量计基本信息 -->
+    <update id="updateFlowInfoCertificate">
+        update flow_info_certificate
+        <set>
+            <if test="code != null">
+                code = #{code,jdbcType=VARCHAR},
+            </if>
+            <if test="manufactor != null">
+                manufactor = #{manufactor,jdbcType=VARCHAR},
+            </if>
+            <if test="startDate != null">
+                start_date = #{startDate,jdbcType=DATE},
+            </if>
+            <if test="endDate != null">
+                end_date = #{endDate,jdbcType=DATE},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除流量计基本信息 -->
+    <delete id="deleteFlowInfoCertificate">
+        DELETE FROM flow_info_certificate WHERE id = #{id}
+    </delete>
+
+
+
+</mapper>

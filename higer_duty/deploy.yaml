@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duty-service
+  namespace: $NAMESPACE
+  labels:
+    app:  $NAMESPACE
+    service: duty
+spec:
+  selector:
+    matchLabels:
+      service: duty
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        service: duty
+    spec:
+      containers:
+      - name:  duty-service
+        image:  $REGISTRY/$NAMESPACE/duty-service:SNAPSHOT-$BUILD_NUMBER
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 4096Mi
+          limits:
+            cpu: 1500m
+            memory: 6144Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 30107
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 30107
+          initialDelaySeconds: 120
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        ports:
+        - containerPort:  30107
+          name:  http
+        envFrom:
+        - configMapRef:
+            name: zhoil-yn-baseinfo
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: duty-service
+  namespace: $NAMESPACE
+spec:
+  selector:
+    service: duty
+  type: NodePort
+  ports:
+  - name: http
+    protocol: TCP
+    port: 30107
+    targetPort: 30107
+    nodePort: 30107

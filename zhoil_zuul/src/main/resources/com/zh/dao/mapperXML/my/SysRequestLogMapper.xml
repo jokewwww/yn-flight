@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zh.dao.mapper.my.SysRequestLogMapper">
+
+    <insert id="insertLog">
+        INSERT INTO sys_request_log
+        (method,request_body,response_body,create_by,create_date,status,exception)
+        values
+        (#{method},#{requestBody}, #{responseBody},#{createBy},#{createDate},#{status},#{exception})
+    </insert>
+</mapper>
